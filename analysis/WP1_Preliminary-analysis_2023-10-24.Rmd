@@ -60,7 +60,7 @@ Listing of patients who have undergone the screening phase (n = `r screening_n`)
 rmarkdown::paged_table(data_00_screening)
 ```
 
-Table 1. Patients included, excluded, and reasons for exclusion
+#### **Table 1. Patients included, excluded, and reasons for exclusion**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_00_screening %>% 
@@ -190,7 +190,7 @@ data_05_eot <- read_excel(
     )
 ```
 
-Table 2. Patients who discontinued prematurely the study treatment:
+#### **Table 2. Patients who discontinued prematurely the study treatment:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_05_eot %>%
