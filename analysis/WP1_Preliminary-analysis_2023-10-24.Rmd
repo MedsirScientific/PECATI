@@ -48,7 +48,10 @@ data_00_screening <- read_excel(
   ) %>% 
   mutate(
     eligibility_date = if_else(
-      eligibile == "Yes" & !is.na(eligibility_date_1), eligibility_date_1, eligibility_date_2)
+      eligibile == "Yes" & !is.na(eligibility_date_1), eligibility_date_1, eligibility_date_2),
+    screening_date = dmy(screening_date),
+    sf_date = dmy(sf_date),
+    eligibility_date = ymd(eligibility_date)
   ) %>%
   select(
     patient, screening_date, eligibile, sf_date, sf_reason, eligibility_date
@@ -60,7 +63,19 @@ screening_n <- length(data_00_screening$patient)
 Listing of patients who have undergone the screening phase (n = `r screening_n`):
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-rmarkdown::paged_table(data_00_screening)
+listing1_formatted_names <- c(
+  "Patient",
+  "Date of screening visit",
+  "Eligible patient?",
+  "Date of screening failure",
+  "Reason for screening failure",
+  "Date of confirmation of eligibility"
+  )
+
+data_00_screening_formatted <- data_00_screening %>% 
+  set_names(listing1_formatted_names)
+
+rmarkdown::paged_table(data_00_screening_formatted)
 ```
 
 #### **Table 1. Patients included, excluded, and reasons for exclusion**
@@ -101,13 +116,22 @@ data_temp_itt <- merge(
   ) %>% 
   select(patient, screening_date, eligibility_date)
 
-itt_n <- length(data_temp_itt$patient) 
+itt_n <- length(data_temp_itt$patient)
 ```
 
 Listing of patients who have started study treatment (n = `r itt_n`):
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-rmarkdown::paged_table(data_temp_itt)
+listing2_formatted_names <- c(
+  "Patient",
+  "Date of screening visit",
+  "Date of confirmation of eligibility"
+  )
+
+data_temp_itt_formatted <- data_temp_itt %>% 
+  set_names(listing2_formatted_names)
+
+rmarkdown::paged_table(data_temp_itt_formatted)
 ```
 
 ## Study treatment discontinuations (EoT)
@@ -193,7 +217,31 @@ data_05_eot <- read_excel(
     last_lenvatinib_date, radiological_pd, radiological_pd_date, clinical_pd,
     clinical_pd_date
     )
+
+eot_n <- length(data_05_eot$patient)
 ```
+
+Listing of patients who discontinued prematurely the study treatment (n = `r eot_n`):
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+listing3_formatted_names <- c(
+  "Patient",
+  "Date of end of treatment visit",
+  "Reason for end of treatment",
+  "Date of last dose of Pembrolizumab",
+  "Date of last dose of Lenvantinib",
+  "Radiological disease progression?",
+  "Date of radiological disease progression",
+  "Clinical disease progression?",
+  "Date of clinical disease progression"
+  )
+
+data_05_eot_formatted <- data_05_eot %>% 
+  set_names(listing3_formatted_names)
+
+rmarkdown::paged_table(data_05_eot_formatted)
+```
+
 
 #### **Table 2. Patients who discontinued prematurely the study treatment:**
 
@@ -218,14 +266,14 @@ data_05_eot %>%
 #   here(paste0("data/PECATI_End of Study_", cutoff_date, ".xlsx")),
 #   sheet = "End of Study",
 #   skip = 1
-#   ) %>% 
-#   clean_names() %>% 
+#   ) %>%
+#   clean_names() %>%
 #   rename(
 #     eos_date = "eo_s_date",
 #     eos_reason = "specify_the_reason",
 #     exitus_reason = "principal_cause_of_death"
-#   ) %>% 
-#   select(patient, eos_date, eos_reason, exitus_reason) %>% 
+#   ) %>%
+#   select(patient, eos_date, eos_reason, exitus_reason) %>%
 #   # Manual fixes
 #   mutate(
 #     eos_date = dmy(eos_date),
@@ -239,12 +287,15 @@ data_05_eot %>%
 #   data_temp_eot,
 #   data_06_eos,
 #   by = "patient",
-#   all = TRUE  
+#   all = TRUE
 # )
-# 
-# rmarkdown::paged_table(data_temp_eos)
 ```
 
+<!-- Listing of patients who discontinued prematurely the study treatment (n = `r eot_n`): -->
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# rmarkdown::paged_table(data_temp_eos)
+```
 
 ## Swimmer plot
 
