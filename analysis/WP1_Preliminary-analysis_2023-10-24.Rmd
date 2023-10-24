@@ -24,8 +24,7 @@ here("WP1_Preliminary-analysis_2023-10-24.Rmd")
 ```
 
 # Patient Disposition
-
-Listing of patients who have undergone the screening phase:
+## Screening
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_00_screening <- read_excel(
@@ -52,6 +51,12 @@ data_00_screening <- read_excel(
     patient, screening_date, eligibile, sf_date, sf_reason, eligibility_date
   )
 
+screening_n <- length(data_00_screening$patient)
+```
+
+Listing of patients who have undergone the screening phase (n = `r screening_n`):
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
 rmarkdown::paged_table(data_00_screening)
 ```
 
@@ -68,3 +73,142 @@ data_00_screening %>%
     )
   )
 ```
+
+## Intention-to-treat population (ITT)
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+data_01_cycles <- read_excel(
+  here("data/PECATI_Cycles_2023_10_24.xlsx"),
+    sheet = "Cycles",
+    skip = 1) %>% 
+  clean_names()
+
+data_02_itt <- data_01_cycles %>% filter(
+  event_num == 1
+  ) %>% 
+  select(patient)
+
+data_temp_itt <- merge(
+  data_02_itt,
+  data_00_screening,
+  by = "patient",
+  all = FALSE
+  ) %>% 
+  select(patient, screening_date, eligibility_date)
+
+itt_n <- length(data_temp_itt$patient) 
+```
+
+Listing of patients who have started study treatment (n = `r itt_n`):
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+rmarkdown::paged_table(data_temp_itt)
+```
+
+## Study treatment discontinuations (EoT)
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+data_03_icf <- read_excel(
+  here("data/PECATI_ICF Screening_2023_10_24.xlsx"),
+    sheet = "ICF",
+    skip = 1) %>% 
+  clean_names() %>% 
+  rename(icf_date = "date_consent_obtained") %>% 
+  select(patient, icf_date) %>% 
+  mutate(
+    icf_date = dmy(icf_date)
+    )
+
+data_03_icf <- data_03_icf %>% 
+  group_by(patient) %>% 
+  filter(icf_date == min(icf_date)) %>% 
+  ungroup()
+
+data_temp_icf <- merge(
+  data_temp_itt,
+  data_03_icf,
+  by = "patient",
+  all = FALSE  
+  )
+
+data_04_c1d1 <- read_excel(
+  here("data/PECATI_Cycles_2023_10_24.xlsx"),
+    sheet = "Cycles",
+    skip = 1) %>% 
+  clean_names() %>% 
+  rename(
+    c1d1_date = "visit_date"
+  ) %>% 
+  mutate(
+    c1d1_date = dmy(c1d1_date)
+    ) %>% 
+  filter(
+    event_num == 1
+  ) %>% 
+  select(
+    patient, c1d1_date
+  )
+
+data_temp_c1d1 <- merge(
+  data_temp_icf,
+  data_04_c1d1,
+  by = "patient",
+  all = FALSE  
+)
+
+data_05_eot <- read_excel(
+  here("data/PECATI_FU30-EOT_2023_10_24.xlsx"), 
+    sheet = "FU30-EOT",
+    skip = 1
+  ) %>% 
+  clean_names() %>% 
+  rename(
+    eot_reason = "main_reason_for_treatment_discontinuation",
+    last_pembrolizumab_date = "date_of_last_dose_of_pembrolizumab",
+    last_lenvatinib_date = "date_of_last_dose_of_lenvatinib",
+    radiological_pd = "disease_progression_confirmed_by_recist_v1_1",
+    radiological_pd_date = "date_of_radiologial_progressive_disease",
+    clinical_pd = "clinical_progression_in_accordance_to_investigator_criteria",
+    clinical_pd_date = "date_of_clinical_progressive_disease"
+  ) %>% 
+  mutate(
+    discontinuation_date = dmy(discontinuation_date),
+    last_pembrolizumab_date = dmy(last_pembrolizumab_date),
+    last_lenvatinib_date = dmy(last_lenvatinib_date),
+    radiological_pd_date = dmy(radiological_pd_date),
+    clinical_pd_date = dmy(clinical_pd_date)
+    ) %>% 
+  # Manual fixes
+  mutate(
+    eot_reason = if_else(
+      patient == "0102-004" & eot_reason == "Other", "Second primary esophageal cancer", eot_reason)
+  ) %>% 
+  select(
+    patient, discontinuation_date, eot_reason, last_pembrolizumab_date,
+    last_lenvatinib_date, radiological_pd, radiological_pd_date, clinical_pd,
+    clinical_pd_date
+    )
+```
+
+Table 2. Patients who discontinued prematurely the study treatment:
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+data_05_eot %>%
+  tbl_summary(
+    missing = "no",
+    percent = "column",
+    sort = list(everything() ~ "frequency"),
+    label = list(eot_reason ~ "Reason for study treatment discontinuation"),
+    include = c(eot_reason),
+    missing_text = "Not reported"
+  )
+```
+
+## Study discontinuation (EoS)
+
+## Swimmer plot
+
+
+
+
+
