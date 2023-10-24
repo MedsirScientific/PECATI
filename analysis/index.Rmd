@@ -8,4 +8,6 @@ editor_options:
   chunk_output_type: console
 ---
 
-Welcome to my research website.
+This is the index page of the online repository for the PECATI study. Here is a list of work packages:
+
+ - [Preliminary data cleaning and analysis (October 2023)](WP1_Preliminary-analysis_2023-10-24.html)

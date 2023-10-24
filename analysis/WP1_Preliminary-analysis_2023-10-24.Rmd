@@ -1,0 +1,70 @@
+---
+title: "PECATI | Preliminary data monitoring, cleaning, and analysis. October 2023"
+author: "Daniel Alcala"
+date: "`r format(Sys.time(), '%Y-%m-%d')`"
+output: html_document
+---
+
+```{r, include = FALSE}
+library(tidyverse)
+library(readxl)
+library(writexl)
+library(janitor)
+library(lubridate)
+library(here)
+library(cowplot)
+library(gt)
+library(gtsummary)
+library(survival)
+library(survminer)
+library(epoxy)
+library(crayon)
+
+here("WP1_Preliminary-analysis_2023-10-24.Rmd")
+```
+
+# Patient Disposition
+
+Listing of patients who have undergone the screening phase:
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+data_00_screening <- read_excel(
+  here("data/PECATI_ICF Screening_2023_10_24.xlsx"),
+    sheet = "ICF Screening",
+    skip = 1) %>% 
+  clean_names() %>% 
+  rename(
+    screening_date = "visit_date",
+    eligibile = "is_the_patient_eligible_to_participate_in_the_study",
+    sf_date = "non_eligible_date",
+    sf_reason = "reason_not_eligible",
+    eligibility_date_1 = "eligibility_date_v2",
+    eligibility_date_2 = "eligibility_date_v3"
+  ) %>% 
+  mutate_at(
+    vars(starts_with("eligibility_date")), dmy
+  ) %>% 
+  mutate(
+    eligibility_date = if_else(
+      eligibile == "Yes" & !is.na(eligibility_date_1), eligibility_date_1, eligibility_date_2)
+  ) %>%
+  select(
+    patient, screening_date, eligibile, sf_date, sf_reason, eligibility_date
+  )
+
+rmarkdown::paged_table(data_00_screening)
+```
+
+Table 1. Patients included, excluded, and reasons for exclusion
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+data_00_screening %>% 
+  tbl_summary(
+    include = c(eligibile, sf_reason),
+    missing = "no",
+    label = list(
+      eligibile ~ "Included",
+      sf_reason ~ "Excluded"
+    )
+  )
+```
