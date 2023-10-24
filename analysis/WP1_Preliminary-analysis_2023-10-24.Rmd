@@ -21,6 +21,9 @@ library(epoxy)
 library(crayon)
 
 here("WP1_Preliminary-analysis_2023-10-24.Rmd")
+
+cutoff_date <- as.Date("2023-10-24")
+cutoff_date <- format(cutoff_date, "%Y_%m_%d")
 ```
 
 # Patient Disposition
@@ -28,7 +31,7 @@ here("WP1_Preliminary-analysis_2023-10-24.Rmd")
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_00_screening <- read_excel(
-  here("data/PECATI_ICF Screening_2023_10_24.xlsx"),
+    here(paste0("data/PECATI_ICF Screening_", cutoff_date, ".xlsx")),
     sheet = "ICF Screening",
     skip = 1) %>% 
   clean_names() %>% 
@@ -80,7 +83,7 @@ data_00_screening %>%
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_01_cycles <- read_excel(
-  here("data/PECATI_Cycles_2023_10_24.xlsx"),
+  here(paste0("data/PECATI_Cycles_", cutoff_date, ".xlsx")),
     sheet = "Cycles",
     skip = 1) %>% 
   clean_names()
@@ -111,7 +114,7 @@ rmarkdown::paged_table(data_temp_itt)
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_03_icf <- read_excel(
-  here("data/PECATI_ICF Screening_2023_10_24.xlsx"),
+  here(paste0("data/PECATI_ICF Screening_", cutoff_date, ".xlsx")),
     sheet = "ICF",
     skip = 1) %>% 
   clean_names() %>% 
@@ -134,7 +137,7 @@ data_temp_icf <- merge(
   )
 
 data_04_c1d1 <- read_excel(
-  here("data/PECATI_Cycles_2023_10_24.xlsx"),
+  here(paste0("data/PECATI_Cycles_", cutoff_date, ".xlsx")),
     sheet = "Cycles",
     skip = 1) %>% 
   clean_names() %>% 
@@ -159,7 +162,7 @@ data_temp_c1d1 <- merge(
 )
 
 data_05_eot <- read_excel(
-  here("data/PECATI_FU30-EOT_2023_10_24.xlsx"), 
+  here(paste0("data/PECATI_FU30-EOT_", cutoff_date, ".xlsx")),
     sheet = "FU30-EOT",
     skip = 1
   ) %>% 
@@ -210,9 +213,40 @@ data_05_eot %>%
 
 ## Study discontinuation (EoS)
 
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# data_06_eos <- read_excel(
+#   here(paste0("data/PECATI_End of Study_", cutoff_date, ".xlsx")),
+#   sheet = "End of Study",
+#   skip = 1
+#   ) %>% 
+#   clean_names() %>% 
+#   rename(
+#     eos_date = "eo_s_date",
+#     eos_reason = "specify_the_reason",
+#     exitus_reason = "principal_cause_of_death"
+#   ) %>% 
+#   select(patient, eos_date, eos_reason, exitus_reason) %>% 
+#   # Manual fixes
+#   mutate(
+#     eos_date = dmy(eos_date),
+#     eos_reason = if_else(
+#       eos_reason == "Withdrawal of consent by subject’s request", "Withdrawal of consent", eos_reason),
+#     eos_reason = if_else(
+#       eos_reason == "Lost to follow-up", "Loss to follow-up", eos_reason)
+#   )
+# 
+# data_temp_eos <- merge(
+#   data_temp_eot,
+#   data_06_eos,
+#   by = "patient",
+#   all = TRUE  
+# )
+# 
+# rmarkdown::paged_table(data_temp_eos)
+```
+
+
 ## Swimmer plot
-
-
 
 
 
