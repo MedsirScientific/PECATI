@@ -318,5 +318,146 @@ rmarkdown::paged_table(data_06_eos_formatted)
 
 ## Swimmer plot
 
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+data_temp_eos <- data_temp_eos %>% 
+  mutate(
+    exitus = if_else(
+      eos_reason == "Death", eos_date, as.Date(NA_real_)),
+    progression = if_else(
+      radiological_pd == "Yes", discontinuation_date, as.Date(NA_real_)),
+  )
 
+# Fill the NAs in the eos_date column with today's date
+data_temp_eos$eos_date <- if_else(
+  is.na(data_temp_eos$eos_date), as.Date(Sys.Date()), data_temp_eos$eos_date)
+
+# Get the earliest date across columns for each patient and make it a date column
+data_temp_eos$earliest_date <- apply(data_temp_eos[, sapply(data_temp_eos, is.Date)], 1, min, na.rm = TRUE)
+
+# Get the latest date across columns for each patient and make it a date column
+data_temp_eos$latest_date <- apply(data_temp_eos[, sapply(data_temp_eos, is.Date)], 1, max, na.rm = TRUE)
+
+# Create a row for each patient for each day from the earliest to the latest date
+data_08_swimmer_long <- data_temp_eos %>%
+  mutate(
+    earliest_date = ymd(earliest_date),
+    latest_date = ymd(latest_date)
+  ) %>% 
+  rowwise() %>%
+  mutate(study_day = list(seq.Date(from = earliest_date, to = latest_date, by = "day"))) %>%
+  unnest(study_day)
+
+# Count the number of rows for each patient
+data_08_swimmer_long <- data_08_swimmer_long %>%
+  group_by(patient) %>%
+  mutate(event_num = row_number())
+
+data_08_swimmer_long <- data_08_swimmer_long %>% 
+  mutate(
+    month = event_num * 0.0328767
+  )
+
+data_08_swimmer_long$icf_this_day <- ifelse(
+  data_08_swimmer_long$icf_date == data_08_swimmer_long$study_day, data_08_swimmer_long$month, NA
+  )
+
+data_08_swimmer_long$c1d1_this_day <- ifelse(
+  data_08_swimmer_long$c1d1_date == data_08_swimmer_long$study_day, data_08_swimmer_long$month, NA
+  )
+
+data_08_swimmer_long$pd_this_day <- ifelse(
+  data_08_swimmer_long$progression == data_08_swimmer_long$study_day, data_08_swimmer_long$month, NA
+  )
+
+data_08_swimmer_long$exitus_this_day <- ifelse(
+  data_08_swimmer_long$exitus == data_08_swimmer_long$study_day, data_08_swimmer_long$month, NA
+  )
+
+data_08_swimmer_long <- data_08_swimmer_long %>% 
+  group_by(patient) %>% 
+  mutate(max_day = max(event_num)) %>% 
+  ungroup() %>% 
+  mutate(patient = fct_reorder(factor(patient), max_day))
+```
+
+#### **Figure 1. Patient trajectories along the clinical trial from informed consent to study termination**
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+cols <- c(
+  "Study treatment start date" = "#74AAFF",
+  "Disease progression" = "#FFD966",
+  "Exitus" = "#040404"
+)
+
+shape_override <- c(21, 21, 21)
+stroke_override <- c(1, 1, 1)
+size_override <-  c(2, 2, 2)
+
+swimmer <- data_08_swimmer_long %>%
+  ggplot(
+    aes(y = patient, group = patient)) +
+  theme_bw() + 
+  theme(
+    panel.grid.minor.x = element_blank(),
+    panel.border = element_blank()
+  ) +
+  # 1 data layer: line plot showing number of TAs
+  geom_line(aes(x = month), linewidth = 2.5, color = "#9A99A0", alpha = 0.25) +
+  # 2 data layer: dot plot showing when the ICF was signed
+  geom_point(aes(x = icf_this_day),
+             size = 2.5,
+             stroke = 0.5,
+             shape = 21,
+             color = "#74AAFF",
+             fill = "#74AAFF",
+             alpha = 0.65) +
+  # 3 data layer: dot plot showing the study treatment start date
+  geom_point(aes(x = c1d1_this_day),
+             size = 2.5,
+             stroke = 0.5,
+             shape = 1,
+             color = "#74AAFF") +
+  # 4 data layer: dot plot showing whether disease progression
+  geom_point(aes(x = pd_this_day),
+             size = 2.5,
+             stroke = 0.5,
+             shape = 21,
+             color = "#040404",
+             fill = "#FFD966",
+             alpha = 0.95) +
+  # 5 data layer: dot plot showing TAs with an OR = SD
+  geom_point(aes(x = exitus_this_day),
+             size = 2.5,
+             stroke = 0.5,
+             shape = 21,
+             color = "#040404",
+             fill = "#040404") +
+  # Final aesthetics adjustments
+  scale_color_manual(values = cols,
+                     name = "XXXX") +
+  scale_x_continuous(breaks = seq(0, 36, 5)) +
+  guides(color = guide_legend(
+  override.aes = list(
+    shape = shape_override,
+    stroke = stroke_override,
+    size = size_override
+  )
+)) +
+  labs(
+    x = "Time since ICF sign (months)",
+    y = "Patient"
+  ) +
+  theme(panel.grid.major.y = element_blank())
+
+ggsave(
+  here("output/PECATI_swimmer_2023-10-24.png"),
+  swimmer,
+  width = 2048,
+  height = 4096,
+  units = "px",
+  dpi = 300
+  )
+  
+swimmer
+```
 
