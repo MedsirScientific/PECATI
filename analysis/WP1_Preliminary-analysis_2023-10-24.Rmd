@@ -134,7 +134,7 @@ data_temp_itt_formatted <- data_temp_itt %>%
 rmarkdown::paged_table(data_temp_itt_formatted)
 ```
 
-## Study treatment discontinuations (EoT)
+## Study treatment discontinuation (EoT)
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_03_icf <- read_excel(
@@ -218,6 +218,13 @@ data_05_eot <- read_excel(
     clinical_pd_date
     )
 
+data_temp_eot <- merge(
+  data_temp_c1d1,
+  data_05_eot,
+  by = "patient",
+  all = TRUE
+  )
+
 eot_n <- length(data_05_eot$patient)
 ```
 
@@ -262,39 +269,51 @@ data_05_eot %>%
 ## Study discontinuation (EoS)
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-# data_06_eos <- read_excel(
-#   here(paste0("data/PECATI_End of Study_", cutoff_date, ".xlsx")),
-#   sheet = "End of Study",
-#   skip = 1
-#   ) %>%
-#   clean_names() %>%
-#   rename(
-#     eos_date = "eo_s_date",
-#     eos_reason = "specify_the_reason",
-#     exitus_reason = "principal_cause_of_death"
-#   ) %>%
-#   select(patient, eos_date, eos_reason, exitus_reason) %>%
-#   # Manual fixes
-#   mutate(
-#     eos_date = dmy(eos_date),
-#     eos_reason = if_else(
-#       eos_reason == "Withdrawal of consent by subject’s request", "Withdrawal of consent", eos_reason),
-#     eos_reason = if_else(
-#       eos_reason == "Lost to follow-up", "Loss to follow-up", eos_reason)
-#   )
-# 
-# data_temp_eos <- merge(
-#   data_temp_eot,
-#   data_06_eos,
-#   by = "patient",
-#   all = TRUE
-# )
+data_06_eos <- read_excel(
+  here(paste0("data/PECATI_End of Study_", cutoff_date, ".xlsx")),
+  sheet = "End of Study",
+  skip = 1
+  ) %>%
+  clean_names() %>%
+  rename(
+    eos = "has_the_patient_continued_the_follow_up_until_the_eo_s_date",
+    eos_date = "eo_s_date",
+    eos_reason = "end_of_study_follow_up_main_reason",
+    exitus_reason = "principal_cause_of_death"
+  ) %>%
+  select(patient, eos, eos_date, eos_reason, exitus_reason) %>%
+  # Manual fixes
+  mutate(
+    eos_date = dmy(eos_date),
+    exitus_reason = if_else(
+      patient == "0102-003", "Disease progression", exitus_reason)
+  )
+
+data_temp_eos <- merge(
+  data_temp_eot,
+  data_06_eos,
+  by = "patient",
+  all = TRUE
+)
+
+eos_n <- length(data_06_eos$patient)
 ```
 
-<!-- Listing of patients who discontinued prematurely the study treatment (n = `r eot_n`): -->
+Listing of patients who discontinued the study (n = `r eos_n`):
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-# rmarkdown::paged_table(data_temp_eos)
+listing4_formatted_names <- c(
+  "Patient",
+  "Did the patient complete the study?",
+  "Date of end of study",
+  "Resason for premature end of study",
+  "Main reason for exitus"
+  )
+
+data_06_eos_formatted <- data_06_eos %>% 
+  set_names(listing4_formatted_names)
+
+rmarkdown::paged_table(data_06_eos_formatted)
 ```
 
 ## Swimmer plot
