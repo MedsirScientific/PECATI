@@ -71,7 +71,9 @@ data_00_screening %>%
       eligibile ~ "Included",
       sf_reason ~ "Excluded"
     )
-  )
+  ) %>%
+  modify_header(label = " ") %>%
+  bold_labels()
 ```
 
 ## Intention-to-treat population (ITT)
@@ -201,7 +203,9 @@ data_05_eot %>%
     label = list(eot_reason ~ "Reason for study treatment discontinuation"),
     include = c(eot_reason),
     missing_text = "Not reported"
-  )
+  ) %>%
+  modify_header(label = " ") %>%
+  bold_labels()
 ```
 
 ## Study discontinuation (EoS)
