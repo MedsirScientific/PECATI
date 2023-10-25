@@ -613,9 +613,9 @@ data_08_baseline_all <- full_join(
 
 ### Quality assurance of baseline tumor burden
 
-A histogram with the sum of the longest diameters of each patient is presented below with the intention of detecting possible strange or unlikely patterns:
+A histogram with the sum of the longest diameters of each patient at baseline is presented below with the intention of detecting possible strange or unlikely patterns:
 
-```{r, message = FALSE, warning = FALSE, echo = FALSE}
+```{r baseline-sld-histogram, message = FALSE, warning = FALSE, echo = FALSE}
 ggplot(
   data_08_baseline_all, 
   aes(x = sum_of_lesions)) +
@@ -633,6 +633,77 @@ ggplot(
   labs(
     x = "Sum of longest diameters at baseline (mm)",
     y = "Number of patients"
+  )
+```
+
+## Post-baseline tumor assessment
+
+Similarly, a histogram with the sum of the longest diameters of each patient after baseline is presented below with the intention of detecting possible strange or unlikely patterns:
+
+```{r post-baseline-sld-histogram, message = FALSE, warning = FALSE, echo = FALSE}
+data_09a_postbaseline_target <- read_excel(
+  here(paste0("data/PECATI_Tumor Assessment_", cutoff_date, ".xlsx")),
+    sheet = "TARGET",
+    skip = 1) %>% 
+    clean_names() %>%
+    # We collect the length of the longest diameter of each reported target (i.e., measurable) lesion individually.
+    # Calculate the sum of longest diameter of all lesions for each tumour assessment.
+    group_by(patient, event_num) %>%
+    mutate(
+      sum_of_lesions = sum(longest_diameter_short_axis_mm)
+    ) %>%
+    # Since we now have the sum of longest diameters repeated as many times as there are measurable lesions, we can keep either any row
+    group_by(patient, event_num) %>%
+    filter(row_number() == 1) %>%
+    mutate(
+      evaluation_date = dmy(evaluation_date)
+    ) %>% 
+    select(
+      patient, event_num, evaluation_date, sum_of_lesions
+    )
+
+data_09b_postbaseline_nontarget <- read_excel(
+    here(paste0("data/PECATI_Tumor Assessment_", cutoff_date, ".xlsx")),
+    sheet = "NON_TARGET",
+    skip = 1) %>% 
+    clean_names() %>%
+    # Since we now have the sum of longest diameters repeated as many times as there are measurable lesions, we can keep either any row
+    group_by(patient, event_num) %>%
+    filter(row_number() == 1) %>%
+    mutate(
+      evaluation_date = dmy(evaluation_date)
+    ) %>% 
+    select(
+      patient, event_num, evaluation_date
+    )
+
+data_09_postbaseline <- merge(
+  data_09a_postbaseline_target,
+  data_09b_postbaseline_nontarget,
+  by = c("patient", "event_num", "evaluation_date"),
+  all = TRUE
+)
+
+# Manual fix
+data_09_postbaseline <- data_09_postbaseline[!(data_09_postbaseline$patient == '0204-001' & is.na(data_09_postbaseline$sum_of_lesions)), ]
+
+ggplot(
+  data_09_postbaseline, 
+  aes(x = sum_of_lesions)) +
+  geom_histogram(
+    fill = "#6561FF", 
+    alpha = 0.5, 
+    color = "#6561FF",
+    bins = 54) +
+  theme(
+    panel.background = element_rect(fill = "#FFFFFF", colour = "#FFFFFF"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.background  = element_rect(fill = "#FFFFFF", colour = "#FFFFFF")
+  ) +
+  labs(
+    x = "Sum of longest diameters after baseline (mm)",
+    y = "Number of assessments"
   )
 ```
 
