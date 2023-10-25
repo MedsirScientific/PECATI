@@ -1059,22 +1059,91 @@ swimmer_spider_plot <- function(site, comment, name) {
 ```{r site-0102-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
 site_0102_name <- "Site 0102 - Hospital Universitari i Politècnic La Fe"
 
-comment_site_0102 <- "   Patient 0102-001 XXXX.\n   
-   Patient 0102-003 XXXX.\n   
-   Patient 0102-004 XXXX."
+comment_site_0102 <- " "
 
 site_0102_figure <- swimmer_spider_plot("0102", comment_site_0102, site_0102_name)
 grid.draw(site_0102_figure)
 ```
 
 ```{r site-0103-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
-site_0103_name <- "Site 0103 - Hospital Universitari i Politècnic La Fe"
+site_0103_name <- "Site 0103 - Hospital Universitario La Paz"
 
-comment_site_0103 <- "   Patient 0103-001 XXXX.\n   
-   Patient 0103-002 XXXX."
+comment_site_0103 <- " "
 
 site_0103_figure <- swimmer_spider_plot("0103", comment_site_0103, site_0103_name)
 grid.draw(site_0103_figure)
+```
+
+```{r site-0105-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
+site_0105_name <- "Site 0105 - Hospital Clínic i Provincial de Barcelona"
+
+comment_site_0105 <- " "
+
+site_0105_figure <- swimmer_spider_plot("0105", comment_site_0105, site_0105_name)
+grid.draw(site_0105_figure)
+```
+
+```{r site-0201-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
+site_0201_name <- "Site 0201 - Institut Curie"
+
+comment_site_0201 <- " "
+
+site_0201_figure <- swimmer_spider_plot("0201", comment_site_0201, site_0201_name)
+grid.draw(site_0201_figure)
+```
+
+```{r site-0202-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
+site_0202_name <- "Site 0202 - IGR Gustave Roussy"
+
+comment_site_0202 <- " "
+
+site_0202_figure <- swimmer_spider_plot("0202", comment_site_0202, site_0202_name)
+grid.draw(site_0202_figure)
+```
+
+```{r site-0203-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
+site_0203_name <- "Site 0203 - Centre Hospitalier Universitaire de Toulouse"
+
+comment_site_0203 <- " "
+
+site_0203_figure <- swimmer_spider_plot("0203", comment_site_0203, site_0203_name)
+grid.draw(site_0203_figure)
+```
+
+```{r site-0204-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
+site_0204_name <- "Site 0204 - Hôpitaux Universitaires de Marseille - Hôpital Nord"
+
+comment_site_0204 <- " "
+
+site_0204_figure <- swimmer_spider_plot("0204", comment_site_0204, site_0204_name)
+grid.draw(site_0204_figure)
+```
+
+```{r site-0205-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
+site_0205_name <- "Site 0205 - Institut Bergonié"
+
+comment_site_0205 <- " "
+
+site_0205_figure <- swimmer_spider_plot("0205", comment_site_0205, site_0205_name)
+grid.draw(site_0205_figure)
+```
+
+```{r site-0206-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
+site_0206_name <- "Site 0206 - CLCC Oscar Lambret"
+
+comment_site_0206 <- " "
+
+site_0206_figure <- swimmer_spider_plot("0206", comment_site_0206, site_0206_name)
+grid.draw(site_0206_figure)
+```
+
+```{r site-0301-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
+site_0301_name <- "Site 0301 - A.O.U. San Luigi Gonzaga"
+
+comment_site_0301 <- " "
+
+site_0301_figure <- swimmer_spider_plot("0301", comment_site_0301, site_0301_name)
+grid.draw(site_0301_figure)
 ```
 
 # Preliminary Efficacy Analysis
