@@ -19,6 +19,8 @@ library(survival)
 library(survminer)
 library(epoxy)
 library(crayon)
+library(grid)
+library(workflowr)
 
 here("WP1_Preliminary-analysis_2023-10-24.Rmd")
 
@@ -637,6 +639,7 @@ ggplot(
 ```
 
 ## Post-baseline tumor assessment
+### Quality assurance of post-baseline tumor burden
 
 Similarly, a histogram with the sum of the longest diameters of each patient after baseline is presented below with the intention of detecting possible strange or unlikely patterns:
 
@@ -707,7 +710,362 @@ ggplot(
   )
 ```
 
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+data_10_new_lesions <- read_excel(
+    here(paste0("data/PECATI_Tumor Assessment_", cutoff_date, ".xlsx")),
+    sheet = "NEW_LESIONS",
+    skip = 1) %>% 
+    clean_names() %>% 
+    # Create a new variable that encodes whether the patient had a new lesion at any tumour assessment
+    mutate(
+      new_lesions = "Yes"
+    ) %>% 
+    mutate(
+      evaluation_date = dmy(evaluation_date)
+    ) %>% 
+    # Since the presentation of a single new lesion already implies disease progression, we only keep the record of one new lesion, regardless of which one.
+    group_by(patient) %>%
+    filter(row_number() == 1) %>% 
+    select(
+      patient, event_num, evaluation_date, new_lesions
+    )
 
+data_11_recist <- read_excel(
+    here(paste0("data/PECATI_Tumor Assessment_", cutoff_date, ".xlsx")),
+    sheet = "Tumor Assessment",
+    skip = 1) %>% 
+    clean_names() %>% 
+    select(
+      patient, event_num, target_lesions_response, non_target_lesions_response, overall_response
+      )
+
+data_12_or_recist <- merge(
+    data_08_baseline_all,
+    data_09_postbaseline,
+    by = c("patient", "event_num", "evaluation_date","sum_of_lesions"),
+    all = TRUE
+    ) %>% 
+    # We create a new variable with the sum of lesion diameters at baseline to later calculate the change from baseline.
+    group_by(patient) %>%
+    mutate(
+      sum_of_lesions = if_else(
+        patient == "0107-007" & event_num == 0, 22.2, sum_of_lesions),
+      sum_of_lesions = if_else(
+        patient == "0107-008" & event_num == 0, 41, sum_of_lesions),
+      baseline_sld = sum_of_lesions[event_num == 0]
+      ) %>%
+    mutate(
+      change_from_baseline = sum_of_lesions - baseline_sld
+    ) %>%
+    mutate(
+      percent_change_from_baseline = ((sum_of_lesions - baseline_sld) / baseline_sld) * 100
+    ) %>% 
+    # For coding disease progression, RECIST sets the criterion of an increase of at least 20% with respect to the smallest sum of lesion diameters (nadir).
+    group_by(patient) %>%
+    mutate(
+      nadir = ifelse(event_num == 0, sum_of_lesions, pmin(sum_of_lesions, lag(sum_of_lesions)))
+    ) %>%
+    mutate(
+      change_from_nadir = sum_of_lesions - nadir
+    ) %>%
+    mutate(
+      percent_change_from_nadir = ((sum_of_lesions - nadir) / nadir) * 100
+    )
+
+data_12_or_recist <- merge(
+  data_12_or_recist,
+  data_10_new_lesions,
+  by = c("patient", "event_num", "evaluation_date"),
+  all = TRUE
+) %>% 
+  mutate(
+    new_lesions = if_else(
+      is.na(new_lesions), "No", new_lesions
+    )
+  )
+
+data_12_or_recist <- merge(
+  data_12_or_recist,
+  data_11_recist,
+  by = c("patient", "event_num"),
+  all = TRUE
+) %>%
+  filter(
+    !is.na(evaluation_date)
+    ) %>% 
+  mutate(
+    overall_response = if_else(
+      overall_response == "Progressive Disease (PD)", "PD", overall_response),
+    overall_response = if_else(
+      overall_response == "Complete Response (CR)", "CR", overall_response),
+    overall_response = if_else(
+      overall_response == "Partial Response (PR)", "PR", overall_response),
+    overall_response = if_else(
+      overall_response == "Stable Disease (SD)", "SD", overall_response),
+    overall_response = if_else(
+      overall_response == "Non-CR/Non-PD", "Non-CR/Non-PD", overall_response),
+    PD = if_else(overall_response == "PD", 1, 0),
+    CR = if_else(overall_response == "CR", 1, 0),
+    PR = if_else(overall_response == "PR", 1, 0),
+    SD = if_else(overall_response == "SD", 1, 0),
+    NN = if_else(overall_response == "Non-CR/Non-PD", 1, 0),
+    pd_this_ta = case_when(PD == 1 ~ event_num),
+    cr_this_ta = case_when(CR == 1 ~ event_num),
+    pr_this_ta = case_when(PR == 1 ~ event_num),
+    sd_this_ta = case_when(SD == 1 ~ event_num),
+    nn_this_ta = case_when(NN == 1 ~ event_num),
+    site = substr(patient, 1, 4)
+  )
+
+data_12_or_recist <- merge(
+  data_02_itt,
+  data_12_or_recist,
+  by = "patient",
+  all = FALSE
+)
+
+cols <- c(
+  "CR" = "#153D99",
+  "PR" = "#74AAFF",
+  "SD" = "#FFD966",
+  "Non-CR/Non-PD" = "#9ACEB7",
+  "PD" = "#B24745"
+)
+
+shape_override <- c(23, 19, 15, 15, 4)
+stroke_override <- c(1, 1, 1, .9, 1)
+size_override <-  c(2, 2, 2, 2, 2)
+
+swimmer_spider_plot <- function(site, comment, name) {
+  swimmer_ta <- data_12_or_recist %>%
+  filter(
+    site == {{site}}
+  ) %>% 
+  ggplot(
+    aes(y = patient, group = patient)) +
+  theme_bw() + 
+  theme(
+    panel.grid.minor.x = element_blank(),
+    panel.border = element_blank()
+  ) +
+  # 1 data layer: line plot showing number of TAs
+  geom_line(aes(x = event_num), size = 1.5) +
+  # 2 data layer: dot plot showing whether each patient had measurable disease at baseline
+  geom_point(aes(x = baseline_target,
+                 col = "Measurable disease"),
+             size = 3.5,
+             stroke = 0.75,
+             shape = 13) +
+  # 3 data layer: dot plot showing whether each patient had only non-measurable disease at baseline 
+  geom_point(aes(x = baseline_nontarget,
+                 col = "Non-measurable disease"),
+             size = 3.5,
+             stroke = 0.75,
+             shape = 1) +
+  # 4 data layer: dot plot showing TAs with an OR = SD
+  geom_point(aes(x = sd_this_ta,
+                 col = "SD"),
+             stroke = 2,
+             shape = 15) +
+  # 5 data layer: dot plot showing TAs with an OR = PR
+  geom_point(aes(x = pr_this_ta,
+                 col = "PR"),
+             size = 2,
+             stroke = 1.5,
+             shape = 19,
+             fill = "#74AAFF") +
+  # 6 data layer: dot plot showing TAs with an OR = CR
+  geom_point(aes(x = cr_this_ta,
+                 col = "CR"),
+             size = 2,
+             stroke = 1.5,
+             shape = 23,
+             fill = "#153D99") +
+  # 7 data layer: dot plot showing TAs with an OR = PD
+  geom_point(aes(x = pd_this_ta,
+                 col = "PD"),
+             size = 2,
+             stroke = 1.5,
+             shape = 4) +
+  # 8 data layer: dot plot showing TAs with an OR = Non-CR/Non-PD
+  geom_point(aes(x = nn_this_ta,
+                 col = "Non-CR/Non-PD"),
+             stroke = 2,
+             shape = 15) +
+  # Final aesthetics adjustments
+  scale_color_manual(values = cols,
+                     limits = c('CR', 'PR', 'SD', 'Non-CR/Non-PD', 'PD'),
+                     name = "Overall Response") +
+  scale_x_continuous(breaks = seq(1, 8, 1)) +
+  guides(color = guide_legend(
+    override.aes = list(
+      shape = shape_override,
+      stroke = stroke_override,
+      size = size_override
+    )
+  )) +
+  labs(
+    x = "Tumor assessment",
+    y = "Patient"
+  )
+
+  ggsave(
+    paste("../output/swimmer-spider-plot/materials/PECATI_site-", as.character({{site}}), "_swimmer_TAs_", cutoff_date, ".png", sep = ""),
+    swimmer_ta,
+    width = 30,
+    height = 15,
+    units = "cm",
+    dpi = 300
+    )
+  
+  spider_ta <- data_12_or_recist %>% 
+  filter(
+    site == {{site}}
+    ) %>%
+  ggplot(
+  aes(x = event_num, y = percent_change_from_baseline)
+  ) + 
+  # Line plot showing SDL percent change from baseline
+  geom_line(aes(color = patient), size = 1.2) +
+  scale_color_manual(values = c(
+    rep("#000000", 200))
+  ) +
+  # Second data layer: dot plot showing TAs with an OR = SD
+  geom_point(aes(x = sd_this_ta,
+                 col = "SD"),
+             stroke = 1.5,
+             shape = 22,
+             colour = "#FFD966",
+             fill = "#FFD966") +
+  # Third data layer: dot plot showing TAs with an OR = PR
+  geom_point(aes(x = pr_this_ta,
+                 col = "PR"),
+             size = 2,
+             stroke = 1.5,
+             shape = 21,
+             colour = "#74AAFF",
+             fill = "#74AAFF") +
+  # Fourth data layer: dot plot showing TAs with an OR = CR
+  geom_point(aes(x = cr_this_ta,
+                 col = "CR"),
+             size = 2,
+             stroke = 1.5,
+             shape = 23,
+             colour = "#153D99",
+             fill = "#153D99") +
+  # Fifth data layer: dot plot showing TAs with an OR = PD
+  geom_point(aes(x = pd_this_ta,
+                 col = "PD"),
+             size = 2,
+             stroke = 1.5,
+             shape = 4,
+             colour = "#B24745") +
+  # Final aesthetics adjustments
+  scale_fill_manual(values = cols,
+                    name = "Overall Response") +
+  theme_minimal() +
+  theme(
+    panel.border = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.background = element_rect(fill = "#FFFFFF", colour = "#FFFFFF"),
+    plot.background  = element_rect(fill = "#FFFFFF", colour = "#FFFFFF"),
+    legend.title = element_text(size = 5),
+    legend.text = element_text(size = 5),
+    legend.justification = "top",
+    legend.position = c(0.95, 0.95),
+    legend.direction = "vertical"
+  ) +
+  labs(
+    x = "Tumor assessment",
+    y = "Change in sum of lesions from baseline (%)",
+    shape = "Overall response"
+  ) +
+  guides(size = "none",
+         color = "none"
+  ) +
+  scale_x_continuous(breaks = seq(1, 8, 1)) +
+  scale_y_continuous(breaks = seq(-100, 100 , 20))
+
+  spider_ta <- spider_ta + scale_shape(na.translate = FALSE)
+  
+  ggsave(
+    paste("../output/swimmer-spider-plot/materials/PECATI_site-", as.character({{site}}), "_spider_TAs_", cutoff_date, ".png", sep = ""),
+    spider_ta,
+    width = 30,
+    height = 15,
+    units = "cm",
+    dpi = 300
+    )
+
+  spider_ta <- spider_ta +
+    annotate("rect", xmin = 0, xmax = 8, ymin = -30, ymax = -100,
+             alpha = .1,fill = "#74AAFF") +
+    annotate("rect", xmin = 0, xmax = 8, ymin = 20, ymax = 100,
+             alpha = .0, fill = "#B24745")
+  
+  combined_ta <- plot_grid(
+  swimmer_ta,
+  spider_ta,
+  nrow = 1,
+  rel_heights = c(1, 1)
+  )
+
+  title <- ggdraw() + 
+    draw_label({{name}},
+      fontface = 'bold',
+      x = 0,
+      hjust = 0
+    ) +
+    theme(
+      plot.margin = margin(0, 0, 0, 7)
+    )
+  
+  combined_ta <- plot_grid(
+    title, combined_ta,
+    ncol = 1,
+    rel_heights = c(0.1, 1)
+  )
+  
+  combined_ta <- add_sub(
+    combined_ta, "   Reason for study treatment discontinuation:",
+    x = 0, hjust = 0,
+    fontface = 'bold',
+    size = 8
+  )
+    
+  combined_ta <- add_sub(
+    combined_ta, {{comment}},
+    x = 0, hjust = 0,
+    fontface = 'plain',
+    size = 8
+  )
+  
+  ggsave(
+    paste("../output/swimmer-spider-plot/PECATI_site-", as.character({{site}}), "_TAs_", cutoff_date, ".png", sep = ""),
+    combined_ta,
+    width = 30,
+    height = 20,
+    units = "cm",
+    dpi = 300
+    )
+  
+  return(combined_ta)
+}
+```
+
+#### **Figure 2. Swimmer and spider plots of tumor assessments**
+
+```{r site-0102-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
+site_0102_name <- "Site 0102 - Hospital Universitari i Politècnic La Fe"
+
+comment_site_0102 <- "   Patient 0102-001 XXXX.\n   
+   Patient 0102-003 XXXX.\n   
+   Patient 0102-003 XXXX."
+
+site_0102_figure <- swimmer_spider_plot("0102", comment_site_0102, site_0102_name)
+grid.draw(site_0102_figure)
+```
 
 # Preliminary Efficacy Analysis
 
