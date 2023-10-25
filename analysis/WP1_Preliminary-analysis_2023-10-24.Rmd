@@ -23,6 +23,11 @@ library(crayon)
 here("WP1_Preliminary-analysis_2023-10-24.Rmd")
 
 cutoff_date <- as.Date("2023-10-24")
+```
+
+The data cutoff date for this analyses is: `r cutoff_date`
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
 cutoff_date <- format(cutoff_date, "%Y_%m_%d")
 ```
 
@@ -460,4 +465,79 @@ ggsave(
   
 swimmer
 ```
+
+# Tumour Assessment
+
+This section presents the cleaning of tumour assessment data from the PECATI study. The ultimate goal is to obtain the number of patients who have experienced radiological disease progression. However, the main purpose of this preliminary analysis of radiological progressions is to detect anomalies or discrepancies in the tumour assessment data collected.
+
+Data from tumour assessments need to be pulled from two different sources. On the one hand, we have the baseline tumour assessment included in the Screening sheet. On the other hand, we have the tumour assessment sheet itself, which collects all post-baseline assessments.
+
+In addition, some patients might not have measurable lesions at baseline. Therefore, we need to collect data for both types of lesions. 
+
+## Baseline tumor assessment
+
+First, we extract data from patients with measurable lesions at baseline:
+
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+data_01a_baseline_target <- read_excel(
+    here(paste0("data/PECATI_Tumor Assessment_", cutoff_date, ".xlsx")),
+    sheet = "TARGET",
+    skip = 1) %>% 
+    clean_names() %>% 
+    # The variable "event_num" encodes the tumour assessment number in the post-baseline assessments.
+    # Create this variable and assign a 0 to mark this as the baseline assessment.
+    mutate(
+      event_num = 0
+    ) %>%
+    group_by(patient, event_num) %>%
+    # We collect the length of the longest diameter of each reported target (i.e., measurable) lesion individually.
+    # Calculate the sum of longest diameter of all lesions.
+    mutate(
+      sum_of_lesions = sum(longest_diameter_short_axis_mm)
+    ) %>%
+    # Since we now have the sum of longest diameters repeated as many times as there are measurable lesions, we can keep either any row
+    group_by(patient) %>%
+    filter(row_number() == 1) %>%
+    mutate(
+      evaluation_date = dmy(evaluation_date)
+    ) %>% 
+    # Create a dummy variable to code that the patient had measurable disease at baseline.
+    mutate(
+      baseline_target = 0
+    ) %>% 
+    select(
+        patient, event_num, baseline_target, evaluation_date, longest_diameter_short_axis_mm, sum_of_lesions
+        )
+
+data_01a_baseline_target <- merge(
+  data_02_itt,
+  data_01a_baseline_target,
+  by = "patient",
+  all = FALSE
+)
+
+baseline_target_n <- length(data_01a_baseline_target$patient)
+```
+
+Listing of patients with measurable disease at baseline phase (n = `r baseline_target_n`):
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+listing5_formatted_names <- c(
+  "Patient",
+  "Date of baseline tumor assessment",
+  "Longest diameter (short axis) in mm",
+  "Sum of longest diameters (SLDs)"
+  )
+
+data_01a_baseline_target_formatted <- data_01a_baseline_target %>% 
+  select(patient, evaluation_date, longest_diameter_short_axis_mm, sum_of_lesions) %>% 
+  set_names(listing5_formatted_names)
+  
+rmarkdown::paged_table(data_01a_baseline_target_formatted)
+```
+
+# Preliminary Efficacy Analysis
+
+# Preliminary Safety Analysis
 
