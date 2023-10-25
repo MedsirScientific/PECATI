@@ -343,7 +343,7 @@ data_temp_eos$earliest_date <- apply(data_temp_eos[, sapply(data_temp_eos, is.Da
 data_temp_eos$latest_date <- apply(data_temp_eos[, sapply(data_temp_eos, is.Date)], 1, max, na.rm = TRUE)
 
 # Create a row for each patient for each day from the earliest to the latest date
-data_08_swimmer_long <- data_temp_eos %>%
+data_07_swimmer_long <- data_temp_eos %>%
   mutate(
     earliest_date = ymd(earliest_date),
     latest_date = ymd(latest_date)
@@ -353,32 +353,32 @@ data_08_swimmer_long <- data_temp_eos %>%
   unnest(study_day)
 
 # Count the number of rows for each patient
-data_08_swimmer_long <- data_08_swimmer_long %>%
+data_07_swimmer_long <- data_07_swimmer_long %>%
   group_by(patient) %>%
   mutate(event_num = row_number())
 
-data_08_swimmer_long <- data_08_swimmer_long %>% 
+data_07_swimmer_long <- data_07_swimmer_long %>% 
   mutate(
     month = event_num * 0.0328767
   )
 
-data_08_swimmer_long$icf_this_day <- ifelse(
-  data_08_swimmer_long$icf_date == data_08_swimmer_long$study_day, data_08_swimmer_long$month, NA
+data_07_swimmer_long$icf_this_day <- ifelse(
+  data_07_swimmer_long$icf_date == data_07_swimmer_long$study_day, data_07_swimmer_long$month, NA
   )
 
-data_08_swimmer_long$c1d1_this_day <- ifelse(
-  data_08_swimmer_long$c1d1_date == data_08_swimmer_long$study_day, data_08_swimmer_long$month, NA
+data_07_swimmer_long$c1d1_this_day <- ifelse(
+  data_07_swimmer_long$c1d1_date == data_07_swimmer_long$study_day, data_07_swimmer_long$month, NA
   )
 
-data_08_swimmer_long$pd_this_day <- ifelse(
-  data_08_swimmer_long$progression == data_08_swimmer_long$study_day, data_08_swimmer_long$month, NA
+data_07_swimmer_long$pd_this_day <- ifelse(
+  data_07_swimmer_long$progression == data_07_swimmer_long$study_day, data_07_swimmer_long$month, NA
   )
 
-data_08_swimmer_long$exitus_this_day <- ifelse(
-  data_08_swimmer_long$exitus == data_08_swimmer_long$study_day, data_08_swimmer_long$month, NA
+data_07_swimmer_long$exitus_this_day <- ifelse(
+  data_07_swimmer_long$exitus == data_07_swimmer_long$study_day, data_07_swimmer_long$month, NA
   )
 
-data_08_swimmer_long <- data_08_swimmer_long %>% 
+data_07_swimmer_long <- data_07_swimmer_long %>% 
   group_by(patient) %>% 
   mutate(max_day = max(event_num)) %>% 
   ungroup() %>% 
@@ -398,7 +398,7 @@ shape_override <- c(21, 21, 21)
 stroke_override <- c(1, 1, 1)
 size_override <-  c(2, 2, 2)
 
-swimmer <- data_08_swimmer_long %>%
+swimmer <- data_07_swimmer_long %>%
   ggplot(
     aes(y = patient, group = patient)) +
   theme_bw() + 
@@ -475,12 +475,13 @@ Data from tumour assessments need to be pulled from two different sources. On th
 In addition, some patients might not have measurable lesions at baseline. Therefore, we need to collect data for both types of lesions. 
 
 ## Baseline tumor assessment
+### Measurable disease
 
 First, we extract data from patients with measurable lesions at baseline:
 
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-data_01a_baseline_target <- read_excel(
+data_08a_baseline_target <- read_excel(
     here(paste0("data/PECATI_Tumor Assessment_", cutoff_date, ".xlsx")),
     sheet = "TARGET",
     skip = 1) %>% 
@@ -510,14 +511,14 @@ data_01a_baseline_target <- read_excel(
         patient, event_num, baseline_target, evaluation_date, longest_diameter_short_axis_mm, sum_of_lesions
         )
 
-data_01a_baseline_target <- merge(
+data_08a_baseline_target <- merge(
   data_02_itt,
-  data_01a_baseline_target,
+  data_08a_baseline_target,
   by = "patient",
   all = FALSE
 )
 
-baseline_target_n <- length(data_01a_baseline_target$patient)
+baseline_target_n <- length(data_08a_baseline_target$patient)
 ```
 
 Listing of patients with measurable disease at baseline phase (n = `r baseline_target_n`):
@@ -530,11 +531,137 @@ listing5_formatted_names <- c(
   "Sum of longest diameters (SLDs)"
   )
 
-data_01a_baseline_target_formatted <- data_01a_baseline_target %>% 
+data_08a_baseline_target_formatted <- data_08a_baseline_target %>% 
   select(patient, evaluation_date, longest_diameter_short_axis_mm, sum_of_lesions) %>% 
   set_names(listing5_formatted_names)
   
-rmarkdown::paged_table(data_01a_baseline_target_formatted)
+rmarkdown::paged_table(data_08a_baseline_target_formatted)
+```
+
+### Non-measurable disease
+
+Then, we extract data from non-measurable lesions at baseline for all patients:
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+data_08b_baseline_nontarget <- read_excel(
+    here(paste0("data/PECATI_Tumor Assessment_", cutoff_date, ".xlsx")),
+    sheet = "NON_TARGET",
+    skip = 1) %>% 
+    clean_names() %>% 
+    # The variable "event_num" encodes the tumour assessment number in the post-baseline assessments.
+    # Create this variable and assign a 0 to mark this as the baseline assessment.
+    mutate(
+      event_num = 0
+    ) %>%
+    # Since we only care about the number of patients with non-measurable disease at baseline, we can keep either any row
+    group_by(patient) %>%
+    filter(row_number() == 1) %>%
+    mutate(
+      evaluation_date = dmy(evaluation_date)
+    ) %>% 
+    select(
+      patient, event_num, evaluation_date
+    )
+
+data_08b_baseline_nontarget <- merge(
+  data_02_itt,
+  data_08b_baseline_nontarget,
+  by = "patient",
+  all = FALSE
+)
+
+baseline_nontarget_n <- length(data_08b_baseline_nontarget$patient)
+```
+
+Listing of patients with measurable disease at baseline phase (n = `r baseline_nontarget_n`):
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+listing6_formatted_names <- c(
+  "Patient",
+  "Date of baseline tumor assessment"
+  )
+
+data_08b_baseline_nontarget_formatted <- data_08b_baseline_nontarget %>% 
+  select(patient, evaluation_date) %>% 
+  set_names(listing6_formatted_names)
+
+rmarkdown::paged_table(data_08b_baseline_nontarget_formatted)
+```
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+data_08_baseline_all <- full_join(
+  data_08a_baseline_target,
+  data_08b_baseline_nontarget,
+  by = c("patient", "event_num")
+  ) %>%
+  # If a patient had measurable lesions at baseline, we want to keep that data.
+  # Only if there were no measurable lesions, we want to keep the tumour assessment date when the non-measurable lesions were detected.
+  mutate(
+    evaluation_date = if_else(
+      is.na(evaluation_date.x), evaluation_date.y, evaluation_date.x
+    )
+  ) %>%
+  # The following mutate() function creates a "baseline_nontarget" variable that codes 0 if the patient had no measurable lesions at baseline.
+  mutate(
+    baseline_nontarget = if_else(is.na(baseline_target) == 0, 1, 0),
+    baseline_nontarget = na_if(baseline_nontarget, 1)
+  ) %>% 
+  select(
+    patient, event_num, evaluation_date, baseline_target, sum_of_lesions, baseline_nontarget
+  )
+
+# rmarkdown::paged_table(data_08_baseline_all)
+```
+
+### Patients without baseline tumour assessment
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+qa_no_baseline_ta <- anti_join(
+  data_02_itt,
+  data_08_baseline_all,
+  by = "patient"
+)
+
+no_baseline_ta_n <- length(qa_no_baseline_ta$patient)
+```
+
+There are `r no_baseline_ta_n` patients in the ITT population who do not have a baseline tumor assessment:
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+listing7_formatted_names <- c(
+  "Patient"
+  )
+
+qa_no_baseline_ta_formatted <- qa_no_baseline_ta %>% 
+  select(patient) %>% 
+  set_names(listing7_formatted_names)
+
+rmarkdown::paged_table(qa_no_baseline_ta)
+```
+
+### Quality assurance of baseline tumor burden
+
+A histogram with the sum of the longest diameters of each patient is presented below with the intention of detecting possible strange or unlikely patterns:
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+ggplot(
+  data_08_baseline_all, 
+  aes(x = sum_of_lesions)) +
+  geom_histogram(
+    fill = "#F3656C", 
+    alpha = 0.5, 
+    color = "#F3656C",
+    bins = 54) +
+  theme(
+    panel.background = element_rect(fill = "#FFFFFF", colour = "#FFFFFF"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.background  = element_rect(fill = "#FFFFFF", colour = "#FFFFFF")
+  ) +
+  labs(
+    x = "Sum of longest diameters at baseline (mm)",
+    y = "Number of patients"
+  )
 ```
 
 # Preliminary Efficacy Analysis
