@@ -11,7 +11,7 @@
 
 <meta name="author" content="Daniel Alcala" />
 
-<meta name="date" content="2023-10-24" />
+<meta name="date" content="2023-10-25" />
 
 <title>PECATI | Preliminary data monitoring, cleaning, and analysis. October 2023</title>
 
@@ -359,7 +359,7 @@ div.tocify {
 <h1 class="title toc-ignore">PECATI | Preliminary data monitoring,
 cleaning, and analysis. October 2023</h1>
 <h4 class="author">Daniel Alcala</h4>
-<h4 class="date">2023-10-24</h4>
+<h4 class="date">2023-10-25</h4>
 
 </div>
 
@@ -388,7 +388,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2023-10-24
+<strong>Last updated:</strong> 2023-10-25
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -519,15 +519,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomMedsirScientificPECATItreee11ba392443de1cff3618ec94b7fe47a556e447atargetblanke11ba39a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomMedsirScientificPECATItreeffbf326c32670dc0dcb623df75532d5cf5578dd0targetblankffbf326a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/MedsirScientific/PECATI/tree/e11ba392443de1cff3618ec94b7fe47a556e447a" target="_blank">e11ba39</a>
+<a href="https://github.com/MedsirScientific/PECATI/tree/ffbf326c32670dc0dcb623df75532d5cf5578dd0" target="_blank">ffbf326</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomMedsirScientificPECATItreee11ba392443de1cff3618ec94b7fe47a556e447atargetblanke11ba39a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomMedsirScientificPECATItreeffbf326c32670dc0dcb623df75532d5cf5578dd0targetblankffbf326a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -537,7 +537,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/MedsirScientific/PECATI/tree/e11ba392443de1cff3618ec94b7fe47a556e447a" target="_blank">e11ba39</a>.
+<a href="https://github.com/MedsirScientific/PECATI/tree/ffbf326c32670dc0dcb623df75532d5cf5578dd0" target="_blank">ffbf326</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -613,6 +613,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/MedsirScientific/PECATI/blob/ffbf326c32670dc0dcb623df75532d5cf5578dd0/analysis/WP1_Preliminary-analysis_2023-10-24.Rmd" target="_blank">ffbf326</a>
+</td>
+<td>
+Daniel Alcalá
+</td>
+<td>
+2023-10-25
+</td>
+<td>
+Add baseline measurbale disease evaluation to WP1
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/MedsirScientific/PECATI/ccbd5b3af50fc0ee5d09231317ca3bc21ef51f18/docs/WP1_Preliminary-analysis_2023-10-24.html" target="_blank">ccbd5b3</a>
+</td>
+<td>
+Daniel Alcalá
+</td>
+<td>
+2023-10-24
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -892,6 +926,7 @@ Patient disposition data
 </div>
 </div>
 </div>
+<p>The data cutoff date for this analyses is: 2023-10-24</p>
 <div id="patient-disposition" class="section level1">
 <h1>Patient Disposition</h1>
 <div id="screening" class="section level2">
@@ -1884,7 +1919,44 @@ id="figure-1.-patient-trajectories-along-the-clinical-trial-from-informed-consen
 class="section level4">
 <h4><strong>Figure 1. Patient trajectories along the clinical trial from
 informed consent to study termination</strong></h4>
-<p><img src="figure/WP1_Preliminary-analysis_2023-10-24.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/WP1_Preliminary-analysis_2023-10-24.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+</div>
+<div id="tumour-assessment" class="section level1">
+<h1>Tumour Assessment</h1>
+<p>This section presents the cleaning of tumour assessment data from the
+PECATI study. The ultimate goal is to obtain the number of patients who
+have experienced radiological disease progression. However, the main
+purpose of this preliminary analysis of radiological progressions is to
+detect anomalies or discrepancies in the tumour assessment data
+collected.</p>
+<p>Data from tumour assessments need to be pulled from two different
+sources. On the one hand, we have the baseline tumour assessment
+included in the Screening sheet. On the other hand, we have the tumour
+assessment sheet itself, which collects all post-baseline
+assessments.</p>
+<p>In addition, some patients might not have measurable lesions at
+baseline. Therefore, we need to collect data for both types of
+lesions.</p>
+<div id="baseline-tumor-assessment" class="section level2">
+<h2>Baseline tumor assessment</h2>
+<p>First, we extract data from patients with measurable lesions at
+baseline:</p>
+<p>Listing of patients with measurable disease at baseline phase (n =
+27):</p>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["Patient"],"name":[1],"type":["chr"],"align":["left"]},{"label":["Date of baseline tumor assessment"],"name":[2],"type":["date"],"align":["right"]},{"label":["Longest diameter (short axis) in mm"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["Sum of longest diameters (SLDs)"],"name":[4],"type":["dbl"],"align":["right"]}],"data":[{"1":"0102-001","2":"2022-08-25","3":"38.00","4":"715.00"},{"1":"0102-003","2":"<NA>","3":"NA","4":"NA"},{"1":"0103-001","2":"2022-09-30","3":"73.00","4":"1014.00"},{"1":"0103-002","2":"2022-10-07","3":"18.00","4":"186.00"},{"1":"0105-001","2":"2022-06-17","3":"50.30","4":"424.80"},{"1":"0105-003","2":"2022-11-07","3":"44.00","4":"220.10"},{"1":"0201-001","2":"2023-04-19","3":"24.90","4":"344.52"},{"1":"0201-002","2":"2023-04-14","3":"23.03","4":"62.88"},{"1":"0201-003","2":"2023-05-15","3":"37.70","4":"255.24"},{"1":"0201-004","2":"2023-07-12","3":"105.61","4":"204.74"},{"1":"0202-002","2":"2022-07-11","3":"39.00","4":"68.00"},{"1":"0202-003","2":"2022-09-02","3":"11.00","4":"96.00"},{"1":"0202-004","2":"2023-02-28","3":"16.00","4":"32.00"},{"1":"0204-001","2":"2023-07-12","3":"10.00","4":"105.00"},{"1":"0205-001","2":"2023-06-27","3":"14.00","4":"85.00"},{"1":"0206-001","2":"2023-09-13","3":"0.00","4":"0.00"},{"1":"0301-001","2":"2022-08-01","3":"99.00","4":"678.00"},{"1":"0301-002","2":"2022-09-19","3":"60.00","4":"641.00"},{"1":"0301-003","2":"2022-11-24","3":"73.00","4":"556.00"},{"1":"0301-004","2":"2023-02-01","3":"34.00","4":"231.00"},{"1":"0301-005","2":"2023-04-21","3":"150.00","4":"513.00"},{"1":"0301-006","2":"2023-05-03","3":"70.00","4":"299.00"},{"1":"0301-007","2":"2023-07-18","3":"55.00","4":"163.00"},{"1":"0301-008","2":"2023-08-22","3":"52.00","4":"102.00"},{"1":"0301-009","2":"2023-08-28","3":"60.00","4":"191.00"},{"1":"0301-010","2":"2023-08-30","3":"102.00","4":"327.00"},{"1":"0301-011","2":"2023-09-12","3":"34.00","4":"101.00"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+</div>
+<div id="preliminary-efficacy-analysis" class="section level1">
+<h1>Preliminary Efficacy Analysis</h1>
+</div>
+<div id="preliminary-safety-analysis" class="section level1">
+<h1>Preliminary Safety Analysis</h1>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -1946,8 +2018,6 @@ loaded via a namespace (and not attached):
 [73] xfun_0.39            xtable_1.8-4         broom_1.0.5         
 [76] rstatix_0.7.2        later_1.3.1          ragg_1.2.5          
 [79] KMsurv_0.1-5         timechange_0.2.0    </code></pre>
-</div>
-</div>
 </div>
 </div>
 
