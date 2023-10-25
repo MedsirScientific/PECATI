@@ -1054,6 +1054,7 @@ swimmer_spider_plot <- function(site, comment, name) {
 }
 ```
 
+### Quality assurance of RECIST v.1.1 evaluation
 #### **Figure 2. Swimmer and spider plots of tumor assessments**
 
 ```{r site-0102-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
