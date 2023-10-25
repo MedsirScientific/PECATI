@@ -482,7 +482,7 @@ First, we extract data from patients with measurable lesions at baseline:
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_08a_baseline_target <- read_excel(
-    here(paste0("data/PECATI_Tumor Assessment_", cutoff_date, ".xlsx")),
+    here(paste0("data/PECATI_ICF Screening_", cutoff_date, ".xlsx")),
     sheet = "TARGET",
     skip = 1) %>% 
     clean_names() %>% 
@@ -609,34 +609,6 @@ data_08_baseline_all <- full_join(
   select(
     patient, event_num, evaluation_date, baseline_target, sum_of_lesions, baseline_nontarget
   )
-
-# rmarkdown::paged_table(data_08_baseline_all)
-```
-
-### Patients without baseline tumour assessment
-
-```{r, message = FALSE, warning = FALSE, echo = FALSE}
-qa_no_baseline_ta <- anti_join(
-  data_02_itt,
-  data_08_baseline_all,
-  by = "patient"
-)
-
-no_baseline_ta_n <- length(qa_no_baseline_ta$patient)
-```
-
-There are `r no_baseline_ta_n` patients in the ITT population who do not have a baseline tumor assessment:
-
-```{r, message = FALSE, warning = FALSE, echo = FALSE}
-listing7_formatted_names <- c(
-  "Patient"
-  )
-
-qa_no_baseline_ta_formatted <- qa_no_baseline_ta %>% 
-  select(patient) %>% 
-  set_names(listing7_formatted_names)
-
-rmarkdown::paged_table(qa_no_baseline_ta)
 ```
 
 ### Quality assurance of baseline tumor burden
@@ -663,6 +635,8 @@ ggplot(
     y = "Number of patients"
   )
 ```
+
+
 
 # Preliminary Efficacy Analysis
 
