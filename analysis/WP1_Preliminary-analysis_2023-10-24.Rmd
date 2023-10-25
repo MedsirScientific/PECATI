@@ -912,8 +912,8 @@ swimmer_spider_plot <- function(site, comment, name) {
   ggsave(
     paste("../output/swimmer-spider-plot/materials/PECATI_site-", as.character({{site}}), "_swimmer_TAs_", cutoff_date, ".png", sep = ""),
     swimmer_ta,
-    width = 30,
-    height = 15,
+    width = 20,
+    height = 20,
     units = "cm",
     dpi = 300
     )
@@ -978,7 +978,7 @@ swimmer_spider_plot <- function(site, comment, name) {
   ) +
   labs(
     x = "Tumor assessment",
-    y = "Change in sum of lesions from baseline (%)",
+    y = "Change in SLD from baseline (%)",
     shape = "Overall response"
   ) +
   guides(size = "none",
@@ -992,8 +992,8 @@ swimmer_spider_plot <- function(site, comment, name) {
   ggsave(
     paste("../output/swimmer-spider-plot/materials/PECATI_site-", as.character({{site}}), "_spider_TAs_", cutoff_date, ".png", sep = ""),
     spider_ta,
-    width = 30,
-    height = 15,
+    width = 15,
+    height = 20,
     units = "cm",
     dpi = 300
     )
@@ -1007,8 +1007,8 @@ swimmer_spider_plot <- function(site, comment, name) {
   combined_ta <- plot_grid(
   swimmer_ta,
   spider_ta,
-  nrow = 1,
-  rel_heights = c(1, 1)
+  nrow = 2,
+  rel_heights = c(2, 5)
   )
 
   title <- ggdraw() + 
@@ -1045,7 +1045,7 @@ swimmer_spider_plot <- function(site, comment, name) {
     paste("../output/swimmer-spider-plot/PECATI_site-", as.character({{site}}), "_TAs_", cutoff_date, ".png", sep = ""),
     combined_ta,
     width = 30,
-    height = 20,
+    height = 60,
     units = "cm",
     dpi = 300
     )
@@ -1061,10 +1061,20 @@ site_0102_name <- "Site 0102 - Hospital Universitari i Politècnic La Fe"
 
 comment_site_0102 <- "   Patient 0102-001 XXXX.\n   
    Patient 0102-003 XXXX.\n   
-   Patient 0102-003 XXXX."
+   Patient 0102-004 XXXX."
 
 site_0102_figure <- swimmer_spider_plot("0102", comment_site_0102, site_0102_name)
 grid.draw(site_0102_figure)
+```
+
+```{r site-0103-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
+site_0103_name <- "Site 0103 - Hospital Universitari i Politècnic La Fe"
+
+comment_site_0103 <- "   Patient 0103-001 XXXX.\n   
+   Patient 0103-002 XXXX."
+
+site_0103_figure <- swimmer_spider_plot("0103", comment_site_0103, site_0103_name)
+grid.draw(site_0103_figure)
 ```
 
 # Preliminary Efficacy Analysis
