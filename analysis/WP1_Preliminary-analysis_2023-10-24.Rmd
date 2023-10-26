@@ -1447,13 +1447,13 @@ tbl_survfit(
   modify_header(label = " ")
 ```
 
-#### **Table 8. 6-month PFS:**
+#### **Table 8. 6- and 12-month PFS:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 tbl_survfit(
   survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival, conf.type = "log-log"),
-  times = c(6),
-  label_header = "**{time}-Month OS**"
+  times = c(6, 12),
+  label_header = "**{time}-Month PFS**"
 ) %>%
   modify_header(label = " ")
 ```
