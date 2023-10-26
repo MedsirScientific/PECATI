@@ -531,12 +531,11 @@ Listing of patients with measurable disease at baseline phase (n = `r baseline_t
 listing5_formatted_names <- c(
   "Patient",
   "Date of baseline tumor assessment",
-  "Longest diameter (short axis) in mm",
   "Sum of longest diameters (SLDs)"
   )
 
 data_08a_baseline_target_formatted <- data_08a_baseline_target %>% 
-  select(patient, evaluation_date, longest_diameter_short_axis_mm, sum_of_lesions) %>% 
+  select(patient, evaluation_date, sum_of_lesions) %>% 
   set_names(listing5_formatted_names)
   
 rmarkdown::paged_table(data_08a_baseline_target_formatted)
