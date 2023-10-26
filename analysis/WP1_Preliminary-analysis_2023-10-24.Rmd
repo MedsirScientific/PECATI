@@ -1223,7 +1223,7 @@ Patient 0301-011 is stable after 4 cycles of study treatment (last registered do
 
 ```
 
-The median (range) follow-up time is:
+The median (range) follow-up time is: [TO BE ADDED]
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 customize_labels <- function (p, font.title = NULL,
@@ -1337,7 +1337,8 @@ tbl_survfit(
   survfit(Surv(os, os_event) ~ 1, data = data_13_survival, conf.type = "log-log"),
   times = c(6),
   label_header = "**{time}-Month OS**"
-)
+  ) %>%
+  modify_header(label = " ")
 ```
 
 #### **Figure 3. Overall survival (OS) in the intention-to-treat popilation**
@@ -1420,8 +1421,6 @@ os_global
 #### **Table 6. Summary of PFS events:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival, conf.type = "log-log")
-
 pfs_results <- survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival, conf.type = "log-log")
 tidy_pfs_results <- tidy(pfs_results)
 
@@ -1455,7 +1454,8 @@ tbl_survfit(
   survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival, conf.type = "log-log"),
   times = c(6),
   label_header = "**{time}-Month OS**"
-)
+) %>%
+  modify_header(label = " ")
 ```
 
 #### **Figure 4. Progression-free survival (PFS) in the intention-to-treat population**
