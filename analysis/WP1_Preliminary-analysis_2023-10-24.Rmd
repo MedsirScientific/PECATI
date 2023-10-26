@@ -1010,7 +1010,7 @@ swimmer_spider_plot <- function(site, comment, name) {
   swimmer_ta,
   spider_ta,
   nrow = 2,
-  rel_heights = c(2, 5)
+  rel_heights = c(3, 5)
   )
 
   title <- ggdraw() + 
@@ -1029,12 +1029,12 @@ swimmer_spider_plot <- function(site, comment, name) {
     rel_heights = c(0.1, 1)
   )
   
-  combined_ta <- add_sub(
-    combined_ta, "   Reason for study treatment discontinuation:",
-    x = 0, hjust = 0,
-    fontface = 'bold',
-    size = 8
-  )
+  # combined_ta <- add_sub(
+  #   combined_ta, "   Reason for study treatment discontinuation:",
+  #   x = 0, hjust = 0,
+  #   fontface = 'bold',
+  #   size = 8
+  # )
     
   combined_ta <- add_sub(
     combined_ta, {{comment}},
