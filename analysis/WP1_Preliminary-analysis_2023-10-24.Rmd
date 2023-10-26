@@ -21,6 +21,7 @@ library(epoxy)
 library(crayon)
 library(grid)
 library(workflowr)
+library(broom)
 
 here("WP1_Preliminary-analysis_2023-10-24.Rmd")
 
@@ -257,7 +258,6 @@ data_05_eot_formatted <- data_05_eot %>%
 
 rmarkdown::paged_table(data_05_eot_formatted)
 ```
-
 
 #### **Table 2. Patients who discontinued prematurely the study treatment:**
 
@@ -1218,6 +1218,7 @@ Patient 0301-010 is stable after 5 cycles of study treatment (last registered do
 Patient 0301-011 is stable after 4 cycles of study treatment (last registered dose: 2023-10-06).
 
 # Preliminary Efficacy Analysis
+## Overall Survival
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 
@@ -1301,16 +1302,43 @@ data_13_survival_formatted <- data_13_survival %>%
 rmarkdown::paged_table(data_13_survival_formatted)
 ```
 
-```{r, message = FALSE, warning = FALSE, echo = FALSE}
-survfit(Surv(os, os_event) ~ 1, data = data_13_survival, conf.type = "log-log")
-```
+#### **Table 3. Summary of OS events:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-summary(survfit(Surv(os, os_event) ~ 1, data = data_13_survival))
+os_results <- survfit(Surv(os, os_event) ~ 1, data = data_13_survival, conf.type = "log-log")
+tidy_os_results <- tidy(os_results)
+
+formatted_os_results <- tidy_os_results %>%
+  mutate(
+    time = round(time, 2),
+    estimate = round(estimate, 2),
+    std.error = round(std.error, 2),
+    conf.low = round(conf.low, 2),
+    conf.high = round(conf.high, 2)
+    )
+
+rmarkdown::paged_table(formatted_os_results)
 ```
 
+#### **Table 4. Median OS:**
+
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-summary(survfit(Surv(os, os_event) ~ 1, data = data_13_survival), times = 12)
+tbl_survfit(
+  survfit(Surv(os, os_event) ~ 1, data = data_13_survival, conf.type = "log-log"),
+  probs = 0.5,
+  label_header = "**Median overall survival (OS)**"
+) %>%
+  modify_header(label = " ")
+```
+
+#### **Table 5. 6-month OS:**
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+tbl_survfit(
+  survfit(Surv(os, os_event) ~ 1, data = data_13_survival, conf.type = "log-log"),
+  times = c(6),
+  label_header = "**{time}-Month OS**"
+)
 ```
 
 #### **Figure 3. Overall survival (OS) in the intention-to-treat popilation**
@@ -1388,19 +1416,50 @@ ggsave(
 os_global
 ```
 
+# Progression-Free Survival
+
+#### **Table 6. Summary of PFS events:**
+
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival, conf.type = "log-log")
+
+pfs_results <- survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival, conf.type = "log-log")
+tidy_pfs_results <- tidy(pfs_results)
+
+formatted_pfs_results <- tidy_pfs_results %>%
+  mutate(
+    time = round(time, 2),
+    estimate = round(estimate, 2),
+    std.error = round(std.error, 2),
+    conf.low = round(conf.low, 2),
+    conf.high = round(conf.high, 2)
+    )
+
+rmarkdown::paged_table(formatted_pfs_results)
 ```
+
+#### **Table 7. Median PFS:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-summary(survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival))
+tbl_survfit(
+  survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival, conf.type = "log-log"),
+  probs = 0.5,
+  label_header = "**Median progression-free survival (OS)**"
+) %>%
+  modify_header(label = " ")
 ```
+
+#### **Table 8. 6-month PFS:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-summary(survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival), times = 12)
+tbl_survfit(
+  survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival, conf.type = "log-log"),
+  times = c(6),
+  label_header = "**{time}-Month OS**"
+)
 ```
 
-#### **Figure 4. Progression-free survival (PFS) in the intention-to-treat popilation**
+#### **Figure 4. Progression-free survival (PFS) in the intention-to-treat population**
 
 ```{r pfs-kaplan-meier-plot, message = FALSE, warning = FALSE, echo = FALSE}
 ### Plot ----------------------------------------------------------------------
