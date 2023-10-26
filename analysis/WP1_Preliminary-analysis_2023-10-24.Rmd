@@ -44,7 +44,7 @@ data_00_screening <- read_excel(
   clean_names() %>% 
   rename(
     screening_date = "visit_date",
-    eligibile = "is_the_patient_eligible_to_participate_in_the_study",
+    eligible = "is_the_patient_eligible_to_participate_in_the_study",
     sf_date = "non_eligible_date",
     sf_reason = "reason_not_eligible",
     eligibility_date_1 = "eligibility_date_v2",
@@ -55,13 +55,15 @@ data_00_screening <- read_excel(
   ) %>% 
   mutate(
     eligibility_date = if_else(
-      eligibile == "Yes" & !is.na(eligibility_date_1), eligibility_date_1, eligibility_date_2),
+      eligible == "Yes" & !is.na(eligibility_date_1), eligibility_date_1, eligibility_date_2),
+    sf_reason = if_else(
+      is.na(eligible), "Unknown", sf_reason),
     screening_date = dmy(screening_date),
     sf_date = dmy(sf_date),
     eligibility_date = ymd(eligibility_date)
   ) %>%
   select(
-    patient, screening_date, eligibile, sf_date, sf_reason, eligibility_date
+    patient, screening_date, eligible, sf_date, sf_reason, eligibility_date
   )
 
 screening_n <- length(data_00_screening$patient)
@@ -90,10 +92,10 @@ rmarkdown::paged_table(data_00_screening_formatted)
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_00_screening %>% 
   tbl_summary(
-    include = c(eligibile, sf_reason),
+    include = c(eligible, sf_reason),
     missing = "no",
     label = list(
-      eligibile ~ "Included",
+      eligible ~ "Included",
       sf_reason ~ "Excluded"
     )
   ) %>%
