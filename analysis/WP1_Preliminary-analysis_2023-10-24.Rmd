@@ -1442,7 +1442,7 @@ rmarkdown::paged_table(formatted_pfs_results)
 tbl_survfit(
   survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival, conf.type = "log-log"),
   probs = 0.5,
-  label_header = "**Median progression-free survival (OS)**"
+  label_header = "**Median progression-free survival (PFS)**"
 ) %>%
   modify_header(label = " ")
 ```
