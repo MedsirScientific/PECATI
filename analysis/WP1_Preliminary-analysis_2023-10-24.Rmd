@@ -1610,6 +1610,8 @@ data_temp_aes_na_formatted <- data_temp_aes_na %>%
 rmarkdown::paged_table(data_temp_aes_na_formatted)
 ```
 
+#### **Table 9. Adverse Events (AEs) by maximum severity in the ITT population:**
+
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 tbl_aes <- data_14_aes %>% 
   tbl_ae(
@@ -1636,8 +1638,64 @@ tbl_aes %>%
 tbl_aes
 ```
 
-```{r, message = FALSE, warning = FALSE, echo = FALSE}
-```
+#### **Table 10. Serious Adverse Events (SAEs) by maximum severity in the ITT population:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
+saes <- data_14_aes %>% 
+  filter(sae == "Yes")
+
+tbl_saes <- saes %>% 
+  tbl_ae(
+    id_df = data_02_itt,
+    id = patient,
+    ae = adverse_event,
+    by = grade,
+    digits = c(0, 0),
+    sort = c("ae")
+  ) %>% 
+  add_overall() %>%
+  modify_header(
+    all_ae_cols() ~ "**{by}**",
+    all_overall_cols() ~ "**Any grade**"
+    ) %>%
+  bold_labels()
+
+tbl_saes %>%
+  as_flex_table() %>%
+  flextable::save_as_docx(
+    path = here(paste0("output/", project_id, "_saes_table_", cutoff_date_formatted, ".docx"))
+  )
+
+tbl_saes
+```
+
+#### **Table 11. Adverse Events (AEs) that led to the permanent discontinuation of the study drug in the ITT population:**
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+aes_discontinuation <- data_14_aes %>% 
+  filter(!str_detect(action_taken, "permanent"))
+
+tbl_discontinuations <- aes_discontinuation %>% 
+  tbl_ae(
+    id_df = data_02_itt,
+    id = patient,
+    ae = adverse_event,
+    by = grade,
+    digits = c(0, 0),
+    sort = c("ae")
+  ) %>% 
+  add_overall() %>%
+  modify_header(
+    all_ae_cols() ~ "**{by}**",
+    all_overall_cols() ~ "**Any grade**"
+    ) %>%
+  bold_labels()
+
+tbl_discontinuations %>%
+  as_flex_table() %>%
+  flextable::save_as_docx(
+    path = here(paste0("output/", project_id, "_aes_discontinuations_table_", cutoff_date_formatted, ".docx"))
+  )
+
+tbl_discontinuations
 ```
