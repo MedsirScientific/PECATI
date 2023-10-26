@@ -31,7 +31,7 @@ cutoff_date <- as.Date("2023-10-24")
 The data cutoff date for this analyses is: `r cutoff_date`
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-cutoff_date <- format(cutoff_date, "%Y_%m_%d")
+cutoff_date_formatted <- format(cutoff_date, "%Y_%m_%d")
 ```
 
 # Patient Disposition
@@ -39,7 +39,7 @@ cutoff_date <- format(cutoff_date, "%Y_%m_%d")
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_00_screening <- read_excel(
-    here(paste0("data/PECATI_ICF Screening_", cutoff_date, ".xlsx")),
+    here(paste0("data/PECATI_ICF Screening_", cutoff_date_formatted, ".xlsx")),
     sheet = "ICF Screening",
     skip = 1) %>% 
   clean_names() %>% 
@@ -108,7 +108,7 @@ data_00_screening %>%
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_01_cycles <- read_excel(
-  here(paste0("data/PECATI_Cycles_", cutoff_date, ".xlsx")),
+  here(paste0("data/PECATI_Cycles_", cutoff_date_formatted, ".xlsx")),
     sheet = "Cycles",
     skip = 1) %>% 
   clean_names()
@@ -148,7 +148,7 @@ rmarkdown::paged_table(data_temp_itt_formatted)
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_03_icf <- read_excel(
-  here(paste0("data/PECATI_ICF Screening_", cutoff_date, ".xlsx")),
+  here(paste0("data/PECATI_ICF Screening_", cutoff_date_formatted, ".xlsx")),
     sheet = "ICF",
     skip = 1) %>% 
   clean_names() %>% 
@@ -171,7 +171,7 @@ data_temp_icf <- merge(
   )
 
 data_04_c1d1 <- read_excel(
-  here(paste0("data/PECATI_Cycles_", cutoff_date, ".xlsx")),
+  here(paste0("data/PECATI_Cycles_", cutoff_date_formatted, ".xlsx")),
     sheet = "Cycles",
     skip = 1) %>% 
   clean_names() %>% 
@@ -196,7 +196,7 @@ data_temp_c1d1 <- merge(
 )
 
 data_05_eot <- read_excel(
-  here(paste0("data/PECATI_FU30-EOT_", cutoff_date, ".xlsx")),
+  here(paste0("data/PECATI_FU30-EOT_", cutoff_date_formatted, ".xlsx")),
     sheet = "FU30-EOT",
     skip = 1
   ) %>% 
@@ -279,7 +279,7 @@ data_05_eot %>%
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_06_eos <- read_excel(
-  here(paste0("data/PECATI_End of Study_", cutoff_date, ".xlsx")),
+  here(paste0("data/PECATI_End of Study_", cutoff_date_formatted, ".xlsx")),
   sheet = "End of Study",
   skip = 1
   ) %>%
@@ -338,7 +338,7 @@ data_temp_eos <- data_temp_eos %>%
 
 # Fill the NAs in the eos_date column with today's date
 data_temp_eos$eos_date <- if_else(
-  is.na(data_temp_eos$eos_date), as.Date(Sys.Date()), data_temp_eos$eos_date)
+  is.na(data_temp_eos$eos_date), cutoff_date, data_temp_eos$eos_date)
 
 # Get the earliest date across columns for each patient and make it a date column
 data_temp_eos$earliest_date <- apply(data_temp_eos[, sapply(data_temp_eos, is.Date)], 1, min, na.rm = TRUE)
@@ -486,7 +486,7 @@ First, we extract data from patients with measurable lesions at baseline:
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_08a_baseline_target <- read_excel(
-    here(paste0("data/PECATI_ICF Screening_", cutoff_date, ".xlsx")),
+    here(paste0("data/PECATI_ICF Screening_", cutoff_date_formatted, ".xlsx")),
     sheet = "TARGET",
     skip = 1) %>% 
     clean_names() %>% 
@@ -547,7 +547,7 @@ Then, we extract data from non-measurable lesions at baseline for all patients:
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_08b_baseline_nontarget <- read_excel(
-    here(paste0("data/PECATI_Tumor Assessment_", cutoff_date, ".xlsx")),
+    here(paste0("data/PECATI_Tumor Assessment_", cutoff_date_formatted, ".xlsx")),
     sheet = "NON_TARGET",
     skip = 1) %>% 
     clean_names() %>% 
@@ -646,7 +646,7 @@ Similarly, a histogram with the sum of the longest diameters of each patient aft
 
 ```{r post-baseline-sld-histogram, message = FALSE, warning = FALSE, echo = FALSE}
 data_09a_postbaseline_target <- read_excel(
-  here(paste0("data/PECATI_Tumor Assessment_", cutoff_date, ".xlsx")),
+  here(paste0("data/PECATI_Tumor Assessment_", cutoff_date_formatted, ".xlsx")),
     sheet = "TARGET",
     skip = 1) %>% 
     clean_names() %>%
@@ -667,7 +667,7 @@ data_09a_postbaseline_target <- read_excel(
     )
 
 data_09b_postbaseline_nontarget <- read_excel(
-    here(paste0("data/PECATI_Tumor Assessment_", cutoff_date, ".xlsx")),
+    here(paste0("data/PECATI_Tumor Assessment_", cutoff_date_formatted, ".xlsx")),
     sheet = "NON_TARGET",
     skip = 1) %>% 
     clean_names() %>%
@@ -713,7 +713,7 @@ ggplot(
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_10_new_lesions <- read_excel(
-    here(paste0("data/PECATI_Tumor Assessment_", cutoff_date, ".xlsx")),
+    here(paste0("data/PECATI_Tumor Assessment_", cutoff_date_formatted, ".xlsx")),
     sheet = "NEW_LESIONS",
     skip = 1) %>% 
     clean_names() %>% 
@@ -732,7 +732,7 @@ data_10_new_lesions <- read_excel(
     )
 
 data_11_recist <- read_excel(
-    here(paste0("data/PECATI_Tumor Assessment_", cutoff_date, ".xlsx")),
+    here(paste0("data/PECATI_Tumor Assessment_", cutoff_date_formatted, ".xlsx")),
     sheet = "Tumor Assessment",
     skip = 1) %>% 
     clean_names() %>% 
@@ -1046,7 +1046,7 @@ swimmer_spider_plot <- function(site, comment, name) {
     paste("../output/swimmer-spider-plot/PECATI_site-", as.character({{site}}), "_TAs_", cutoff_date, ".png", sep = ""),
     combined_ta,
     width = 30,
-    height = 60,
+    height = 75,
     units = "cm",
     dpi = 300
     )
@@ -1221,9 +1221,17 @@ Patient 0301-011 is stable after 4 cycles of study treatment (last registered do
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 
+data_temp_eos <- data_temp_eos %>% 
+  mutate(
+    fu = as.numeric(eos_date - c1d1_date + 1)/(365.25/12)
+  )
+
+fu_median <- round(median(data_temp_eos$fu), digits = 1)
+fu_min <- round(min(data_temp_eos$fu), digits = 1)
+fu_max <- round(max(data_temp_eos$fu), digits = 1)
 ```
 
-The median (range) follow-up time is: [TO BE ADDED]
+The median (range) follow-up time is: `r fu_median` months (`r fu_min`-`r fu_max`)
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 customize_labels <- function (p, font.title = NULL,
