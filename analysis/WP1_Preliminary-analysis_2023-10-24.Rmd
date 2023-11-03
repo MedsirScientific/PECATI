@@ -33,25 +33,80 @@ cutoff_date <- as.Date("2023-10-24")
 The data cutoff date for this analyses is: `r cutoff_date`
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# Reformat the data cutoff date for reading of files
 cutoff_date_formatted <- format(cutoff_date, "%Y_%m_%d")
 ```
 
 # Patient Disposition
+
 ## Screening
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# data_00_screening <- read_excel(
+#     here(paste0("data/", project_id, "_ICF Screening_", cutoff_date_formatted, ".xlsx")),
+#     sheet = "ICF Screening",
+#     skip = 1) %>% 
+#   clean_names() %>% 
+#   rename(
+#     screening_date = "visit_date",
+#     eligible = "is_the_patient_eligible_to_participate_in_the_study",
+#     sf_date = "non_eligible_date",
+#     sf_reason = "reason_not_eligible",
+#     eligibility_date_1 = "eligibility_date_v2",
+#     eligibility_date_2 = "eligibility_date_v3"
+#   ) %>% 
+#   mutate_at(
+#     vars(starts_with("eligibility_date")), dmy
+#   ) %>% 
+#   mutate(
+#     eligibility_date = if_else(
+#       eligible == "Yes" & !is.na(eligibility_date_1), eligibility_date_1, eligibility_date_2),
+#     sf_reason = if_else(
+#       is.na(eligible), "Unknown", sf_reason),
+#     screening_date = dmy(screening_date),
+#     sf_date = dmy(sf_date),
+#     eligibility_date = ymd(eligibility_date)
+#   ) %>%
+#   select(
+#     patient, screening_date, eligible, sf_date, sf_reason, eligibility_date
+#   )
+# 
+# screening_n <- length(data_00_screening$patient)
+```
+
+<!--# Under development -->
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE, include = FALSE}
+data_00_screening <- read_excel(
+    here(paste0("data/", project_id, "_ICF Screening_", cutoff_date_formatted, ".xlsx")),
+    sheet = "ICF Screening",
+    skip = 1) %>% 
+  clean_names()
+
+# Print column names, excluding any columns that start with "inclusion_" or "exclusion_"
+data_00_screening %>% 
+  select(-starts_with("inclusion_"), -starts_with("exclusion_")) %>% 
+  names()
+```
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+rename_list = list(
+  patient = "patient",
+  screening_date = "visit_date",
+  eligible = "is_the_patient_eligible_to_participate_in_the_study",
+  sf_date = "non_eligible_date",
+  sf_reason = "reason_not_eligible",
+  eligibility_date_1 = "eligibility_date_v2",
+  eligibility_date_2 = "eligibility_date_v3"
+  )
+
 data_00_screening <- read_excel(
     here(paste0("data/", project_id, "_ICF Screening_", cutoff_date_formatted, ".xlsx")),
     sheet = "ICF Screening",
     skip = 1) %>% 
   clean_names() %>% 
   rename(
-    screening_date = "visit_date",
-    eligible = "is_the_patient_eligible_to_participate_in_the_study",
-    sf_date = "non_eligible_date",
-    sf_reason = "reason_not_eligible",
-    eligibility_date_1 = "eligibility_date_v2",
-    eligibility_date_2 = "eligibility_date_v3"
+    !!!rename_list
   ) %>% 
   mutate_at(
     vars(starts_with("eligibility_date")), dmy
@@ -71,6 +126,8 @@ data_00_screening <- read_excel(
 
 screening_n <- length(data_00_screening$patient)
 ```
+
+<!--# Under development -->
 
 Listing of patients who have undergone the screening phase (n = `r screening_n`):
 
@@ -478,13 +535,13 @@ This section presents the cleaning of tumour assessment data from the PECATI stu
 
 Data from tumour assessments need to be pulled from two different sources. On the one hand, we have the baseline tumour assessment included in the Screening sheet. On the other hand, we have the tumour assessment sheet itself, which collects all post-baseline assessments.
 
-In addition, some patients might not have measurable lesions at baseline. Therefore, we need to collect data for both types of lesions. 
+In addition, some patients might not have measurable lesions at baseline. Therefore, we need to collect data for both types of lesions.
 
 ## Baseline tumor assessment
+
 ### Measurable disease
 
 First, we extract data from patients with measurable lesions at baseline:
-
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_08a_baseline_target <- read_excel(
@@ -642,6 +699,7 @@ ggplot(
 ```
 
 ## Post-baseline tumor assessment
+
 ### Quality assurance of post-baseline tumor burden
 
 Similarly, a histogram with the sum of the longest diameters of each patient after baseline is presented below with the intention of detecting possible strange or unlikely patterns:
@@ -1051,6 +1109,7 @@ swimmer_spider_plot <- function(site, comment, name) {
 ```
 
 ### Quality assurance of RECIST v.1.1 evaluation
+
 #### **Figure 2. Swimmer and spider plots of tumor assessments**
 
 ```{r site-0102-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
@@ -1189,7 +1248,7 @@ site_0301_figure <- swimmer_spider_plot("0301", comment_site_0301, site_0301_nam
 grid.draw(site_0301_figure)
 ```
 
-Patient 0301-001 discontinued the study treatment after 11 cycles due to general or specific changes in the patient’s condition render the patient unacceptable for further treatment.
+Patient 0301-001 discontinued the study treatment after 11 cycles due to general or specific changes in the patient's condition render the patient unacceptable for further treatment.
 
 Patient 0301-002 is stable after 21 cycles of study treatment (last registered dose: 2023-10-05).
 
@@ -1212,6 +1271,7 @@ Patient 0301-010 is stable after 5 cycles of study treatment (last registered do
 Patient 0301-011 is stable after 4 cycles of study treatment (last registered dose: 2023-10-06).
 
 # Preliminary Efficacy Analysis
+
 ## Overall Survival
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
