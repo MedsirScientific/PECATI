@@ -1237,7 +1237,7 @@ Patient 0301-011 is stable after 4 cycles of study treatment (last registered do
 
 # Preliminary Efficacy Analysis
 
-## Overall Survival
+### Follow-up
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 
@@ -1304,6 +1304,104 @@ data_13_survival$pfs <- data_13_survival$pfs / 30.4375
 data_13_survival$os <- data_13_survival$os / 30.4375
 ```
 
+## Primary Endpoint: 5-month Progression-Free Survival (PFS)
+
+#### **Table 3. Summary of PFS events:**
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+pfs_results <- survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival, conf.type = "log-log")
+tidy_pfs_results <- tidy(pfs_results)
+
+formatted_pfs_results <- tidy_pfs_results %>%
+  mutate(
+    time = round(time, 2),
+    estimate = round(estimate, 2),
+    std.error = round(std.error, 2),
+    conf.low = round(conf.low, 2),
+    conf.high = round(conf.high, 2)
+    )
+
+rmarkdown::paged_table(formatted_pfs_results)
+```
+
+#### **Table 4. 5-month PFS:**
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+tbl_survfit(
+  survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival, conf.type = "log-log"),
+  times = c(5),
+  label_header = "**{time}-Month PFS**"
+) %>%
+  modify_header(label = " ")
+```
+
+#### **Figure 2. 5-month Progression-free survival (PFS) in the intention-to-treat population**
+
+```{r 5mo-pfs-kaplan-meier-plot, message = FALSE, warning = FALSE, echo = FALSE}
+### Plot ----------------------------------------------------------------------
+pfs_5mo <- ggsurvplot(
+  fit = survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival),
+  xlab = "Time since study treatment start date (months)", 
+  ylab = "Progression-Free Survival",
+  conf.int = FALSE,
+  surv.median.line = "hv",
+  xlim = c(0,18.9),
+  ylim = c(0,1.009),
+  censor.size = 3.5,
+  size = 1,
+  break.time.by = 3,
+  axes.offset = FALSE,
+  surv.scale = "percent",
+  break.y.by = 0.20,
+  risk.table = TRUE,
+  fontsize = 2.5,
+  ggtheme = theme_classic(),
+  palette = c("#8FB2F5"),
+  legend.labs = c(" "),
+  legend.title = " "
+)
+
+### Modify theme --------------------------------------------------------------
+pfs_5mo <- customize_labels(
+  pfs_5mo,
+  font.title     = c(8, "bold",  "#0a0908"),
+  font.caption   = c(8, "plain", "#0a0908"),
+  font.x         = c(8, "bold",  "#0a0908"),          
+  font.y         = c(8, "bold",  "#0a0908"),      
+  font.xtickslab = c(8, "plain", "#0a0908"),
+  font.ytickslab = c(8, "plain", "#0a0908")
+)
+
+grid.draw.ggsurvplot <- function(x){
+  survminer:::print.ggsurvplot(x, newpage = FALSE)
+}
+
+caption1 <- paste(strwrap(
+  "5-month PFS is 97.0% (95% CI 80.4-99.6)", 90), collapse = "\n"
+  )
+
+pfs_5mo$plot <- pfs_5mo$plot + annotate(
+  "text", x = 0.5, y = 0.10,
+  label = caption1,
+  cex = 2.5, vjust = "center", hjust = "left", fontface = 20
+  )
+
+### Save plot ---------------------------------------------------------------
+ggsave(
+  here("output/", project_id, "_Figure_5-mo_PFS_global_", as.Date(Sys.Date()), ".png"),
+  pfs_5mo,
+  width = 20,
+  height = 12,
+  units = "cm",
+  dpi = 300
+  )
+
+### Show plot --------------------------------------------------------------
+pfs_5mo
+```
+
+## Overall Survival
+
 Listing of survival data:
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
@@ -1329,7 +1427,7 @@ data_13_survival_formatted <- data_13_survival %>%
 rmarkdown::paged_table(data_13_survival_formatted)
 ```
 
-#### **Table 3. Summary of OS events:**
+#### **Table 5. Summary of OS events:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 os_results <- survfit(Surv(os, os_event) ~ 1, data = data_13_survival, conf.type = "log-log")
@@ -1347,7 +1445,7 @@ formatted_os_results <- tidy_os_results %>%
 rmarkdown::paged_table(formatted_os_results)
 ```
 
-#### **Table 4. Median OS:**
+#### **Table 6. Median OS:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 tbl_survfit(
@@ -1358,7 +1456,7 @@ tbl_survfit(
   modify_header(label = " ")
 ```
 
-#### **Table 5. 6-month OS:**
+#### **Table 7. 6-month OS:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 tbl_survfit(
@@ -1446,7 +1544,7 @@ os_global
 
 ## Progression-Free Survival
 
-#### **Table 6. Summary of PFS events:**
+#### **Table 8. Summary of PFS events:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 pfs_results <- survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival, conf.type = "log-log")
@@ -1464,7 +1562,7 @@ formatted_pfs_results <- tidy_pfs_results %>%
 rmarkdown::paged_table(formatted_pfs_results)
 ```
 
-#### **Table 7. Median PFS:**
+#### **Table 9. Median PFS:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 tbl_survfit(
@@ -1475,7 +1573,7 @@ tbl_survfit(
   modify_header(label = " ")
 ```
 
-#### **Table 8. 6- and 12-month PFS:**
+#### **Table 10. 6- and 12-month PFS:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 tbl_survfit(
