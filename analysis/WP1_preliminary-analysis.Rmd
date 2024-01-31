@@ -30,7 +30,7 @@ project_id <- "PECATI"
 cutoff_date <- as.Date("2024-01-30")
 ```
 
-The data cutoff date for this analyses is: `r cutoff_date`
+The data cutoff date for these analyses is: `r cutoff_date`
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Reformat the data cutoff date for reading of files
@@ -1668,7 +1668,7 @@ pfs_global$plot <- pfs_global$plot + annotate(
 
 ### Save plot ---------------------------------------------------------------
 ggsave(
-  paste("../output/", project_id, "PFS_global_", as.Date(Sys.Date()), ".png", sep = ""),
+  paste("../output/", project_id, "_PFS_global_", as.Date(Sys.Date()), ".png", sep = ""),
   pfs_global,
   width = 20,
   height = 12,
