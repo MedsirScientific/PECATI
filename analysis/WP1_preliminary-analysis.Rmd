@@ -242,6 +242,8 @@ data_05_eot <- read_excel(
   # Manual fixes
   mutate(
     eot_reason = if_else(
+      eot_reason == "Death (fill “End of Study” form)", "Exitus", eot_reason),
+    eot_reason = if_else(
       patient == "0102-004" & eot_reason == "Other", "Second primary esophageal cancer", eot_reason),
     eot_reason = if_else(
       eot_reason == "General or specific changes in the patient’s condition render the patient unacceptable for further treatment in the judgment of the Investigator", "Investigator's decision", eot_reason)
