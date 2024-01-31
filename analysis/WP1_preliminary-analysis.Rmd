@@ -1776,7 +1776,7 @@ tbl_aes <- data_14_aes %>%
 tbl_aes %>%
   as_flex_table() %>%
   flextable::save_as_docx(
-    path = here(paste0("output/", project_id, "_aes_table_", cutoff_date_formatted, ".docx"))
+    path = here(paste0("output/", project_id, "_aes_table_", as.Date(Sys.Date()), ".docx"))
   )
 
 tbl_aes
@@ -1807,7 +1807,7 @@ tbl_saes <- saes %>%
 tbl_saes %>%
   as_flex_table() %>%
   flextable::save_as_docx(
-    path = here(paste0("output/", project_id, "_saes_table_", cutoff_date_formatted, ".docx"))
+    path = here(paste0("output/", project_id, "_saes_table_", as.Date(Sys.Date()), ".docx"))
   )
 
 tbl_saes
@@ -1838,7 +1838,7 @@ tbl_discontinuations <- aes_discontinuation %>%
 tbl_discontinuations %>%
   as_flex_table() %>%
   flextable::save_as_docx(
-    path = here(paste0("output/", project_id, "_aes_discontinuations_table_", cutoff_date_formatted, ".docx"))
+    path = here(paste0("output/", project_id, "_aes_discontinuations_table_", as.Date(Sys.Date()), ".docx"))
   )
 
 tbl_discontinuations
