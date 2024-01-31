@@ -242,7 +242,9 @@ data_05_eot <- read_excel(
   # Manual fixes
   mutate(
     eot_reason = if_else(
-      patient == "0102-004" & eot_reason == "Other", "Second primary esophageal cancer", eot_reason)
+      patient == "0102-004" & eot_reason == "Other", "Second primary esophageal cancer", eot_reason),
+    eot_reason = if_else(
+      eot_reason == "General or specific changes in the patient’s condition render the patient unacceptable for further treatment in the judgment of the Investigator", "Investigator's decision", eot_reason)
   ) %>% 
   select(
     patient, discontinuation_date, eot_reason, last_pembrolizumab_date,
@@ -415,7 +417,7 @@ data_07_swimmer_long <- data_07_swimmer_long %>%
 
 #### **Figure 1. Patient trajectories along the clinical trial from informed consent to study termination**
 
-```{r, message = FALSE, warning = FALSE, echo = FALSE}
+```{r, swimmer-plot-patient-disposition, fig.height = 8, message = FALSE, warning = FALSE, echo = FALSE}
 cols <- c(
   "Study treatment start date" = "#74AAFF",
   "Disease progression" = "#FFD966",
@@ -483,14 +485,14 @@ swimmer <- data_07_swimmer_long %>%
   theme(panel.grid.major.y = element_blank())
 
 ggsave(
-  here("output/PECATI_swimmer_2024-01-30.png"),
+  paste("../output/", project_id, "_swimmer-plot_patient-disposition_", as.Date(Sys.Date()), ".png", sep = ""),
   swimmer,
   width = 2048,
   height = 4096,
   units = "px",
   dpi = 300
   )
-  
+
 swimmer
 ```
 
@@ -1353,7 +1355,7 @@ tbl_survfit(
   modify_header(label = " ")
 ```
 
-#### **Figure 2. 5-month Progression-free survival (PFS) in the intention-to-treat population**
+#### **Figure 3. 5-month Progression-free survival (PFS) in the intention-to-treat population**
 
 ```{r 5mo-pfs-kaplan-meier-plot, message = FALSE, warning = FALSE, echo = FALSE}
 ### Plot ----------------------------------------------------------------------
@@ -1406,7 +1408,7 @@ pfs_5mo$plot <- pfs_5mo$plot + annotate(
 
 ### Save plot ---------------------------------------------------------------
 ggsave(
-  here("output/", project_id, "_Figure_5-mo_PFS_global_", as.Date(Sys.Date()), ".png"),
+  paste("../output/", project_id, "_5-mo_PFS_global_", as.Date(Sys.Date()), ".png", sep = ""),
   pfs_5mo,
   width = 20,
   height = 12,
@@ -1485,7 +1487,7 @@ tbl_survfit(
   modify_header(label = " ")
 ```
 
-#### **Figure 3. Overall survival (OS) in the intention-to-treat popilation**
+#### **Figure 4. Overall survival (OS) in the intention-to-treat popilation**
 
 ```{r ofs-kaplan-meier-plot, message = FALSE, warning = FALSE, echo = FALSE}
 ### Plot ----------------------------------------------------------------------
@@ -1548,13 +1550,14 @@ os_global$plot <- os_global$plot + annotate(
 
 ### Save plot ---------------------------------------------------------------
 ggsave(
-  here(paste0("output/", project_id, "_Figure_OS_global_", as.Date(Sys.Date()),".png")),
+  paste("../output/", project_id, "_OS_global_", as.Date(Sys.Date()), ".png", sep = ""),
   os_global,
   width = 20,
   height = 12,
   units = "cm",
   dpi = 300
   )
+
 
 ### Show plot --------------------------------------------------------------
 os_global
@@ -1602,7 +1605,7 @@ tbl_survfit(
   modify_header(label = " ")
 ```
 
-#### **Figure 4. Progression-free survival (PFS) in the intention-to-treat population**
+#### **Figure 5. Progression-free survival (PFS) in the intention-to-treat population**
 
 ```{r pfs-kaplan-meier-plot, message = FALSE, warning = FALSE, echo = FALSE}
 ### Plot ----------------------------------------------------------------------
@@ -1665,7 +1668,7 @@ pfs_global$plot <- pfs_global$plot + annotate(
 
 ### Save plot ---------------------------------------------------------------
 ggsave(
-  here("output/", project_id, "_Figure_PFS_global_", as.Date(Sys.Date()), ".png"),
+  paste("../output/", project_id, "PFS_global_", as.Date(Sys.Date()), ".png", sep = ""),
   pfs_global,
   width = 20,
   height = 12,
