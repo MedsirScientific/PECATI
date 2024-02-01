@@ -1314,6 +1314,8 @@ data_13_survival <- data_temp_eos %>%
   # Create a new column "pfs" that contains the number of days between the study treatment start date and the date of progression
   mutate(pfs = if_else(
     is.na(progression), eos_date - c1d1_date, progression - c1d1_date)) %>%
+  mutate(pfs = if_else(
+    patient == "0202-005", discontinuation_date - c1d1_date, pfs)) %>%
   # Create a new column "os event" that contains a 1 if the column "exitus" is not NA and a 0 otherwise
   mutate(os_event = if_else(
     is.na(exitus), 0, 1)) %>%
@@ -1324,7 +1326,11 @@ data_13_survival <- data_temp_eos %>%
     patient, pfs_event, pfs, os_event, os
   ) %>%
   mutate(pfs_event = if_else(
-    pfs_event == 0 & os_event == 1, 1, pfs_event))
+    pfs_event == 0 & os_event == 1, 1, pfs_event)) %>% 
+  # Manually add clinical progressions as PD events
+  mutate(
+    pfs_event = if_else(patient == "0202-005", 1, pfs_event)
+    )
 
 data_13_survival$pfs <- data_13_survival$pfs / 30.4375
 data_13_survival$os <- data_13_survival$os / 30.4375
@@ -1653,11 +1659,11 @@ grid.draw.ggsurvplot <- function(x){
 }
 
 caption1 <- paste(strwrap(
-  "Medidan PFS is Not Reached (12.9 - NR). Events: 6/41 (14.6%)", 90), collapse = "\n"
+  "Medidan PFS is Not Reached (12.9 - NR). Events: 7/41 (17%)", 90), collapse = "\n"
   )
 
 caption2 <- paste(strwrap(
-  "12-month PFS is 82.3% (95% CI 57.8-93.3)", 90), collapse = "\n"
+  "12-month PFS is 78% (95% CI 53.5-90.6)", 90), collapse = "\n"
   )
 
 pfs_global$plot <- pfs_global$plot + annotate(
