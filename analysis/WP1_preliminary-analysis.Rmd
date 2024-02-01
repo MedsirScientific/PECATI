@@ -1319,10 +1319,12 @@ data_13_survival <- data_temp_eos %>%
     is.na(exitus), 0, 1)) %>%
   # Create a new column "os" that contains the number of days between the study treatment start date and the date of end of study
   mutate(os = if_else(
-    is.na(exitus), eos_date - c1d1_date, exitus - c1d1_date)) %>% 
+    is.na(exitus), eos_date - c1d1_date, exitus - c1d1_date)) %>%
   select(
     patient, pfs_event, pfs, os_event, os
-  )
+  ) %>%
+  mutate(pfs_event = if_else(
+    pfs_event == 0 & os_event == 1, 1, pfs_event))
 
 data_13_survival$pfs <- data_13_survival$pfs / 30.4375
 data_13_survival$os <- data_13_survival$os / 30.4375
@@ -1491,7 +1493,7 @@ tbl_survfit(
   modify_header(label = " ")
 ```
 
-#### **Figure 4. Overall survival (OS) in the intention-to-treat popilation**
+#### **Figure 4. Overall survival (OS) in the intention-to-treat population**
 
 ```{r ofs-kaplan-meier-plot, message = FALSE, warning = FALSE, echo = FALSE}
 ### Plot ----------------------------------------------------------------------
@@ -1651,7 +1653,7 @@ grid.draw.ggsurvplot <- function(x){
 }
 
 caption1 <- paste(strwrap(
-  "Medidan PFS is Not Reached (NR - NR). Events: 4/41 (9.8%)", 90), collapse = "\n"
+  "Medidan PFS is Not Reached (12.9 - NR). Events: 6/41 (14.6%)", 90), collapse = "\n"
   )
 
 caption2 <- paste(strwrap(
