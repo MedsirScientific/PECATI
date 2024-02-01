@@ -1109,7 +1109,7 @@ site_0103_figure <- swimmer_spider_plot("0103", comment_site_0103, site_0103_nam
 grid.draw(site_0103_figure)
 ```
 
-Patient 0103-001 discontinued study treatment after 14 cycles due ton radiological progression (unequivocal progression of non-target lesions).
+Patient 0103-001 discontinued study treatment after 14 cycles due to radiological progression (unequivocal progression of non-target lesions).
 
 Patient 0103-002 is stable after 23 cycles of study treatment (last registered dose: 2023-12-14).
 
@@ -1156,7 +1156,7 @@ grid.draw(site_0202_figure)
 
 Patient 0202-002 discontinued the study treatment after 3 cycles due to unacceptable toxicity (unrelated grade 4 severe sepsis on pancolitis).
 
-Patient 0202-003 discontinued the study treatment after after 17 cycles of study treatment due to XXXX (XXXX).
+Patient 0202-003 discontinued the study treatment after after 17 cycles of study treatment due to unacceptable toxicity (missing TEAE).
 
 Patient 0202-004 is stable after 18 cycles of study treatment (last registered dose: 2024-01-11).
 
@@ -1220,7 +1220,7 @@ grid.draw(site_0206_figure)
 
 Patient 0206-001 is responding after 10 cycles of study treatment (last registered dose: 2024-01-15).
 
-Patient 0206-002 is responding after 6 cycles of study treatment (last registered dose: 2024-01-19).
+Patient 0206-002 discontinued study treatment after 6 cycles due to radiological progression (new lesions in the spleen).
 
 ```{r site-0301-swimmer-spider-plot, fig.height = 10, message = FALSE, warning = FALSE, echo = FALSE}
 site_0301_name <- "Site 0301 - A.O.U. San Luigi Gonzaga"
