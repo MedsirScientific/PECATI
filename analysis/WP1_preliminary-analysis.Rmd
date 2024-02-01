@@ -498,6 +498,8 @@ ggsave(
 swimmer
 ```
 
+Blue filled circles represent the date of informed consent. Blue empty circles represent the date of study treatment start. Yellow filled circles represent the date of disease progression. Black filled circles represent the date of exitus.
+
 # Tumour Assessment
 
 This section presents the cleaning of tumour assessment data from the PECATI study. The ultimate goal is to obtain the number of patients who have experienced radiological disease progression. However, the main purpose of this preliminary analysis of radiological progressions is to detect anomalies or discrepancies in the tumour assessment data collected.
@@ -575,7 +577,7 @@ Then, we extract data from non-measurable lesions at baseline for all patients:
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_08b_baseline_nontarget <- read_excel(
-    here(paste0("data/", cutoff_date, "/", project_id, "_Tumor Assessment_", cutoff_date_formatted, ".xlsx")),
+    here(paste0("data/", cutoff_date, "/", project_id, "_ICF Screening_", cutoff_date_formatted, ".xlsx")),
     sheet = "NON_TARGET",
     skip = 1) %>% 
     clean_names() %>% 
