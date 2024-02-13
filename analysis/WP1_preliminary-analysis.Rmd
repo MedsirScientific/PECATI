@@ -24,10 +24,10 @@ library(grid)
 library(workflowr)
 library(broom)
 
-here("WP1_Preliminary-analysis_2023-10-24.Rmd")
+here("WP1_preliminary-analysis.Rmd")
 
 project_id <- "PECATI"
-cutoff_date <- as.Date("2024-01-30")
+cutoff_date <- as.Date("2024-02-09")
 ```
 
 The data cutoff date for these analyses is: `r cutoff_date`
@@ -66,7 +66,7 @@ rename_list = list(
   )
 
 data_00_screening <- read_excel(
-    here(paste0("data/",cutoff_date, "/", project_id, "_ICF Screening_", cutoff_date_formatted, ".xlsx")),
+    here(paste0("data/", cutoff_date, "/", project_id, "_ICF Screening_", cutoff_date_formatted, ".xlsx")),
     sheet = "ICF Screening",
     skip = 1) %>% 
   clean_names() %>% 
@@ -79,15 +79,28 @@ data_00_screening <- read_excel(
   mutate(
     eligibility_date = if_else(
       eligible == "Yes" & !is.na(eligibility_date_1), eligibility_date_1, eligibility_date_2),
+    eligibility_date = ymd(eligibility_date),
+    sf_date = dmy(sf_date),
+    ### Manual fixes ### ------------------------------------------------------
+    eligible = if_else(
+      patient == "0301-014", "Yes", eligible),
+    eligible = if_else(
+      patient == "0301-012", "Yes", eligible),
+    ### -----------------------------------------------------------------------
     sf_reason = if_else(
       is.na(eligible), "Unknown", sf_reason),
-    screening_date = dmy(screening_date),
-    sf_date = dmy(sf_date),
-    eligibility_date = ymd(eligibility_date)
+    screening_date = dmy(screening_date)
   ) %>%
   select(
     patient, screening_date, eligible, sf_date, sf_reason, eligibility_date
   )
+
+### Manual fix ### ------------------------------------------------------------
+# Change eligibility_date for patient 0301-014 to screening_date
+data_00_screening$eligibility_date[which(data_00_screening$patient == "0301-014")] <- data_00_screening$screening_date[which(data_00_screening$patient == "0301-014")]
+```
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
 
 screening_n <- length(data_00_screening$patient)
 ```
@@ -317,11 +330,21 @@ data_06_eos <- read_excel(
     exitus_reason = "principal_cause_of_death"
   ) %>%
   select(patient, eos, eos_date, eos_reason, exitus_reason) %>%
-  # Manual fixes
   mutate(
     eos_date = dmy(eos_date),
+    ### Manual fixes ### ------------------------------------------------------
+    eos_reason = if_else(
+      eos_reason == "Death", "Exitus", eos_reason),
     exitus_reason = if_else(
-      patient == "0102-003", "Disease progression", exitus_reason)
+      patient == "0102-003", "Disease progression", exitus_reason),
+    exitus_reason = if_else(
+      patient == "0202-002", "Disease progression", exitus_reason),
+    exitus_reason = if_else(
+      patient == "0202-003", "Disease progression", exitus_reason),
+    exitus_reason = if_else(
+      patient == "0301-005", "Disease progression", exitus_reason),
+    exitus_reason = if_else(
+      patient == "0301-002", "Myocardial ischaemia", exitus_reason)
   )
 
 data_temp_eos <- merge(
@@ -351,18 +374,41 @@ data_06_eos_formatted <- data_06_eos %>%
 rmarkdown::paged_table(data_06_eos_formatted)
 ```
 
+#### **Table 3. Patients who discontinued prematurely the study:**
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+data_06_eos_formatted %>%
+  tbl_summary(
+    missing = "no",
+    percent = "column",
+    sort = list(everything() ~ "frequency"),
+    label = list("Resason for premature end of study" ~ "Premature study discontinuation",
+                 "Did the patient complete the study?" ~ "Study completion"),
+    include = c("Did the patient complete the study?", "Resason for premature end of study",
+                "Main reason for exitus"),
+    missing_text = "Not reported"
+  ) %>%
+  modify_header(label = " ") %>%
+  bold_labels()
+```
+
 ## Swimmer plot
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_temp_eos <- data_temp_eos %>% 
   mutate(
     exitus = if_else(
-      eos_reason == "Death", eos_date, as.Date(NA_real_)),
+      eos_reason == "Exitus", eos_date, as.Date(NA_real_)),
     progression = if_else(
       radiological_pd == "Yes", discontinuation_date, as.Date(NA_real_)),
     progression = if_else(
       clinical_pd == "Yes", discontinuation_date, as.Date(NA_real_))
   )
+
+### Manual fix ### ------------------------------------------------------------
+# Change progression for patient 0202-005 to radiological_pd_date
+data_temp_eos$progression[which(data_temp_eos$patient == "0202-005")] <- data_temp_eos$radiological_pd_date[which(data_temp_eos$patient == "0202-005")]
+### ---------------------------------------------------------------------------
 
 # Fill the NAs in the eos_date column with today's date
 data_temp_eos$eos_date <- if_else(
@@ -521,7 +567,7 @@ data_08a_baseline_target <- read_excel(
     skip = 1) %>% 
     clean_names() %>% 
     # The variable "event_num" encodes the tumour assessment number in the post-baseline assessments.
-    # Create this variable and assign a 0 to mark this as the baseline assessment.
+    # Create this variable and assign a 0 to mark these data as the baseline assessment.
     mutate(
       event_num = 0
     ) %>%
@@ -542,7 +588,7 @@ data_08a_baseline_target <- read_excel(
       baseline_target = 0
     ) %>% 
     select(
-        patient, event_num, baseline_target, evaluation_date, longest_diameter_short_axis_mm, sum_of_lesions
+        patient, event_num, baseline_target, evaluation_date, sum_of_lesions
         )
 
 data_08a_baseline_target <- merge(
@@ -780,10 +826,11 @@ data_12_or_recist <- merge(
     # We create a new variable with the sum of lesion diameters at baseline to later calculate the change from baseline.
     group_by(patient) %>%
     mutate(
-      sum_of_lesions = if_else(
-        patient == "0107-007" & event_num == 0, 22.2, sum_of_lesions),
-      sum_of_lesions = if_else(
-        patient == "0107-008" & event_num == 0, 41, sum_of_lesions),
+  # Manual fix ###########################
+      # sum_of_lesions = if_else(
+      #   patient == "0107-007" & event_num == 0, 22.2, sum_of_lesions),
+      # sum_of_lesions = if_else(
+      #   patient == "0107-008" & event_num == 0, 41, sum_of_lesions),
       baseline_sld = sum_of_lesions[event_num == 0]
       ) %>%
     mutate(
@@ -1094,9 +1141,9 @@ site_0102_figure <- swimmer_spider_plot("0102", comment_site_0102, site_0102_nam
 grid.draw(site_0102_figure)
 ```
 
-Patient 0102-001 discontinued study treatment after 19 cycles due to unacceptable toxicity (grade 3 pneumonitis related to Pembrolizumab).
+Patient 0102-001 discontinued study treatment after 18 cycles due to unacceptable toxicity (grade 3 pneumonitis related to Pembrolizumab).
 
-Patient 0102-003 discontinued study treatment after 1 cycle without any post-baseline tumor assessment due to clinical progression.
+Patient 0102-003 discontinued study treatment after 1 cycle without any post-baseline tumor assessment due to clinical progression. Please note that two empty TA pages have been created.
 
 Patient 0102-004 discontinued study treatment after 2 cycles due to a second primary esophageal cancer.
 
@@ -1111,7 +1158,7 @@ grid.draw(site_0103_figure)
 
 Patient 0103-001 discontinued study treatment after 14 cycles due to radiological progression (unequivocal progression of non-target lesions).
 
-Patient 0103-002 is stable after 23 cycles of study treatment (last registered dose: 2023-12-14).
+Patient 0103-002 is stable after 25 cycles of study treatment (last registered Lenvatinib dose: 2024-01-24; last registered Pembrolizumab dose: 2024-01-25).
 
 ```{r site-0105-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
 site_0105_name <- "Site 0105 - Hospital Clínic i Provincial de Barcelona"
@@ -1122,7 +1169,7 @@ site_0105_figure <- swimmer_spider_plot("0105", comment_site_0105, site_0105_nam
 grid.draw(site_0105_figure)
 ```
 
-Patient 0105-001 is stable after 30 cycles of study treatment (last registered dose: 2023-08-30).
+Patient 0105-001 is stable after 30 cycles of study treatment (last registered Lenvatinib dose: 2024-01-22; last registered Pembrolizumab dose: 2024-01-23).
 
 Patient 0105-003 discontinued study treatment after 18 cycles due to unacceptable toxicity (grade 2 proteinuria and dyspnoea related to Pembrolizumab and grade 1 dysphonia unrelated to the study treatment).
 
@@ -1135,13 +1182,13 @@ site_0201_figure <- swimmer_spider_plot("0201", comment_site_0201, site_0201_nam
 grid.draw(site_0201_figure)
 ```
 
-Patient 0201-001 is responding after 16 cycles of study treatment (last registered dose: 2024-01-17).
+Patient 0201-001 is responding after 16 cycles of study treatment (last registered Lenvatinib dose: 2024-01-16; last registered Pembrolizumab dose: 2024-02-07).
 
-Patient 0201-002 is stable after 10 cycles of study treatment (last registered dose: 2023-09-11).
+Patient 0201-002 is stable after 10 cycles of study treatment (last registered Lenvatinib dose: 2023-09-10; last registered Pembrolizumab dose: 2023-09-11).
 
-Patient 0201-003 is stable after 15 cycles of study treatment (last registered dose: 2024-01-22).
+Patient 0201-003 is stable after 15 cycles of study treatment (last registered Lenvatinib dose: 2024-02-11; last registered Pembrolizumab dose: 2024-12-12).
 
-Patient 0201-004 is stable after 12 cycles of study treatment (last registered dose: 2024-01-24).
+Patient 0201-004 is stable after 11 cycles of study treatment (last registered Lenvatinib dose: 2024-01-23; last registered Pembrolizumab dose: 2024-01-24).
 
 Patient 0201-005 discontinued study treatment after 2 cycles due to unacceptable toxicity (grade 4 myocarditis, meningoencephalite, NT-pro BNP, ECG modification, and troponin increased related to Lenvatinib).
 
@@ -1154,17 +1201,17 @@ site_0202_figure <- swimmer_spider_plot("0202", comment_site_0202, site_0202_nam
 grid.draw(site_0202_figure)
 ```
 
-Patient 0202-002 discontinued the study treatment after 3 cycles due to unacceptable toxicity (unrelated grade 4 severe sepsis on pancolitis).
+Patient 0202-002 discontinued the study treatment after 2 cycles due to unacceptable toxicity (unrelated grade 4 severe sepsis on pancolitis).
 
-Patient 0202-003 discontinued the study treatment after after 17 cycles of study treatment due to unacceptable toxicity (missing TEAE).
+Patient 0202-003 discontinued the study treatment after after 15 cycles of study treatment due to unacceptable toxicity (**missing TEAE**).
 
-Patient 0202-004 is stable after 18 cycles of study treatment (last registered dose: 2024-01-11).
+Patient 0202-004 is stable after 18 cycles of study treatment (last registered Lenvatinib dose: 2023-12-20; last registered Pembrolizumab dose: 2024-01-11).
 
-Patient 0202-005 discontinued the study treatment after 10 due to clinical progression but does not have any tumor assessment registered in the eCRF (last registered dose: 2023-08-04).
+Patient 0202-005 discontinued the study treatment after 9 due to clinical progression but does not have any tumor assessment registered in the eCRF (last registered Lenvatinib dose: 2023-10-29; last registered Pembrolizumab dose: 2023-06-23).
 
-Patient 0202-007 is receiving the study treatment after 11 cycles but does not have any tumor assessment registered in the eCRF (last registered dose: 2023-10-30).
+Patient 0202-007 is receiving the study treatment after 11 cycles but does not have any tumor assessment registered in the eCRF (last registered Lenvatinib dose: 2023-12-20; last registered Pembrolizumab dose: 2023-06-07).
 
-Patient 0202-008 is stable after 3 cycles of study treatment (last registered dose: 2024-01-15).
+Patient 0202-008 is stable after 3 cycles of study treatment (last registered Lenvatinib dose: 2024-01-14; last registered Pembrolizumab dose: 2023-12-04).
 
 ```{r site-0203-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
 site_0203_name <- "Site 0203 - Centre Hospitalier Universitaire de Toulouse"
@@ -1175,13 +1222,13 @@ site_0203_figure <- swimmer_spider_plot("0203", comment_site_0203, site_0203_nam
 grid.draw(site_0203_figure)
 ```
 
-Patient 0203-001 is stable after 7 cycles of study treatment (last registered dose: 2023-08-22).
+Patient 0203-001 is stable after 7 cycles of study treatment (last registered Lenvatinib dose: 2023-08-21; last registered Pembrolizumab dose: 2023-08-22).
 
-Patient 0203-002 is receiving the study treatment after 5 cycles but does not have any post-baseline tumor assessment yet (last registered dose: 2023-12-06).
+Patient 0203-002 is receiving the study treatment after 5 cycles but does not have any post-baseline tumor assessment yet (last registered Lenvatinib dose: 2023-09-17; last registered Pembrolizumab dose: 2023-12-06).
 
-Patient 0203-003 is receiving the study treatment after 1 cycle but does not have any post-baseline tumor assessment yet (last registered dose: 2023-12-05).
+Patient 0203-003 is receiving the study treatment after 1 cycle but does not have any post-baseline tumor assessment yet (last Pembrolizumab registered dose: 2023-12-05).
 
-Patient 0203-004 is receiving the study treatment after 1 cycle but does not have any post-baseline tumor assessment yet (last registered dose: 2024-01-03).
+Patient 0203-004 is receiving the study treatment after 1 cycle but does not have any post-baseline tumor assessment yet (last Pembrolizumab registered dose: 2024-01-03).
 
 ```{r site-0204-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
 site_0204_name <- "Site 0204 - Hôpitaux Universitaires de Marseille - Hôpital Nord"
@@ -1192,9 +1239,9 @@ site_0204_figure <- swimmer_spider_plot("0204", comment_site_0204, site_0204_nam
 grid.draw(site_0204_figure)
 ```
 
-Patient 0204-001 is stable after 11 cycles of study treatment (last registered dose: 2024-01-19).
+Patient 0204-001 is stable after 11 cycles of study treatment (last registered Lenvatinib dose: 2023-12-27; last registered Pembrolizumab dose: 2024-01-17).
 
-Patient 0204-003 is stable after 3 cycles of study treatment (last registered dose: 2023-12-28).
+Patient 0204-003 is stable after 3 cycles of study treatment (last registered Lenvatinib dose: 2023-12-06; last registered Pembrolizumab dose: 2023-12-07).
 
 ```{r site-0205-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
 site_0205_name <- "Site 0205 - Institut Bergonié"
@@ -1205,9 +1252,9 @@ site_0205_figure <- swimmer_spider_plot("0205", comment_site_0205, site_0205_nam
 grid.draw(site_0205_figure)
 ```
 
-Patient 0205-001 is responding after 7 cycles of study treatment (last registered dose: 2023-09-20).
+Patient 0205-001 is responding after 12 cycles of study treatment (last registered Lenvatinib dose: 2024-01-02; last registered Pembrolizumab dose: 2024-01-23).
 
-Patient 0205-002 is receiving the study treatment after 1 cycle but does not have any post-baseline tumor assessment yet (last registered dose: 2023-10-18).
+Patient 0205-002 is receiving the study treatment after 1 cycle but does not have any post-baseline tumor assessment yet (last registered Lenvatinib dose: 2024-01-30; last registered Pembrolizumab dose: 2024-01-31).
 
 ```{r site-0206-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
 site_0206_name <- "Site 0206 - CLCC Oscar Lambret"
@@ -1218,9 +1265,9 @@ site_0206_figure <- swimmer_spider_plot("0206", comment_site_0206, site_0206_nam
 grid.draw(site_0206_figure)
 ```
 
-Patient 0206-001 is responding after 10 cycles of study treatment (last registered dose: 2024-01-15).
+Patient 0206-001 is responding after 11 cycles of study treatment (last registered Lenvatinib dose: 2024-02-06; last registered Pembrolizumab dose: 2024-02-07).
 
-Patient 0206-002 discontinued study treatment after 6 cycles due to radiological progression (new lesions in the spleen).
+Patient 0206-002 discontinued study treatment after 7 cycles due to radiological progression (new lesions in the spleen). Please note that the **EoT page has not been created** yet.
 
 ```{r site-0301-swimmer-spider-plot, fig.height = 10, message = FALSE, warning = FALSE, echo = FALSE}
 site_0301_name <- "Site 0301 - A.O.U. San Luigi Gonzaga"
@@ -1235,29 +1282,29 @@ Patient 0301-001 discontinued the study treatment after 11 cycles due to investi
 
 Patient 0301-002 discontinued the study treatment after 22 cycles due to exitus.
 
-Patient 0301-003 is responding after 21 cycles of study treatment (last registered dose: 2023-12-22).
+Patient 0301-003 is responding after 21 cycles of study treatment (last registered Lenvatinib dose: 2023-12-21; last registered Pembrolizumab dose: 2024-02-02).
 
-Patient 0301-004 is stable after 19 cycles of study treatment (last registered dose: 2024-01-18).
+Patient 0301-004 is stable after 20 cycles of study treatment (last registered Lenvatinib dose: 2024-02-07; last registered Pembrolizumab dose: 2024-02-08).
 
 Patient 0301-005 discontinued the study treatment after 10 cycles due to clinical progression.
 
-Patient 0301-006 is stable after 15 cycles of study treatment (last registered dose: 2024-01-18).
+Patient 0301-006 is stable after 16 cycles of study treatment (last registered Lenvatinib dose: 2024-02-07; last registered Pembrolizumab dose: 2024-02-08).
 
-Patient 0301-007 is stable after 13 cycles of study treatment (last registered dose: 2024-01-04).
+Patient 0301-007 is stable after 13 cycles of study treatment (last registered Lenvatinib dose: 2024-01-24; last registered Pembrolizumab dose: 2024-01-04).
 
-Patient 0301-008 is responding after 2 cycles of study treatment (last registered dose: 2023-08-03).
+Patient 0301-008 is responding after 2 cycles of study treatment (last registered Lenvatinib dose: 2023-08-02; last registered Pembrolizumab dose: 2023-08-03).
 
-Patient 0301-009 is stable after 10 cycles of study treatment (last registered dose: 2024-01-24).
+Patient 0301-009 is stable after 10 cycles of study treatment (last registered Lenvatinib dose: 2024-01-24; last registered Pembrolizumab dose: 2024-01-25).
 
-Patient 0301-010 is stable after 10 cycles of study treatment (last registered dose: 2024-01-26).
+Patient 0301-010 is stable after 10 cycles of study treatment (last registered Lenvatinib dose: 2024-01-25; last registered Pembrolizumab dose: 2024-01-26).
 
-Patient 0301-011 is stable after 9 cycles of study treatment (last registered dose: 2024-01-29).
+Patient 0301-011 is stable after 9 cycles of study treatment (last registered Lenvatinib dose: 2024-01-28; last registered Pembrolizumab dose: 2024-01-29).
 
-Patient 0301-012 is receiving the study treatment after 2 cycle but does not have any post-baseline tumor assessment yet (last registered dose: 2024-01-09).
+Patient 0301-012 discontinued the study treatment after 2 cycles due to radiological progression (46% increase of target lesions and unequivocal progression of non-target lesions).
 
-Patient 0301-013 is receiving the study treatment after 2 cycle but does not have any post-baseline tumor assessment yet (last registered dose: 2024-01-18).
+Patient 0301-013 is stable after 2 cycles of study treatment (last registered Lenvatinib dose: 2024-02-08; last registered Pembrolizumab dose: 2024-02-09).
 
-Patient 0301-014 is receiving the study treatment after 1 cycle but does not have any post-baseline tumor assessment yet (last registered dose: 2024-01-23).
+Patient 0301-014 is receiving the study treatment after 1 cycle but does not have any post-baseline tumor assessment yet (last registered Pembrolizumab dose: 2024-01-23).
 
 # Preliminary Efficacy Analysis
 
@@ -1327,7 +1374,7 @@ data_13_survival <- data_temp_eos %>%
   ) %>%
   mutate(pfs_event = if_else(
     pfs_event == 0 & os_event == 1, 1, pfs_event)) %>% 
-  # Manually add clinical progressions as PD events
+  ### Manually add clinical progressions as PD events ### ---------------------
   mutate(
     pfs_event = if_else(patient == "0202-005", 1, pfs_event)
     )
