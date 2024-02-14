@@ -1,5 +1,5 @@
 ---
-title: "PECATI | Preliminary data monitoring, cleaning, and analysis. January 2024"
+title: "PECATI | Preliminary data monitoring, cleaning, and analysis. February 2024"
 author: "Daniel Alcala"
 date: "`r format(Sys.time(), '%Y-%m-%d')`"
 output: html_document
@@ -193,6 +193,15 @@ data_03_icf <- read_excel(
     icf_date = dmy(icf_date)
     )
 
+### Manual fix ### ------------------------------------------------------------
+# Add patient 0301-014 who was included recently and doesn't appear in the ICF sheet
+# I'm using one day before the screening visit date as the date of ICF
+data_03_icf <- rbind(
+  data_03_icf,
+  data.frame(patient = "0301-014", icf_date = as.Date("2024-01-21"))
+  )
+### ---------------------------------------------------------------------------
+
 data_03_icf <- data_03_icf %>% 
   group_by(patient) %>% 
   filter(icf_date == min(icf_date)) %>% 
@@ -227,7 +236,7 @@ data_temp_c1d1 <- merge(
   data_temp_icf,
   data_04_c1d1,
   by = "patient",
-  all = FALSE  
+  all = FALSE
 )
 
 data_05_eot <- read_excel(
@@ -252,7 +261,7 @@ data_05_eot <- read_excel(
     radiological_pd_date = dmy(radiological_pd_date),
     clinical_pd_date = dmy(clinical_pd_date)
     ) %>% 
-  # Manual fixes
+  ### Manual fixes ### --------------------------------------------------------
   mutate(
     eot_reason = if_else(
       eot_reason == "Death (fill “End of Study” form)", "Exitus", eot_reason),
@@ -260,6 +269,7 @@ data_05_eot <- read_excel(
       patient == "0102-004" & eot_reason == "Other", "Second primary esophageal cancer", eot_reason),
     eot_reason = if_else(
       eot_reason == "General or specific changes in the patient’s condition render the patient unacceptable for further treatment in the judgment of the Investigator", "Investigator's decision", eot_reason)
+  ### -------------------------------------------------------------------------
   ) %>% 
   select(
     patient, discontinuation_date, eot_reason, last_pembrolizumab_date,
@@ -1417,6 +1427,10 @@ tbl_survfit(
 #### **Figure 3. 5-month Progression-free survival (PFS) in the intention-to-treat population**
 
 ```{r 5mo-pfs-kaplan-meier-plot, message = FALSE, warning = FALSE, echo = FALSE}
+pfs5 <- summary(
+  survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival, conf.type = "log-log"), times = c(5)
+  )
+
 ### Plot ----------------------------------------------------------------------
 pfs_5mo <- ggsurvplot(
   fit = survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival),
@@ -1455,14 +1469,16 @@ grid.draw.ggsurvplot <- function(x){
   survminer:::print.ggsurvplot(x, newpage = FALSE)
 }
 
+pfs_5mo$plot <- pfs_5mo$plot + geom_vline(xintercept = 5, linetype = "dashed", size = 0.35)
+
 caption1 <- paste(strwrap(
-  "5-month PFS is 97.4% (95% CI 82.8-99.6)", 90), collapse = "\n"
+  "5-month PFS is 95% (95% CI 81.5-98.7)", 90), collapse = "\n"
   )
 
 pfs_5mo$plot <- pfs_5mo$plot + annotate(
-  "text", x = 0.5, y = 0.10,
+  "text", x = 5.5, y = 0.10,
   label = caption1,
-  cex = 2.5, vjust = "center", hjust = "left", fontface = 20
+  cex = 3.5, vjust = "center", hjust = "left", fontface = 20
   )
 
 ### Save plot ---------------------------------------------------------------
@@ -1588,23 +1604,23 @@ grid.draw.ggsurvplot <- function(x){
 }
 
 caption1 <- paste(strwrap(
-  "Medidan OS is Not Reached (14.8 - NR). Events: 5/41 (12.2%)", 90), collapse = "\n"
+  "Medidan OS is 17 months (12.9 - NR). Events: 5/43 (11.6%)", 90), collapse = "\n"
   )
 
 caption2 <- paste(strwrap(
-  "12-month OS is 97.4% (95% CI 82.8-99.6)", 90), collapse = "\n"
+  "12-month OS is 93.4% (95% CI 75.2-98.4)", 90), collapse = "\n"
   )
 
 os_global$plot <- os_global$plot + annotate(
   "text", x = 0.5, y = 0.20,
   label = caption1,
-  cex = 2.5, vjust = "center", hjust = "left", fontface = 20
+  cex = 3.5, vjust = "center", hjust = "left", fontface = 20
   )
 
 os_global$plot <- os_global$plot + annotate(
   "text", x = 0.5, y = 0.10,
   label = caption2,
-  cex = 2.5, vjust = "center", hjust = "left", fontface = 20
+  cex = 3.5, vjust = "center", hjust = "left", fontface = 20
   )
 
 ### Save plot ---------------------------------------------------------------
@@ -1706,23 +1722,23 @@ grid.draw.ggsurvplot <- function(x){
 }
 
 caption1 <- paste(strwrap(
-  "Medidan PFS is Not Reached (12.9 - NR). Events: 7/41 (17%)", 90), collapse = "\n"
+  "Medidan PFS is Not Reached (12.9 - NR). Events: 8/43 (18.6%)", 90), collapse = "\n"
   )
 
 caption2 <- paste(strwrap(
-  "12-month PFS is 78% (95% CI 53.5-90.6)", 90), collapse = "\n"
+  "12-month PFS is 76.4% (95% CI 52.9-89.2)", 90), collapse = "\n"
   )
 
 pfs_global$plot <- pfs_global$plot + annotate(
   "text", x = 0.5, y = 0.20,
   label = caption1,
-  cex = 2.5, vjust = "center", hjust = "left", fontface = 20
+  cex = 3.5, vjust = "center", hjust = "left", fontface = 20
   )
 
 pfs_global$plot <- pfs_global$plot + annotate(
   "text", x = 0.5, y = 0.10,
   label = caption2,
-  cex = 2.5, vjust = "center", hjust = "left", fontface = 20
+  cex = 3.5, vjust = "center", hjust = "left", fontface = 20
   )
 
 ### Save plot ---------------------------------------------------------------
