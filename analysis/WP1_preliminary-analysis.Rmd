@@ -287,17 +287,6 @@ data_temp_eot <- merge(
 eot_n <- length(data_05_eot$patient)
 ```
 
-```{r}
-# Select the patient with the earliest c1d1_date in data_04_c1d1
-fpi <- data_04_c1d1 %>% 
-  filter(c1d1_date == min(c1d1_date))
-
-lpi <- data_04_c1d1 %>% 
-  filter(c1d1_date == max(c1d1_date))
-```
-
-First Patient In (FPI) started the study treatment on `r fpi$c1d1_date` and Last Patient In (LPI) started the study treatment on `r lpi$c1d1_date`.
-
 Listing of patients who discontinued prematurely the study treatment (n = `r eot_n`):
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
@@ -412,6 +401,17 @@ data_06_eos_formatted %>%
   modify_header(label = " ") %>%
   bold_labels()
 ```
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# Select the patient with the earliest c1d1_date in data_04_c1d1
+fpi <- data_04_c1d1 %>% 
+  filter(c1d1_date == min(c1d1_date))
+
+lpi <- data_04_c1d1 %>% 
+  filter(c1d1_date == max(c1d1_date))
+```
+
+First Patient In (FPI) started the study treatment on `r fpi$c1d1_date` and Last Patient In (LPI) started the study treatment on `r lpi$c1d1_date`.
 
 ## Swimmer plot
 
