@@ -287,6 +287,17 @@ data_temp_eot <- merge(
 eot_n <- length(data_05_eot$patient)
 ```
 
+```{r}
+# Select the patient with the earliest c1d1_date in data_04_c1d1
+fpi <- data_04_c1d1 %>% 
+  filter(c1d1_date == min(c1d1_date))
+
+lpi <- data_04_c1d1 %>% 
+  filter(c1d1_date == max(c1d1_date))
+```
+
+First Patient In (FPI) started the study treatment on `r fpi$c1d1_date` and Last Patient In (LPI) started the study treatment on `r lpi$c1d1_date`.
+
 Listing of patients who discontinued prematurely the study treatment (n = `r eot_n`):
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
@@ -1316,6 +1327,75 @@ grid.draw(site_0301_figure)
 
 - Patient 0301-014 is receiving the study treatment after 1 cycle but does not have any post-baseline tumor assessment yet (last registered Pembrolizumab dose: 2024-01-23).
 
+## Last Lenvatinib Dose
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+last_lenvatinib <- data_01_cycles %>% 
+  select(patient, event_num, visit_date, has_the_patient_taken_any_lenvatinib_dose_during_the_cycle) %>% 
+  filter(has_the_patient_taken_any_lenvatinib_dose_during_the_cycle == "Yes") %>% 
+  group_by(patient) %>%
+  filter(event_num == max(event_num)) %>%
+  ungroup() %>% 
+  mutate(
+    visit_date = dmy(visit_date)
+  )
+
+patients_not_in_last_lenvatinib <- data_02_itt %>% 
+  anti_join(last_lenvatinib, by = "patient") %>% 
+  select(patient)
+
+last_lenvatinib <- last_lenvatinib %>% 
+  bind_rows(
+    data_02_itt %>% 
+      anti_join(last_lenvatinib, by = "patient") %>% 
+      select(patient) %>% 
+      mutate(
+        event_num = NA,
+        visit_date = NA,
+        has_the_patient_taken_any_lenvatinib_dose_during_the_cycle = NA
+      )
+  )
+
+last_lenvatinib <- last_lenvatinib %>% 
+  rename(
+    last_cycle_visit_date = visit_date
+  )
+
+lenvatinib <- merge(
+  data_04_c1d1,
+  last_lenvatinib,
+  by = "patient",
+  all = TRUE
+) %>% 
+  select(-has_the_patient_taken_any_lenvatinib_dose_during_the_cycle) %>% 
+  # Create a new variable with the number of weeks between last_cycle_visit_date dose and c1d1_date
+  mutate(
+    last_lenvatinib = if_else(
+      is.na(last_cycle_visit_date), NA, as.numeric(last_cycle_visit_date - c1d1_date, units = "weeks")),
+    lenvatinib_8w = if_else(
+      last_lenvatinib >= 8, "Yes", "No")
+  )
+```
+
+#### **Table 4. Number of weeks receiving Lenvatinib:**
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+lenvatinib %>%
+  tbl_summary(
+    missing = "always",
+    percent = "column",
+    type = list(lenvatinib_8w ~ "categorical"),
+    sort = list(everything() ~ "frequency"),
+    label = list(lenvatinib_8w ~ "At least 8 weeks of Lenvatinib"),
+    include = c(lenvatinib_8w),
+    missing_text = "Not reported yet"
+  ) %>%
+  modify_header(label = " ") %>%
+  bold_labels()
+```
+
+<!-- ### --------------------------------------------------------------------->
+
 # Preliminary Efficacy Analysis
 
 ### Follow-up
@@ -1395,7 +1475,7 @@ data_13_survival$os <- data_13_survival$os / 30.4375
 
 ## Primary Endpoint: 5-month Progression-Free Survival (PFS)
 
-#### **Table 4. Summary of PFS events:**
+#### **Table 5. Summary of PFS events:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 pfs_results <- survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival, conf.type = "log-log")
@@ -1413,7 +1493,7 @@ formatted_pfs_results <- tidy_pfs_results %>%
 rmarkdown::paged_table(formatted_pfs_results)
 ```
 
-#### **Table 5. 5-month PFS:**
+#### **Table 6. 5-month PFS:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 tbl_survfit(
@@ -1522,7 +1602,7 @@ data_13_survival_formatted <- data_13_survival %>%
 rmarkdown::paged_table(data_13_survival_formatted)
 ```
 
-#### **Table 6. Summary of OS events:**
+#### **Table 7. Summary of OS events:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 os_results <- survfit(Surv(os, os_event) ~ 1, data = data_13_survival, conf.type = "log-log")
@@ -1540,7 +1620,7 @@ formatted_os_results <- tidy_os_results %>%
 rmarkdown::paged_table(formatted_os_results)
 ```
 
-#### **Table 7. Median OS:**
+#### **Table 8. Median OS:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 tbl_survfit(
@@ -1551,7 +1631,7 @@ tbl_survfit(
   modify_header(label = " ")
 ```
 
-#### **Table 8. 6-month OS:**
+#### **Table 9. 6-month OS:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 tbl_survfit(
@@ -1640,7 +1720,7 @@ os_global
 
 ## Progression-Free Survival
 
-#### **Table 9. Summary of PFS events:**
+#### **Table 10. Summary of PFS events:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 pfs_results <- survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival, conf.type = "log-log")
@@ -1658,7 +1738,7 @@ formatted_pfs_results <- tidy_pfs_results %>%
 rmarkdown::paged_table(formatted_pfs_results)
 ```
 
-#### **Table 10. Median PFS:**
+#### **Table 11. Median PFS:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 tbl_survfit(
@@ -1669,7 +1749,7 @@ tbl_survfit(
   modify_header(label = " ")
 ```
 
-#### **Table 11. 6- and 12-month PFS:**
+#### **Table 12. 6- and 12-month PFS:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 tbl_survfit(
@@ -1829,7 +1909,7 @@ data_temp_aes_na_formatted <- data_temp_aes_na %>%
 rmarkdown::paged_table(data_temp_aes_na_formatted)
 ```
 
-#### **Table 12. Adverse Events (AEs) by maximum severity in the ITT population:**
+#### **Table 13. Adverse Events (AEs) by maximum severity in the ITT population:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 tbl_aes <- data_14_aes %>% 
@@ -1857,7 +1937,7 @@ tbl_aes %>%
 tbl_aes
 ```
 
-#### **Table 13. Serious Adverse Events (SAEs) by maximum severity in the ITT population:**
+#### **Table 14. Serious Adverse Events (SAEs) by maximum severity in the ITT population:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 saes <- data_14_aes %>% 
@@ -1888,7 +1968,7 @@ tbl_saes %>%
 tbl_saes
 ```
 
-#### **Table 14. Adverse Events (AEs) that led to the permanent discontinuation of the study drug in the ITT population:**
+#### **Table 15. Adverse Events (AEs) that led to the permanent discontinuation of the study drug in the ITT population:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 aes_discontinuation <- data_14_aes %>% 
