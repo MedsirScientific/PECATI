@@ -519,15 +519,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomMedsirScientificPECATItree1a218e11f0a4214586ba3af9b3a02f1afd8a53f1targetblank1a218e1a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomMedsirScientificPECATItree79cc2aad1f34d26bc60910059cbb3e091fde9daetargetblank79cc2aaa">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/MedsirScientific/PECATI/tree/1a218e11f0a4214586ba3af9b3a02f1afd8a53f1" target="_blank">1a218e1</a>
+<a href="https://github.com/MedsirScientific/PECATI/tree/79cc2aad1f34d26bc60910059cbb3e091fde9dae" target="_blank">79cc2aa</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomMedsirScientificPECATItree1a218e11f0a4214586ba3af9b3a02f1afd8a53f1targetblank1a218e1a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomMedsirScientificPECATItree79cc2aad1f34d26bc60910059cbb3e091fde9daetargetblank79cc2aaa"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -537,7 +537,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/MedsirScientific/PECATI/tree/1a218e11f0a4214586ba3af9b3a02f1afd8a53f1" target="_blank">1a218e1</a>.
+<a href="https://github.com/MedsirScientific/PECATI/tree/79cc2aad1f34d26bc60910059cbb3e091fde9dae" target="_blank">79cc2aa</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -712,6 +712,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/MedsirScientific/PECATI/blob/79cc2aad1f34d26bc60910059cbb3e091fde9dae/analysis/WP1_preliminary-analysis.Rmd" target="_blank">79cc2aa</a>
+</td>
+<td>
+Daniel Alcalá
+</td>
+<td>
+2024-02-14
+</td>
+<td>
+Hide and rearrange FPI and LPI code chunk
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/MedsirScientific/PECATI/f5933933942167c882b48f48d843a9001339fa57/docs/WP1_preliminary-analysis.html" target="_blank">f593393</a>
+</td>
+<td>
+Daniel Alcalá
+</td>
+<td>
+2024-02-14
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -1724,14 +1758,6 @@ exclusion</strong></h4>
 </div>
 <div id="study-treatment-discontinuation-eot" class="section level2">
 <h2>Study treatment discontinuation (EoT)</h2>
-<pre class="r"><code># Select the patient with the earliest c1d1_date in data_04_c1d1
-fpi &lt;- data_04_c1d1 %&gt;% 
-  filter(c1d1_date == min(c1d1_date))
-
-lpi &lt;- data_04_c1d1 %&gt;% 
-  filter(c1d1_date == max(c1d1_date))</code></pre>
-<p>First Patient In (FPI) started the study treatment on 2022-05-13 and
-Last Patient In (LPI) started the study treatment on 2024-01-31.</p>
 <p>Listing of patients who discontinued prematurely the study treatment
 (n = 13):</p>
 <div data-pagedtable="false">
@@ -2698,6 +2724,8 @@ study:</strong></h4>
   </tfoot>
 </table>
 </div>
+<p>First Patient In (FPI) started the study treatment on 2022-05-13 and
+Last Patient In (LPI) started the study treatment on 2024-01-31.</p>
 </div>
 </div>
 <div id="swimmer-plot" class="section level2">
