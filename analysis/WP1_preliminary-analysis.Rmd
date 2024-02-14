@@ -1151,11 +1151,11 @@ site_0102_figure <- swimmer_spider_plot("0102", comment_site_0102, site_0102_nam
 grid.draw(site_0102_figure)
 ```
 
-Patient 0102-001 discontinued study treatment after 18 cycles due to unacceptable toxicity (grade 3 pneumonitis related to Pembrolizumab).
+- Patient 0102-001 discontinued study treatment after 18 cycles due to unacceptable toxicity (grade 3 pneumonitis related to Pembrolizumab).
 
-Patient 0102-003 discontinued study treatment after 1 cycle without any post-baseline tumor assessment due to clinical progression. Please note that two empty TA pages have been created.
+- Patient 0102-003 discontinued study treatment after 1 cycle without any post-baseline tumor assessment due to clinical progression. Please note that two empty TA pages have been created.
 
-Patient 0102-004 discontinued study treatment after 2 cycles due to a second primary esophageal cancer.
+- Patient 0102-004 discontinued study treatment after 2 cycles due to a second primary esophageal cancer.
 
 ```{r site-0103-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
 site_0103_name <- "Site 0103 - Hospital Universitario La Paz"
@@ -1166,9 +1166,9 @@ site_0103_figure <- swimmer_spider_plot("0103", comment_site_0103, site_0103_nam
 grid.draw(site_0103_figure)
 ```
 
-Patient 0103-001 discontinued study treatment after 14 cycles due to radiological progression (unequivocal progression of non-target lesions).
+- Patient 0103-001 discontinued study treatment after 14 cycles due to radiological progression (unequivocal progression of non-target lesions).
 
-Patient 0103-002 is stable after 25 cycles of study treatment (last registered Lenvatinib dose: 2024-01-24; last registered Pembrolizumab dose: 2024-01-25).
+- Patient 0103-002 is stable after 25 cycles of study treatment (last registered Lenvatinib dose: 2024-01-24; last registered Pembrolizumab dose: 2024-01-25).
 
 ```{r site-0105-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
 site_0105_name <- "Site 0105 - Hospital Clínic i Provincial de Barcelona"
@@ -1179,9 +1179,9 @@ site_0105_figure <- swimmer_spider_plot("0105", comment_site_0105, site_0105_nam
 grid.draw(site_0105_figure)
 ```
 
-Patient 0105-001 is stable after 30 cycles of study treatment (last registered Lenvatinib dose: 2024-01-22; last registered Pembrolizumab dose: 2024-01-23).
+- Patient 0105-001 is stable after 30 cycles of study treatment (last registered Lenvatinib dose: 2024-01-22; last registered Pembrolizumab dose: 2024-01-23).
 
-Patient 0105-003 discontinued study treatment after 18 cycles due to unacceptable toxicity (grade 2 proteinuria and dyspnoea related to Pembrolizumab and grade 1 dysphonia unrelated to the study treatment).
+- Patient 0105-003 discontinued study treatment after 18 cycles due to unacceptable toxicity (grade 2 proteinuria and dyspnoea related to Pembrolizumab and grade 1 dysphonia unrelated to the study treatment).
 
 ```{r site-0201-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
 site_0201_name <- "Site 0201 - Institut Curie"
@@ -1192,15 +1192,15 @@ site_0201_figure <- swimmer_spider_plot("0201", comment_site_0201, site_0201_nam
 grid.draw(site_0201_figure)
 ```
 
-Patient 0201-001 is responding after 16 cycles of study treatment (last registered Lenvatinib dose: 2024-01-16; last registered Pembrolizumab dose: 2024-02-07).
+- Patient 0201-001 is responding after 16 cycles of study treatment (last registered Lenvatinib dose: 2024-01-16; last registered Pembrolizumab dose: 2024-02-07).
 
-Patient 0201-002 is stable after 10 cycles of study treatment (last registered Lenvatinib dose: 2023-09-10; last registered Pembrolizumab dose: 2023-09-11).
+- Patient 0201-002 is stable after 10 cycles of study treatment (last registered Lenvatinib dose: 2023-09-10; last registered Pembrolizumab dose: 2023-09-11).
 
-Patient 0201-003 is stable after 15 cycles of study treatment (last registered Lenvatinib dose: 2024-02-11; last registered Pembrolizumab dose: 2024-12-12).
+- Patient 0201-003 is stable after 15 cycles of study treatment (last registered Lenvatinib dose: 2024-02-11; last registered Pembrolizumab dose: 2024-12-12).
 
-Patient 0201-004 is stable after 11 cycles of study treatment (last registered Lenvatinib dose: 2024-01-23; last registered Pembrolizumab dose: 2024-01-24).
+- Patient 0201-004 is stable after 11 cycles of study treatment (last registered Lenvatinib dose: 2024-01-23; last registered Pembrolizumab dose: 2024-01-24).
 
-Patient 0201-005 discontinued study treatment after 2 cycles due to unacceptable toxicity (grade 4 myocarditis, meningoencephalite, NT-pro BNP, ECG modification, and troponin increased related to Lenvatinib).
+- Patient 0201-005 discontinued study treatment after 2 cycles due to unacceptable toxicity (grade 4 myocarditis, meningoencephalite, NT-pro BNP, ECG modification, and troponin increased related to Lenvatinib).
 
 ```{r site-0202-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
 site_0202_name <- "Site 0202 - IGR Gustave Roussy"
@@ -1211,17 +1211,17 @@ site_0202_figure <- swimmer_spider_plot("0202", comment_site_0202, site_0202_nam
 grid.draw(site_0202_figure)
 ```
 
-Patient 0202-002 discontinued the study treatment after 2 cycles due to unacceptable toxicity (unrelated grade 4 severe sepsis on pancolitis).
+- Patient 0202-002 discontinued the study treatment after 2 cycles due to unacceptable toxicity (unrelated grade 4 severe sepsis on pancolitis).
 
-Patient 0202-003 discontinued the study treatment after after 15 cycles of study treatment due to unacceptable toxicity (**missing TEAE**).
+- Patient 0202-003 discontinued the study treatment after after 15 cycles of study treatment due to unacceptable toxicity (**missing TEAE**).
 
-Patient 0202-004 is stable after 18 cycles of study treatment (last registered Lenvatinib dose: 2023-12-20; last registered Pembrolizumab dose: 2024-01-11).
+- Patient 0202-004 is stable after 18 cycles of study treatment (last registered Lenvatinib dose: 2023-12-20; last registered Pembrolizumab dose: 2024-01-11).
 
-Patient 0202-005 discontinued the study treatment after 9 due to clinical progression but does not have any tumor assessment registered in the eCRF (last registered Lenvatinib dose: 2023-10-29; last registered Pembrolizumab dose: 2023-06-23).
+- Patient 0202-005 discontinued the study treatment after 9 due to clinical progression but does not have any tumor assessment registered in the eCRF (last registered Lenvatinib dose: 2023-10-29; last registered Pembrolizumab dose: 2023-06-23).
 
-Patient 0202-007 is receiving the study treatment after 11 cycles but does not have any tumor assessment registered in the eCRF (last registered Lenvatinib dose: 2023-12-20; last registered Pembrolizumab dose: 2023-06-07).
+- Patient 0202-007 is receiving the study treatment after 11 cycles but does not have any tumor assessment registered in the eCRF (last registered Lenvatinib dose: 2023-12-20; last registered Pembrolizumab dose: 2023-06-07).
 
-Patient 0202-008 is stable after 3 cycles of study treatment (last registered Lenvatinib dose: 2024-01-14; last registered Pembrolizumab dose: 2023-12-04).
+- Patient 0202-008 is stable after 3 cycles of study treatment (last registered Lenvatinib dose: 2024-01-14; last registered Pembrolizumab dose: 2023-12-04).
 
 ```{r site-0203-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
 site_0203_name <- "Site 0203 - Centre Hospitalier Universitaire de Toulouse"
@@ -1232,13 +1232,13 @@ site_0203_figure <- swimmer_spider_plot("0203", comment_site_0203, site_0203_nam
 grid.draw(site_0203_figure)
 ```
 
-Patient 0203-001 is stable after 7 cycles of study treatment (last registered Lenvatinib dose: 2023-08-21; last registered Pembrolizumab dose: 2023-08-22).
+- Patient 0203-001 is stable after 7 cycles of study treatment (last registered Lenvatinib dose: 2023-08-21; last registered Pembrolizumab dose: 2023-08-22).
 
-Patient 0203-002 is receiving the study treatment after 5 cycles but does not have any post-baseline tumor assessment yet (last registered Lenvatinib dose: 2023-09-17; last registered Pembrolizumab dose: 2023-12-06).
+- Patient 0203-002 is receiving the study treatment after 5 cycles but does not have any post-baseline tumor assessment yet (last registered Lenvatinib dose: 2023-09-17; last registered Pembrolizumab dose: 2023-12-06).
 
-Patient 0203-003 is receiving the study treatment after 1 cycle but does not have any post-baseline tumor assessment yet (last Pembrolizumab registered dose: 2023-12-05).
+- Patient 0203-003 is receiving the study treatment after 1 cycle but does not have any post-baseline tumor assessment yet (last Pembrolizumab registered dose: 2023-12-05).
 
-Patient 0203-004 is receiving the study treatment after 1 cycle but does not have any post-baseline tumor assessment yet (last Pembrolizumab registered dose: 2024-01-03).
+- Patient 0203-004 is receiving the study treatment after 1 cycle but does not have any post-baseline tumor assessment yet (last Pembrolizumab registered dose: 2024-01-03).
 
 ```{r site-0204-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
 site_0204_name <- "Site 0204 - Hôpitaux Universitaires de Marseille - Hôpital Nord"
@@ -1249,9 +1249,9 @@ site_0204_figure <- swimmer_spider_plot("0204", comment_site_0204, site_0204_nam
 grid.draw(site_0204_figure)
 ```
 
-Patient 0204-001 is stable after 11 cycles of study treatment (last registered Lenvatinib dose: 2023-12-27; last registered Pembrolizumab dose: 2024-01-17).
+- Patient 0204-001 is stable after 11 cycles of study treatment (last registered Lenvatinib dose: 2023-12-27; last registered Pembrolizumab dose: 2024-01-17).
 
-Patient 0204-003 is stable after 3 cycles of study treatment (last registered Lenvatinib dose: 2023-12-06; last registered Pembrolizumab dose: 2023-12-07).
+- Patient 0204-003 is stable after 3 cycles of study treatment (last registered Lenvatinib dose: 2023-12-06; last registered Pembrolizumab dose: 2023-12-07).
 
 ```{r site-0205-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
 site_0205_name <- "Site 0205 - Institut Bergonié"
@@ -1262,9 +1262,9 @@ site_0205_figure <- swimmer_spider_plot("0205", comment_site_0205, site_0205_nam
 grid.draw(site_0205_figure)
 ```
 
-Patient 0205-001 is responding after 12 cycles of study treatment (last registered Lenvatinib dose: 2024-01-02; last registered Pembrolizumab dose: 2024-01-23).
+- Patient 0205-001 is responding after 12 cycles of study treatment (last registered Lenvatinib dose: 2024-01-02; last registered Pembrolizumab dose: 2024-01-23).
 
-Patient 0205-002 is receiving the study treatment after 1 cycle but does not have any post-baseline tumor assessment yet (last registered Lenvatinib dose: 2024-01-30; last registered Pembrolizumab dose: 2024-01-31).
+- Patient 0205-002 is receiving the study treatment after 1 cycle but does not have any post-baseline tumor assessment yet (last registered Lenvatinib dose: 2024-01-30; last registered Pembrolizumab dose: 2024-01-31).
 
 ```{r site-0206-swimmer-spider-plot, message = FALSE, warning = FALSE, echo = FALSE}
 site_0206_name <- "Site 0206 - CLCC Oscar Lambret"
@@ -1275,9 +1275,9 @@ site_0206_figure <- swimmer_spider_plot("0206", comment_site_0206, site_0206_nam
 grid.draw(site_0206_figure)
 ```
 
-Patient 0206-001 is responding after 11 cycles of study treatment (last registered Lenvatinib dose: 2024-02-06; last registered Pembrolizumab dose: 2024-02-07).
+- Patient 0206-001 is responding after 11 cycles of study treatment (last registered Lenvatinib dose: 2024-02-06; last registered Pembrolizumab dose: 2024-02-07).
 
-Patient 0206-002 discontinued study treatment after 7 cycles due to radiological progression (new lesions in the spleen). Please note that the **EoT page has not been created** yet.
+- Patient 0206-002 discontinued study treatment after 7 cycles due to radiological progression (new lesions in the spleen). Please note that the **EoT page has not been created** yet.
 
 ```{r site-0301-swimmer-spider-plot, fig.height = 10, message = FALSE, warning = FALSE, echo = FALSE}
 site_0301_name <- "Site 0301 - A.O.U. San Luigi Gonzaga"
@@ -1288,33 +1288,33 @@ site_0301_figure <- swimmer_spider_plot("0301", comment_site_0301, site_0301_nam
 grid.draw(site_0301_figure)
 ```
 
-Patient 0301-001 discontinued the study treatment after 11 cycles due to investigator decision.
+- Patient 0301-001 discontinued the study treatment after 11 cycles due to investigator decision.
 
-Patient 0301-002 discontinued the study treatment after 22 cycles due to exitus.
+- Patient 0301-002 discontinued the study treatment after 22 cycles due to exitus.
 
-Patient 0301-003 is responding after 21 cycles of study treatment (last registered Lenvatinib dose: 2023-12-21; last registered Pembrolizumab dose: 2024-02-02).
+- Patient 0301-003 is responding after 21 cycles of study treatment (last registered Lenvatinib dose: 2023-12-21; last registered Pembrolizumab dose: 2024-02-02).
 
-Patient 0301-004 is stable after 20 cycles of study treatment (last registered Lenvatinib dose: 2024-02-07; last registered Pembrolizumab dose: 2024-02-08).
+- Patient 0301-004 is stable after 20 cycles of study treatment (last registered Lenvatinib dose: 2024-02-07; last registered Pembrolizumab dose: 2024-02-08).
 
-Patient 0301-005 discontinued the study treatment after 10 cycles due to clinical progression.
+- Patient 0301-005 discontinued the study treatment after 10 cycles due to clinical progression.
 
-Patient 0301-006 is stable after 16 cycles of study treatment (last registered Lenvatinib dose: 2024-02-07; last registered Pembrolizumab dose: 2024-02-08).
+- Patient 0301-006 is stable after 16 cycles of study treatment (last registered Lenvatinib dose: 2024-02-07; last registered Pembrolizumab dose: 2024-02-08).
 
-Patient 0301-007 is stable after 13 cycles of study treatment (last registered Lenvatinib dose: 2024-01-24; last registered Pembrolizumab dose: 2024-01-04).
+- Patient 0301-007 is stable after 13 cycles of study treatment (last registered Lenvatinib dose: 2024-01-24; last registered Pembrolizumab dose: 2024-01-04).
 
-Patient 0301-008 is responding after 2 cycles of study treatment (last registered Lenvatinib dose: 2023-08-02; last registered Pembrolizumab dose: 2023-08-03).
+- Patient 0301-008 is responding after 2 cycles of study treatment (last registered Lenvatinib dose: 2023-08-02; last registered Pembrolizumab dose: 2023-08-03).
 
-Patient 0301-009 is stable after 10 cycles of study treatment (last registered Lenvatinib dose: 2024-01-24; last registered Pembrolizumab dose: 2024-01-25).
+- Patient 0301-009 is stable after 10 cycles of study treatment (last registered Lenvatinib dose: 2024-01-24; last registered Pembrolizumab dose: 2024-01-25).
 
-Patient 0301-010 is stable after 10 cycles of study treatment (last registered Lenvatinib dose: 2024-01-25; last registered Pembrolizumab dose: 2024-01-26).
+- Patient 0301-010 is stable after 10 cycles of study treatment (last registered Lenvatinib dose: 2024-01-25; last registered Pembrolizumab dose: 2024-01-26).
 
-Patient 0301-011 is stable after 9 cycles of study treatment (last registered Lenvatinib dose: 2024-01-28; last registered Pembrolizumab dose: 2024-01-29).
+- Patient 0301-011 is stable after 9 cycles of study treatment (last registered Lenvatinib dose: 2024-01-28; last registered Pembrolizumab dose: 2024-01-29).
 
-Patient 0301-012 discontinued the study treatment after 2 cycles due to radiological progression (46% increase of target lesions and unequivocal progression of non-target lesions).
+- Patient 0301-012 discontinued the study treatment after 2 cycles due to radiological progression (46% increase of target lesions and unequivocal progression of non-target lesions).
 
-Patient 0301-013 is stable after 2 cycles of study treatment (last registered Lenvatinib dose: 2024-02-08; last registered Pembrolizumab dose: 2024-02-09).
+- Patient 0301-013 is stable after 2 cycles of study treatment (last registered Lenvatinib dose: 2024-02-08; last registered Pembrolizumab dose: 2024-02-09).
 
-Patient 0301-014 is receiving the study treatment after 1 cycle but does not have any post-baseline tumor assessment yet (last registered Pembrolizumab dose: 2024-01-23).
+- Patient 0301-014 is receiving the study treatment after 1 cycle but does not have any post-baseline tumor assessment yet (last registered Pembrolizumab dose: 2024-01-23).
 
 # Preliminary Efficacy Analysis
 
