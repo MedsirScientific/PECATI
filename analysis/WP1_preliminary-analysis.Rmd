@@ -1395,7 +1395,7 @@ data_13_survival$os <- data_13_survival$os / 30.4375
 
 ## Primary Endpoint: 5-month Progression-Free Survival (PFS)
 
-#### **Table 3. Summary of PFS events:**
+#### **Table 4. Summary of PFS events:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 pfs_results <- survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival, conf.type = "log-log")
@@ -1413,7 +1413,7 @@ formatted_pfs_results <- tidy_pfs_results %>%
 rmarkdown::paged_table(formatted_pfs_results)
 ```
 
-#### **Table 4. 5-month PFS:**
+#### **Table 5. 5-month PFS:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 tbl_survfit(
@@ -1522,7 +1522,7 @@ data_13_survival_formatted <- data_13_survival %>%
 rmarkdown::paged_table(data_13_survival_formatted)
 ```
 
-#### **Table 5. Summary of OS events:**
+#### **Table 6. Summary of OS events:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 os_results <- survfit(Surv(os, os_event) ~ 1, data = data_13_survival, conf.type = "log-log")
@@ -1540,7 +1540,7 @@ formatted_os_results <- tidy_os_results %>%
 rmarkdown::paged_table(formatted_os_results)
 ```
 
-#### **Table 6. Median OS:**
+#### **Table 7. Median OS:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 tbl_survfit(
@@ -1551,7 +1551,7 @@ tbl_survfit(
   modify_header(label = " ")
 ```
 
-#### **Table 7. 6-month OS:**
+#### **Table 8. 6-month OS:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 tbl_survfit(
@@ -1640,7 +1640,7 @@ os_global
 
 ## Progression-Free Survival
 
-#### **Table 8. Summary of PFS events:**
+#### **Table 9. Summary of PFS events:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 pfs_results <- survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival, conf.type = "log-log")
@@ -1658,7 +1658,7 @@ formatted_pfs_results <- tidy_pfs_results %>%
 rmarkdown::paged_table(formatted_pfs_results)
 ```
 
-#### **Table 9. Median PFS:**
+#### **Table 10. Median PFS:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 tbl_survfit(
@@ -1669,7 +1669,7 @@ tbl_survfit(
   modify_header(label = " ")
 ```
 
-#### **Table 10. 6- and 12-month PFS:**
+#### **Table 11. 6- and 12-month PFS:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 tbl_survfit(
@@ -1829,7 +1829,7 @@ data_temp_aes_na_formatted <- data_temp_aes_na %>%
 rmarkdown::paged_table(data_temp_aes_na_formatted)
 ```
 
-#### **Table 9. Adverse Events (AEs) by maximum severity in the ITT population:**
+#### **Table 12. Adverse Events (AEs) by maximum severity in the ITT population:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 tbl_aes <- data_14_aes %>% 
@@ -1857,7 +1857,7 @@ tbl_aes %>%
 tbl_aes
 ```
 
-#### **Table 10. Serious Adverse Events (SAEs) by maximum severity in the ITT population:**
+#### **Table 13. Serious Adverse Events (SAEs) by maximum severity in the ITT population:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 saes <- data_14_aes %>% 
@@ -1888,7 +1888,7 @@ tbl_saes %>%
 tbl_saes
 ```
 
-#### **Table 11. Adverse Events (AEs) that led to the permanent discontinuation of the study drug in the ITT population:**
+#### **Table 14. Adverse Events (AEs) that led to the permanent discontinuation of the study drug in the ITT population:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 aes_discontinuation <- data_14_aes %>% 
