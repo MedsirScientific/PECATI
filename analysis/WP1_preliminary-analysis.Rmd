@@ -1409,7 +1409,7 @@ pembrolizumab_modifications <- data_01_cycles %>%
   mutate(
     date_of_administration = dmy(date_of_administration),
     temporary_interruption = if_else(
-      pembrolizumab_administered == "No" & !is.na(reason_no_administration) & !str_detect(reason_no_administration, "temporal"), "Yes", "No"),
+      pembrolizumab_administered == "No" & !is.na(reason_no_administration) & !str_detect(reason_no_administration, "permanent"), "Yes", "No"),
     delay = if_else(
       pembrolizumab_administered == "Yes" & !is.na(treatment_delay_reason), "Yes", "No"),
     reduction = if_else(
@@ -1524,7 +1524,7 @@ tbl_pembrolizumab_delays <- pembrolizumab_delays %>%
     type = all_dichotomous() ~ "categorical",
     sort = list(everything() ~ "frequency"),
     label = list(delay ~ "Pembrolizumab dose delay",
-                 treatment_delay_reason ~ "Reason for treatment delay"),
+                 treatment_delay_reason ~ "Reason for dose delay"),
     include = c(delay, treatment_delay_reason)
   ) %>%
   modify_header(label = " ") %>%
@@ -1687,8 +1687,8 @@ tbl_pembrolizumab_temporary <- pembrolizumab_temporary_interruptions %>%
     percent = "column",
     type = all_dichotomous() ~ "categorical",
     sort = list(everything() ~ "frequency"),
-    label = list(temporary_interruption ~ "Pembrolizumab temporary dose interruption",
-                 reason_no_administration ~ "Reason for interruption"),
+    label = list(temporary_interruption ~ "Pembrolizumab dose temporary interruption",
+                 reason_no_administration ~ "Reason for temporary interruption"),
     include = c(temporary_interruption, reason_no_administration)
   ) %>%
   modify_header(label = " ") %>%
@@ -1705,7 +1705,7 @@ tbl_lenvatinib_temporary <- lenvatinib_temporary_interruptions %>%
     type = all_dichotomous() ~ "categorical",
     sort = list(everything() ~ "frequency"),
     label = list(temporary_interruption ~ "Lenvatinib temporary dose interruption",
-                 reason_of_no_dose_other_dose_or_dose_reduction ~ "Reason for interruption"),
+                 reason_of_no_dose_other_dose_or_dose_reduction ~ "Reason for temporary interruption"),
     include = c(temporary_interruption, reason_of_no_dose_other_dose_or_dose_reduction)
   ) %>%
   modify_header(label = " ") %>%
@@ -1820,7 +1820,7 @@ tbl_lenvatinib_permanent <- lenvatinib_permanent_interruptions %>%
   bold_labels()
 ```
 
-### **Table 5. Study drugs dose modifications**
+### **Table 5. Study drugs modifications**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 row1 <- tbl_merge(list(tbl_pembrolizumab_delays))
@@ -1831,9 +1831,10 @@ row5 <- tbl_merge(list(tbl_lenvatinib_temporary))
 row6 <- tbl_merge(list(tbl_lenvatinib_permanent))
 
 tbl_stack <-
-  tbl_stack(list(row1, row2, row3, row4, row5, row6))
+  tbl_stack(list(row1, row2, row3, row4, row5, row6)) %>% 
+  modify_spanning_header(all_stat_cols() ~ "")
 
-tbl_stack %>% modify_spanning_header(all_stat_cols() ~ "")
+tbl_stack 
 ```
 
 # Preliminary Efficacy Analysis
