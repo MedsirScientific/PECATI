@@ -1575,6 +1575,64 @@ lenvatinib_reductions <- lenvatinib_modifications %>%
     max_daily_dose = max(lenvatinib_daily_dose_mg, na.rm = TRUE)
   ) %>% 
   ungroup()
+
+# Print the median of mean_daily_dose
+median(lenvatinib_reductions$mean_daily_dose, na.rm = TRUE)
+min(lenvatinib_reductions$min_daily_dose, na.rm = TRUE)
+max(lenvatinib_reductions$max_daily_dose, na.rm = TRUE)
+
+### Line and dot plot of lenvatinib daily dose across time ### ----------------
+# lenvatinib_modifications_s2 %>% 
+#   ggplot(aes(x = event_num, y = lenvatinib_daily_dose_mg, group = patient)) +
+#   geom_line() +
+#   geom_point() +
+#   theme_minimal() +
+#   labs(
+#     title = "Lenvatinib daily dose (mg) across time",
+#     x = "Cycle number",
+#     y = "Lenvatinib daily dose (mg)"
+#   )
+```
+
+#### **Figure 3. Lenvatinib daily dose (mg) across time**
+
+```{r, line-dot-plot-lenvatinib, fig.height = 15, message = FALSE, warning = FALSE, echo = FALSE}
+lenvatinib_daily_dose <- lenvatinib_modifications_s2 %>% 
+  ggplot(aes(x = event_num, y = lenvatinib_daily_dose_mg, group = patient)) +
+  geom_line() +
+  geom_point() +
+  theme_minimal() +
+  labs(
+    title = "Lenvatinib daily dose (mg) across time",
+    x = "Cycle number",
+    y = "Lenvatinib daily dose (mg)"
+  ) +
+  facet_wrap(~patient)
+# Add a white background to the plot
+lenvatinib_daily_dose <- lenvatinib_daily_dose + theme(
+  panel.background = element_rect(fill = "white"),
+  panel.grid.major = element_line(colour = "grey", size = 0.5),
+  panel.grid.minor = element_blank(),
+  strip.background = element_rect(fill = "white"),
+  strip.text.x = element_text(colour = "black", face = "bold"),
+  axis.text.x = element_text(colour = "black"),
+  axis.text.y = element_text(colour = "black"),
+  axis.title.x = element_text(colour = "black", face = "bold"),
+  axis.title.y = element_text(colour = "black", face = "bold"),
+  plot.title = element_text(colour = "black", face = "bold")
+)
+
+### Save plot ---------------------------------------------------------------
+ggsave(
+  paste("../output/", project_id, "_lenvatinib_dose", as.Date(Sys.Date()), ".png", sep = ""),
+  lenvatinib_daily_dose,
+  width = 50,
+  height = 50,
+  units = "cm",
+  dpi = 300
+  )
+
+lenvatinib_daily_dose 
 ```
 
 <!-- #### **Table X.2. Pembrolizumab dose reduction:** -->
@@ -1945,7 +2003,7 @@ tbl_survfit(
   modify_header(label = " ")
 ```
 
-#### **Figure 3. 5-month Progression-free survival (PFS) in the intention-to-treat population**
+#### **Figure 4. 5-month Progression-free survival (PFS) in the intention-to-treat population**
 
 ```{r 5mo-pfs-kaplan-meier-plot, message = FALSE, warning = FALSE, echo = FALSE}
 pfs5 <- summary(
@@ -2083,7 +2141,7 @@ tbl_survfit(
   modify_header(label = " ")
 ```
 
-#### **Figure 4. Overall survival (OS) in the intention-to-treat population**
+#### **Figure 5. Overall survival (OS) in the intention-to-treat population**
 
 ```{r ofs-kaplan-meier-plot, message = FALSE, warning = FALSE, echo = FALSE}
 ### Plot ----------------------------------------------------------------------
@@ -2201,7 +2259,7 @@ tbl_survfit(
   modify_header(label = " ")
 ```
 
-#### **Figure 5. Progression-free survival (PFS) in the intention-to-treat population**
+#### **Figure 6. Progression-free survival (PFS) in the intention-to-treat population**
 
 ```{r pfs-kaplan-meier-plot, message = FALSE, warning = FALSE, echo = FALSE}
 ### Plot ----------------------------------------------------------------------
