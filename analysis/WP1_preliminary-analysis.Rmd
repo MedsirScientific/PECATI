@@ -1399,6 +1399,7 @@ lenvatinib %>%
 ## Dose delays, reductions, and interruptions
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
+### Pembrolizumb ### ---------------------------------------------------------- 
 pembrolizumab_modifications <- data_01_cycles %>% 
   mutate(
     visit_date = dmy(visit_date)
@@ -1408,7 +1409,7 @@ pembrolizumab_modifications <- data_01_cycles %>%
   mutate(
     date_of_administration = dmy(date_of_administration),
     temporary_interruption = if_else(
-      pembrolizumab_administered == "No" & !is.na(reason_no_administration) & !str_detect(reason_no_administration, "permanent"), "Yes", "No"),
+      pembrolizumab_administered == "No" & !is.na(reason_no_administration) & !str_detect(reason_no_administration, "temporal"), "Yes", "No"),
     delay = if_else(
       pembrolizumab_administered == "Yes" & !is.na(treatment_delay_reason), "Yes", "No"),
     reduction = if_else(
@@ -1424,7 +1425,58 @@ pembrolizumab_modifications <- data_01_cycles %>%
     permanent_discontinuation
   )
 
-# Treatment delay
+### Lenvatinib ### ------------------------------------------------------------
+lenvatinib_modifications_s1 <- data_01_cycles %>% 
+  mutate(
+    visit_date = dmy(visit_date)
+  ) %>% 
+  select(
+    patient, event_num, has_the_patient_taken_any_lenvatinib_dose_during_the_cycle, number_capsules_taken_10_mg, number_capsules_taken_4_mg
+  ) %>% 
+  mutate(
+    lenvatinib_dose_mg = (number_capsules_taken_10_mg * 10) + (number_capsules_taken_4_mg * 4)
+  )
+
+lenvatinib_modifications_s2 <- read_excel(
+    here(paste0("data/", cutoff_date, "/", project_id, "_Cycles_", cutoff_date_formatted, ".xlsx")),
+    sheet = "LENVATINIB",
+    skip = 1) %>% 
+  clean_names() %>% 
+  mutate(
+    date = dmy(date),
+    lenvatinib_dose_mg = case_when(
+      dose == "10 mg (1 capsule 10 mg)" ~ 10,
+      dose == "12 mg (3 capsules 4 mg)" ~ 12,
+      dose == "16 mg (4 capsules 4 mg )" ~ 16,
+      dose == "20 mg (2 capsules 10 mg)" ~ 20,
+      dose == "No dose" ~ 0
+    )
+  ) %>% 
+  group_by(patient, event_num) %>%
+  mutate(
+    lenvatinib_daily_dose_mg = sum(lenvatinib_dose_mg)
+  ) %>% 
+  filter(
+    day == "#1"
+  ) %>% 
+  select(patient, event_num, date, lenvatinib_daily_dose_mg,
+         reason_of_no_dose_other_dose_or_dose_reduction, specify_ae_interruption
+         )
+
+lenvatinib_modifications <- lenvatinib_modifications_s1 %>% 
+  left_join(
+    lenvatinib_modifications_s2, by = c("patient", "event_num")
+    ) %>% 
+  rename(
+    lenvatinib_administered = has_the_patient_taken_any_lenvatinib_dose_during_the_cycle,
+  ) %>% 
+  select(
+    patient, event_num, date, lenvatinib_administered, lenvatinib_daily_dose_mg,
+    reason_of_no_dose_other_dose_or_dose_reduction, specify_ae_interruption
+  )
+
+### Treatment delay ### -------------------------------------------------------
+### Pembrolizumb ### ---------------------------------------------------------- 
 ## Patients with treatment delay
 pembrolizumab_delay <- pembrolizumab_modifications %>% 
   group_by(patient) %>% 
@@ -1465,7 +1517,7 @@ pembrolizumab_delays <- pembrolizumab_delays %>%
 <!-- #### **Table X.1. Pembrolizumab dose delay:** -->
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-tbl_delays <- pembrolizumab_delays %>%
+tbl_pembrolizumab_delays <- pembrolizumab_delays %>%
   tbl_summary(
     missing = "no",
     percent = "column",
@@ -1480,6 +1532,7 @@ tbl_delays <- pembrolizumab_delays %>%
 ```
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
+### Pembrolizumb ### ---------------------------------------------------------- 
 # Treatment reduction
 ## Patients with treatment reduction
 pembrolizumab_reduction <- pembrolizumab_modifications %>% 
@@ -1510,12 +1563,24 @@ pembrolizumab_no_reduction_clean <- pembrolizumab_no_reduction %>%
   select(patient, everything())
 
 pembrolizumab_reductions <- bind_rows(pembrolizumab_reduction, pembrolizumab_no_reduction_clean)
+
+### Lenvatinib ### ------------------------------------------------------------
+# Treatment reduction
+## Patients with treatment reduction
+lenvatinib_reductions <- lenvatinib_modifications %>% 
+  group_by(patient) %>% 
+  summarise(
+    mean_daily_dose = mean(lenvatinib_daily_dose_mg, na.rm = TRUE),
+    min_daily_dose = min(lenvatinib_daily_dose_mg, na.rm = TRUE),
+    max_daily_dose = max(lenvatinib_daily_dose_mg, na.rm = TRUE)
+  ) %>% 
+  ungroup()
 ```
 
 <!-- #### **Table X.2. Pembrolizumab dose reduction:** -->
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-tbl_reductions <- pembrolizumab_reductions %>%
+tbl_pembrolizumab_reductions <- pembrolizumab_reductions %>%
   tbl_summary(
     missing = "no",
     percent = "column",
@@ -1530,6 +1595,7 @@ tbl_reductions <- pembrolizumab_reductions %>%
 ```
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
+### Pembrolizumab ### ---------------------------------------------------------
 # Treatment temporary interruption
 ## Patients with treatment temporary interruption
 pembrolizumab_temporary <- pembrolizumab_modifications %>% 
@@ -1568,12 +1634,54 @@ pembrolizumab_temporary_interruptions <- pembrolizumab_temporary_interruptions %
     reason_no_administration = if_else(
       reason_no_administration == "Non-Medical Reason", "Non-medical reasons", reason_no_administration)
   )
+
+### Lenvatinib ### ------------------------------------------------------------
+# Treatment temporary interruption
+## Patients with treatment temporary interruption
+lenvatinib_temporary <- lenvatinib_modifications %>% 
+  group_by(patient) %>% 
+  filter(
+    str_detect(lenvatinib_administered, "temporal")
+  ) %>% 
+  filter(
+    event_num == min(event_num)
+  ) %>% 
+  ungroup() %>% 
+  select(-event_num)
+
+## Patients without any treatment reduction
+lenvatinib_no_temporary <- lenvatinib_modifications %>% 
+  group_by(patient) %>% 
+  filter(
+    !str_detect(lenvatinib_administered, "temporal")
+  ) %>% 
+  filter(
+    event_num == min(event_num)
+  ) %>% 
+  ungroup() %>% 
+  select(-event_num)
+
+lenvatinib_no_temporary_clean <- lenvatinib_no_temporary %>% 
+  anti_join(lenvatinib_temporary, by = "patient") %>% 
+  select(patient, everything())
+
+lenvatinib_temporary_interruptions <- bind_rows(lenvatinib_temporary, lenvatinib_no_temporary_clean)
+
+lenvatinib_temporary_interruptions <- lenvatinib_temporary_interruptions %>% 
+  mutate(
+    temporary_interruption = if_else(
+      str_detect(lenvatinib_administered, "temporal"), "Yes", "No"),
+    reason_of_no_dose_other_dose_or_dose_reduction = if_else(
+      reason_of_no_dose_other_dose_or_dose_reduction == "Toxicity (record in AEs form)", "Adverse Event/toxicity", reason_of_no_dose_other_dose_or_dose_reduction),
+    reason_of_no_dose_other_dose_or_dose_reduction = if_else(
+      temporary_interruption == "Yes" & reason_of_no_dose_other_dose_or_dose_reduction == "NA", "Unknown", reason_of_no_dose_other_dose_or_dose_reduction)
+  )
 ```
 
 <!-- #### **Table X.3. Pembrolizumab temporary dose interruption:** -->
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-tbl_temporary <- pembrolizumab_temporary_interruptions %>%
+tbl_pembrolizumab_temporary <- pembrolizumab_temporary_interruptions %>%
   tbl_summary(
     missing = "no",
     percent = "column",
@@ -1587,8 +1695,25 @@ tbl_temporary <- pembrolizumab_temporary_interruptions %>%
   bold_labels()
 ```
 
+<!-- #### **Table X.3. Lenvatinib temporary dose interruption:** -->
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
+tbl_lenvatinib_temporary <- lenvatinib_temporary_interruptions %>%
+  tbl_summary(
+    missing = "no",
+    percent = "column",
+    type = all_dichotomous() ~ "categorical",
+    sort = list(everything() ~ "frequency"),
+    label = list(temporary_interruption ~ "Lenvatinib temporary dose interruption",
+                 reason_of_no_dose_other_dose_or_dose_reduction ~ "Reason for interruption"),
+    include = c(temporary_interruption, reason_of_no_dose_other_dose_or_dose_reduction)
+  ) %>%
+  modify_header(label = " ") %>%
+  bold_labels()
+```
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+### Pembrolizumab ### ---------------------------------------------------------
 # Treatment permanent discontinuation
 ## Patients with treatment permanent discontinuation
 pembrolizumab_permanent <- pembrolizumab_modifications %>% 
@@ -1619,13 +1744,53 @@ pembrolizumab_no_permanent_clean <- pembrolizumab_no_permanent %>%
   select(patient, everything())
 
 pembrolizumab_permanent_discontinuations <- bind_rows(pembrolizumab_permanent, pembrolizumab_no_permanent_clean)
+
+### Lenvatinib ### ------------------------------------------------------------
+# Treatment permanent discontinuation
+## Patients with treatment permanent discontinuation
+lenvatinib_permanent <- lenvatinib_modifications %>% 
+  group_by(patient) %>% 
+  filter(
+    str_detect(lenvatinib_administered, "permanent")
+  ) %>% 
+  filter(
+    event_num == min(event_num)
+  ) %>% 
+  ungroup() %>% 
+  select(-event_num)
+
+## Patients without any treatment reduction
+lenvatinib_no_permanent <- lenvatinib_modifications %>% 
+  group_by(patient) %>% 
+  filter(
+    !str_detect(lenvatinib_administered, "permanent")
+  ) %>% 
+  filter(
+    event_num == min(event_num)
+  ) %>% 
+  ungroup() %>% 
+  select(-event_num)
+
+lenvatinib_no_permanent_clean <- lenvatinib_no_permanent %>% 
+  anti_join(lenvatinib_permanent, by = "patient") %>% 
+  select(patient, everything())
+
+lenvatinib_permanent_interruptions <- bind_rows(lenvatinib_permanent, lenvatinib_no_permanent_clean)
+
+lenvatinib_permanent_interruptions <- lenvatinib_permanent_interruptions %>% 
+  mutate(
+    permanent_interruption = if_else(
+      str_detect(lenvatinib_administered, "permanent"), "Yes", "No"),
+    lenvatinib_administered = if_else(
+      lenvatinib_administered == "No, temporal interruption", "Yes", lenvatinib_administered)
+  )
 ```
 
 
 <!-- #### **Table X.4. Pembrolizumab permanent discontinuation:** -->
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-tbl_permanent <- pembrolizumab_permanent_discontinuations %>%
+tbl_pembrolizumab_permanent <- pembrolizumab_permanent_discontinuations %>%
   tbl_summary(
     missing = "no",
     percent = "column",
@@ -1638,23 +1803,38 @@ tbl_permanent <- pembrolizumab_permanent_discontinuations %>%
   bold_labels()
 ```
 
-<!-- ### Under development --------------------------------------------------->
 
-### **Table X. Pembrolizumab dose modifications**
+<!-- #### **Table X.3. Lenvatinib permanent discontinuation:** -->
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-row1 <- tbl_merge(list(tbl_delays))
-row2 <- tbl_merge(list(tbl_reductions))
-row3 <- tbl_merge(list(tbl_temporary))
-row4 <- tbl_merge(list(tbl_permanent))
+tbl_lenvatinib_permanent <- lenvatinib_permanent_interruptions %>%
+  tbl_summary(
+    missing = "no",
+    percent = "column",
+    type = all_dichotomous() ~ "categorical",
+    sort = list(everything() ~ "frequency"),
+    label = list(permanent_interruption ~ "Lenvatinib permanent interruption"),
+    include = c(permanent_interruption)
+  ) %>%
+  modify_header(label = " ") %>%
+  bold_labels()
+```
+
+### **Table 5. Study drugs dose modifications**
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+row1 <- tbl_merge(list(tbl_pembrolizumab_delays))
+row2 <- tbl_merge(list(tbl_pembrolizumab_reductions))
+row3 <- tbl_merge(list(tbl_pembrolizumab_temporary))
+row4 <- tbl_merge(list(tbl_pembrolizumab_permanent))
+row5 <- tbl_merge(list(tbl_lenvatinib_temporary))
+row6 <- tbl_merge(list(tbl_lenvatinib_permanent))
 
 tbl_stack <-
-  tbl_stack(list(row1, row2, row3, row4))
+  tbl_stack(list(row1, row2, row3, row4, row5, row6))
 
 tbl_stack %>% modify_spanning_header(all_stat_cols() ~ "")
 ```
-
-<!-- ### --------------------------------------------------------------------->
 
 # Preliminary Efficacy Analysis
 
@@ -1735,7 +1915,7 @@ data_13_survival$os <- data_13_survival$os / 30.4375
 
 ## Primary Endpoint: 5-month Progression-Free Survival (PFS)
 
-#### **Table 5. Summary of PFS events:**
+#### **Table 6. Summary of PFS events:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 pfs_results <- survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival, conf.type = "log-log")
@@ -1753,7 +1933,7 @@ formatted_pfs_results <- tidy_pfs_results %>%
 rmarkdown::paged_table(formatted_pfs_results)
 ```
 
-#### **Table 6. 5-month PFS:**
+#### **Table 7. 5-month PFS:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 tbl_survfit(
@@ -1862,7 +2042,7 @@ data_13_survival_formatted <- data_13_survival %>%
 rmarkdown::paged_table(data_13_survival_formatted)
 ```
 
-#### **Table 7. Summary of OS events:**
+#### **Table 8. Summary of OS events:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 os_results <- survfit(Surv(os, os_event) ~ 1, data = data_13_survival, conf.type = "log-log")
@@ -1880,7 +2060,7 @@ formatted_os_results <- tidy_os_results %>%
 rmarkdown::paged_table(formatted_os_results)
 ```
 
-#### **Table 8. Median OS:**
+#### **Table 9. Median OS:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 tbl_survfit(
@@ -1891,7 +2071,7 @@ tbl_survfit(
   modify_header(label = " ")
 ```
 
-#### **Table 9. 6-month OS:**
+#### **Table 10. 6-month OS:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 tbl_survfit(
@@ -1980,7 +2160,7 @@ os_global
 
 ## Progression-Free Survival
 
-#### **Table 10. Summary of PFS events:**
+#### **Table 11. Summary of PFS events:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 pfs_results <- survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival, conf.type = "log-log")
@@ -1998,7 +2178,7 @@ formatted_pfs_results <- tidy_pfs_results %>%
 rmarkdown::paged_table(formatted_pfs_results)
 ```
 
-#### **Table 11. Median PFS:**
+#### **Table 12. Median PFS:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 tbl_survfit(
@@ -2009,7 +2189,7 @@ tbl_survfit(
   modify_header(label = " ")
 ```
 
-#### **Table 12. 6- and 12-month PFS:**
+#### **Table 13. 6- and 12-month PFS:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 tbl_survfit(
@@ -2194,7 +2374,7 @@ data_temp_aes_na_formatted <- data_temp_aes_na %>%
 rmarkdown::paged_table(data_temp_aes_na_formatted)
 ```
 
-#### **Table 13. Adverse Events (AEs) by maximum severity in the ITT population:**
+#### **Table 14. Adverse Events (AEs) by maximum severity in the ITT population:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_14_aes <- data_14_aes %>% 
@@ -2225,7 +2405,7 @@ tbl_aes %>%
 tbl_aes
 ```
 
-#### **Table 14. Serious Adverse Events (SAEs) by maximum severity in the ITT population:**
+#### **Table 15. Serious Adverse Events (SAEs) by maximum severity in the ITT population:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 saes <- data_14_aes %>% 
@@ -2256,7 +2436,7 @@ tbl_saes %>%
 tbl_saes
 ```
 
-#### **Table 15. Serious Adverse Events (SAEs) of grade ≥3 in the ITT population:**
+#### **Table 16. Serious Adverse Events (SAEs) of grade ≥3 in the ITT population:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 saes_g3 <- saes %>% 
@@ -2289,7 +2469,7 @@ tbl_saes_g3
 
 There is `r nrow(myocarditis)` patient with `r myocarditis$adverse_event` of  `r tolower(myocarditis$grade)`  `r tolower(myocarditis$relationship)`.
 
-#### **Table 16. Adverse Events (AEs) that led to the permanent discontinuation of the study drug in the ITT population:**
+#### **Table 17. Adverse Events (AEs) that led to the permanent discontinuation of the study drug in the ITT population:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 aes_discontinuation <- data_14_aes %>% 
@@ -2328,7 +2508,7 @@ tbl_discontinuations
 
 There are `r length(unique(aes_discontinuation$patient))` patients with adverse events that led to the permanent discontinuation of any study drug. Pembrolizumab was discontinued in `r length(unique(aes_discontinuation_pembro$patient))` patients and Lenvatinib was discontinued in `r length(unique(aes_discontinuation_lenva$patient))` patients.
 
-#### **Table 17. Adverse Events (AEs) that led to dose reductions in the ITT population:**
+#### **Table 18. Adverse Events (AEs) that led to dose reductions in the ITT population:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 aes_reductions <- data_14_aes %>% 
