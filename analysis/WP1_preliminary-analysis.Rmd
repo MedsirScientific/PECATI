@@ -2027,7 +2027,7 @@ tbl_saes_g3 %>%
 tbl_saes_g3
 ```
 
-There are `r nrow(myocarditis)` with `r myocarditis$adverse_event` of  `r tolower(myocarditis$grade)`  `r tolower(myocarditis$relationship)`.
+There is `r nrow(myocarditis)` patient with `r myocarditis$adverse_event` of  `r tolower(myocarditis$grade)`  `r tolower(myocarditis$relationship)`.
 
 #### **Table 16. Adverse Events (AEs) that led to the permanent discontinuation of the study drug in the ITT population:**
 
