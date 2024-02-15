@@ -1394,9 +1394,7 @@ lenvatinib %>%
   bold_labels()
 ```
 
-<!-- ### Under development --------------------------------------------------->
-
-# Extent of Exposure of Study Treatment
+# Extent of Exposure to the Study Treatment
 
 ## Dose delays, reductions, and interruptions
 
@@ -1466,10 +1464,10 @@ pembrolizumab_delays <- pembrolizumab_delays %>%
   )
 ```
 
-#### **Table X.1. Pembrolizumab dose delay:**
+<!-- #### **Table X.1. Pembrolizumab dose delay:** -->
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-pembrolizumab_delays %>%
+tbl_delays <- pembrolizumab_delays %>%
   tbl_summary(
     missing = "no",
     percent = "column",
@@ -1516,10 +1514,10 @@ pembrolizumab_no_reduction_clean <- pembrolizumab_no_reduction %>%
 pembrolizumab_reductions <- bind_rows(pembrolizumab_reduction, pembrolizumab_no_reduction_clean)
 ```
 
-#### **Table X.2. Pembrolizumab dose reduction:**
+<!-- #### **Table X.2. Pembrolizumab dose reduction:** -->
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-pembrolizumab_reductions %>%
+tbl_reductions <- pembrolizumab_reductions %>%
   tbl_summary(
     missing = "no",
     percent = "column",
@@ -1570,14 +1568,14 @@ pembrolizumab_temporary_interruptions <- pembrolizumab_temporary_interruptions %
     reason_no_administration = if_else(
       reason_no_administration == "Dose withhold due to toxicity or other medical reason (record in AEs form)", "Adverse Event/toxicity", reason_no_administration),
     reason_no_administration = if_else(
-      reason_no_administration == "Non-Medical Reason", "Non-medical reason", reason_no_administration)
+      reason_no_administration == "Non-Medical Reason", "Non-medical reasons", reason_no_administration)
   )
 ```
 
-#### **Table X.3. Pembrolizumab temporary dose interruption:**
+<!-- #### **Table X.3. Pembrolizumab temporary dose interruption:** -->
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-pembrolizumab_temporary_interruptions %>%
+tbl_temporary <- pembrolizumab_temporary_interruptions %>%
   tbl_summary(
     missing = "no",
     percent = "column",
@@ -1626,10 +1624,10 @@ pembrolizumab_permanent_discontinuations <- bind_rows(pembrolizumab_permanent, p
 ```
 
 
-#### **Table X.4. Pembrolizumab permanent discontinuation:**
+<!-- #### **Table X.4. Pembrolizumab permanent discontinuation:** -->
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-pembrolizumab_permanent_discontinuations %>%
+tbl_permanent <- pembrolizumab_permanent_discontinuations %>%
   tbl_summary(
     missing = "no",
     percent = "column",
@@ -1640,6 +1638,22 @@ pembrolizumab_permanent_discontinuations %>%
   ) %>%
   modify_header(label = " ") %>%
   bold_labels()
+```
+
+<!-- ### Under development --------------------------------------------------->
+
+### **Table X. Pembrolizumab dose modifications**
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+row1 <- tbl_merge(list(tbl_delays))
+row2 <- tbl_merge(list(tbl_reductions))
+row3 <- tbl_merge(list(tbl_temporary))
+row4 <- tbl_merge(list(tbl_permanent))
+
+tbl_stack <-
+  tbl_stack(list(row1, row2, row3, row4))
+
+tbl_stack %>% modify_spanning_header(all_stat_cols() ~ "")
 ```
 
 <!-- ### --------------------------------------------------------------------->
