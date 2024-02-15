@@ -1576,10 +1576,11 @@ lenvatinib_reductions <- lenvatinib_modifications %>%
   ) %>% 
   ungroup()
 
+### The following information was a petition from the PI ### ------------------
 # Print the median of mean_daily_dose
-mean(lenvatinib_reductions$mean_daily_dose, na.rm = TRUE)
-min(lenvatinib_reductions$min_daily_dose, na.rm = TRUE)
-max(lenvatinib_reductions$max_daily_dose, na.rm = TRUE)
+# mean(lenvatinib_reductions$mean_daily_dose, na.rm = TRUE)
+# min(lenvatinib_reductions$min_daily_dose, na.rm = TRUE)
+# max(lenvatinib_reductions$max_daily_dose, na.rm = TRUE)
 
 ### Line and dot plot of lenvatinib daily dose across time ### ----------------
 # lenvatinib_modifications_s2 %>% 
@@ -1607,19 +1608,19 @@ lenvatinib_daily_dose <- lenvatinib_modifications_s2 %>%
     x = "Cycle number",
     y = "Lenvatinib daily dose (mg)"
   ) +
-  facet_wrap(~patient) + 
-  theme(
-  panel.background = element_rect(fill = "white"),
-  panel.grid.major = element_line(colour = "grey", size = 0.5),
-  panel.grid.minor = element_blank(),
-  strip.background = element_rect(fill = "white"),
-  strip.text.x = element_text(colour = "black", face = "bold"),
-  axis.text.x = element_text(colour = "black"),
-  axis.text.y = element_text(colour = "black"),
-  axis.title.x = element_text(colour = "black", face = "bold"),
-  axis.title.y = element_text(colour = "black", face = "bold"),
-  plot.title = element_text(colour = "black", face = "bold")
-)
+  facet_wrap(~patient) # + 
+#   theme(
+#   panel.background = element_rect(fill = "white"),
+#   panel.grid.major = element_line(colour = "grey", size = 0.5),
+#   panel.grid.minor = element_blank(),
+#   strip.background = element_rect(fill = "white"),
+#   strip.text.x = element_text(colour = "black", face = "bold"),
+#   axis.text.x = element_text(colour = "black"),
+#   axis.text.y = element_text(colour = "black"),
+#   axis.title.x = element_text(colour = "black", face = "bold"),
+#   axis.title.y = element_text(colour = "black", face = "bold"),
+#   plot.title = element_text(colour = "black", face = "bold")
+# )
 
 ### Save plot ---------------------------------------------------------------
 ggsave(
