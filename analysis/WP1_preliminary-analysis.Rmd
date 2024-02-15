@@ -1394,6 +1394,254 @@ lenvatinib %>%
   bold_labels()
 ```
 
+<!-- ### Under development --------------------------------------------------->
+
+# Extent of Exposure of Study Treatment
+
+## Dose delays, reductions, and interruptions
+
+### Pembrolizumab
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+pembrolizumab_modifications <- data_01_cycles %>% 
+  mutate(
+    visit_date = dmy(visit_date)
+  ) %>% 
+  select(patient, event_num, pembrolizumab_administered, reason_no_administration, specify_ae_no_dose, date_of_administration,
+         treatment_delay_reason, pembrolizumab_administered_dose, other_dose_mg) %>% 
+  mutate(
+    date_of_administration = dmy(date_of_administration),
+    temporary_interruption = if_else(
+      pembrolizumab_administered == "No" & !is.na(reason_no_administration) & !str_detect(reason_no_administration, "permanent"), "Yes", "No"),
+    delay = if_else(
+      pembrolizumab_administered == "Yes" & !is.na(treatment_delay_reason), "Yes", "No"),
+    reduction = if_else(
+      !is.na(other_dose_mg), "Yes", "No"),
+    permanent_discontinuation = if_else(
+      pembrolizumab_administered == "No" & str_detect(reason_no_administration, "permanent"), "Yes", "No")
+  ) %>% 
+  select(
+    patient, event_num, pembrolizumab_administered, date_of_administration,
+    delay, treatment_delay_reason, 
+    reduction, pembrolizumab_administered_dose, other_dose_mg,
+    temporary_interruption, reason_no_administration,
+    permanent_discontinuation
+  )
+
+# Treatment delay
+## Patients with treatment delay
+pembrolizumab_delay <- pembrolizumab_modifications %>% 
+  group_by(patient) %>% 
+  filter(
+    delay == "Yes"
+  ) %>% 
+  filter(
+    event_num == min(event_num)
+  ) %>% 
+  ungroup() %>% 
+  select(-event_num)
+
+## Patients without any treatment delay
+pembrolizumab_no_delay <- pembrolizumab_modifications %>% 
+  group_by(patient) %>% 
+  filter(
+    delay == "No"
+  ) %>% 
+  filter(
+    event_num == min(event_num)
+  ) %>% 
+  ungroup() %>% 
+  select(-event_num)
+
+pembrolizumab_no_delay_clean <- pembrolizumab_no_delay %>% 
+  anti_join(pembrolizumab_delay, by = "patient") %>% 
+  select(patient, everything())
+
+pembrolizumab_delays <- bind_rows(pembrolizumab_delay, pembrolizumab_no_delay_clean)
+
+pembrolizumab_delays <- pembrolizumab_delays %>% 
+  mutate(
+    treatment_delay_reason = if_else(
+      treatment_delay_reason == "Adverse Event/toxicity (please, record it in the AEs form)", "Adverse Event/toxicity", treatment_delay_reason)
+  )
+```
+
+#### **Table X.1. Pembrolizumab dose delay:**
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+pembrolizumab_delays %>%
+  tbl_summary(
+    missing = "no",
+    percent = "column",
+    type = all_dichotomous() ~ "categorical",
+    sort = list(everything() ~ "frequency"),
+    label = list(delay ~ "Pembrolizumab dose delay",
+                 treatment_delay_reason ~ "Reason for treatment delay"),
+    include = c(delay, treatment_delay_reason)
+  ) %>%
+  modify_header(label = " ") %>%
+  bold_labels()
+```
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# Treatment reduction
+## Patients with treatment reduction
+pembrolizumab_reduction <- pembrolizumab_modifications %>% 
+  group_by(patient) %>% 
+  filter(
+    reduction == "Yes"
+  ) %>% 
+  filter(
+    event_num == min(event_num)
+  ) %>% 
+  ungroup() %>% 
+  select(-event_num)
+
+## Patients without any treatment reduction
+pembrolizumab_no_reduction <- pembrolizumab_modifications %>% 
+  group_by(patient) %>% 
+  filter(
+    reduction == "No"
+  ) %>% 
+  filter(
+    event_num == min(event_num)
+  ) %>% 
+  ungroup() %>% 
+  select(-event_num)
+
+pembrolizumab_no_reduction_clean <- pembrolizumab_no_reduction %>% 
+  anti_join(pembrolizumab_reduction, by = "patient") %>% 
+  select(patient, everything())
+
+pembrolizumab_reductions <- bind_rows(pembrolizumab_reduction, pembrolizumab_no_reduction_clean)
+```
+
+#### **Table X.2. Pembrolizumab dose reduction:**
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+pembrolizumab_reductions %>%
+  tbl_summary(
+    missing = "no",
+    percent = "column",
+    type = all_dichotomous() ~ "categorical",
+    sort = list(everything() ~ "frequency"),
+    label = list(reduction ~ "Pembrolizumab dose reduction",
+                 pembrolizumab_administered_dose ~ "Dose administered"),
+    include = c(reduction, pembrolizumab_administered_dose)
+  ) %>%
+  modify_header(label = " ") %>%
+  bold_labels()
+```
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# Treatment temporary interruption
+## Patients with treatment temporary interruption
+pembrolizumab_temporary <- pembrolizumab_modifications %>% 
+  group_by(patient) %>% 
+  filter(
+    temporary_interruption == "Yes"
+  ) %>% 
+  filter(
+    event_num == min(event_num)
+  ) %>% 
+  ungroup() %>% 
+  select(-event_num)
+
+## Patients without any treatment reduction
+pembrolizumab_no_temporary <- pembrolizumab_modifications %>% 
+  group_by(patient) %>% 
+  filter(
+    temporary_interruption == "No"
+  ) %>% 
+  filter(
+    event_num == min(event_num)
+  ) %>% 
+  ungroup() %>% 
+  select(-event_num)
+
+pembrolizumab_no_temporary_clean <- pembrolizumab_no_temporary %>% 
+  anti_join(pembrolizumab_temporary, by = "patient") %>% 
+  select(patient, everything())
+
+pembrolizumab_temporary_interruptions <- bind_rows(pembrolizumab_temporary, pembrolizumab_no_temporary_clean)
+
+pembrolizumab_temporary_interruptions <- pembrolizumab_temporary_interruptions %>% 
+  mutate(
+    reason_no_administration = if_else(
+      reason_no_administration == "Dose withhold due to toxicity or other medical reason (record in AEs form)", "Adverse Event/toxicity", reason_no_administration),
+    reason_no_administration = if_else(
+      reason_no_administration == "Non-Medical Reason", "Non-medical reason", reason_no_administration)
+  )
+```
+
+#### **Table X.3. Pembrolizumab temporary dose interruption:**
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+pembrolizumab_temporary_interruptions %>%
+  tbl_summary(
+    missing = "no",
+    percent = "column",
+    type = all_dichotomous() ~ "categorical",
+    sort = list(everything() ~ "frequency"),
+    label = list(temporary_interruption ~ "Pembrolizumab temporary dose interruption",
+                 reason_no_administration ~ "Reason for interruption"),
+    include = c(temporary_interruption, reason_no_administration)
+  ) %>%
+  modify_header(label = " ") %>%
+  bold_labels()
+```
+
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# Treatment permanent discontinuation
+## Patients with treatment permanent discontinuation
+pembrolizumab_permanent <- pembrolizumab_modifications %>% 
+  group_by(patient) %>% 
+  filter(
+    permanent_discontinuation == "Yes"
+  ) %>% 
+  filter(
+    event_num == min(event_num)
+  ) %>% 
+  ungroup() %>% 
+  select(-event_num)
+
+## Patients without any treatment reduction
+pembrolizumab_no_permanent <- pembrolizumab_modifications %>% 
+  group_by(patient) %>% 
+  filter(
+    permanent_discontinuation == "No"
+  ) %>% 
+  filter(
+    event_num == min(event_num)
+  ) %>% 
+  ungroup() %>% 
+  select(-event_num)
+
+pembrolizumab_no_permanent_clean <- pembrolizumab_no_permanent %>% 
+  anti_join(pembrolizumab_permanent, by = "patient") %>% 
+  select(patient, everything())
+
+pembrolizumab_permanent_discontinuations <- bind_rows(pembrolizumab_permanent, pembrolizumab_no_permanent_clean)
+```
+
+
+#### **Table X.4. Pembrolizumab permanent discontinuation:**
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+pembrolizumab_permanent_discontinuations %>%
+  tbl_summary(
+    missing = "no",
+    percent = "column",
+    type = all_dichotomous() ~ "categorical",
+    sort = list(everything() ~ "frequency"),
+    label = list(permanent_discontinuation ~ "Pembrolizumab permanent discontinuation"),
+    include = c(permanent_discontinuation)
+  ) %>%
+  modify_header(label = " ") %>%
+  bold_labels()
+```
+
 <!-- ### --------------------------------------------------------------------->
 
 # Preliminary Efficacy Analysis

@@ -10,4 +10,4 @@ editor_options:
 
 This is the index page of the online repository for the PECATI study. Here is a list of work packages:
 
- - [Preliminary data cleaning and analysis (January 2024)](WP1_preliminary-analysis.html)
+ - [Preliminary data cleaning and analysis (February 2024)](WP1_preliminary-analysis.html)
