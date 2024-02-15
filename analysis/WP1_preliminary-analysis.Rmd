@@ -2066,7 +2066,7 @@ tbl_discontinuations %>%
 tbl_discontinuations
 ```
 
-There are `r nrow(unique(aes_discontinuation$patient))` patients with adverse events that led to the permanent discontinuation of any study drug. Pembrolizumab was discontinued in `r nrow(unique(aes_discontinuation_pembro$patient))` patients and Lenvatinib was discontinued in `r nrow(unique(aes_discontinuation_lenva$patient))` patients.
+There are `r length(unique(aes_discontinuation$patient))` patients with adverse events that led to the permanent discontinuation of any study drug. Pembrolizumab was discontinued in `r length(unique(aes_discontinuation_pembro$patient))` patients and Lenvatinib was discontinued in `r length(unique(aes_discontinuation_lenva$patient))` patients.
 
 #### **Table 17. Adverse Events (AEs) that led to dose reductions in the ITT population:**
 
@@ -2105,5 +2105,5 @@ tbl_reductions %>%
 tbl_reductions
 ```
 
-There are `r nrow(unique(aes_reductions$patient))` patients with adverse events that led to dose reductions of any study drug. Pembrolizumab was reduced in `r nrow(unique(aes_reductions_pembro$patient))` patients and Lenvatinib was reduced in `r nrow(unique(aes_reductions_lenva$patient))` patients.
+There are `r length(unique(aes_reductions$patient))` patients with adverse events that led to dose reductions of any study drug. Pembrolizumab was reduced in `r length(unique(aes_reductions_pembro$patient))` patients and Lenvatinib was reduced in `r length(unique(aes_reductions_lenva$patient))` patients.
 
