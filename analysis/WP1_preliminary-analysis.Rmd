@@ -2285,6 +2285,7 @@ data_14_aes <- read_excel(
     ) %>% 
   clean_names() %>% 
   drop_na(adverse_event) %>% 
+  filter(adverse_event != c("Death", "death")) %>% 
   rename(
     sae = "serious_seriousness_criteria",
     grade = "severity_intensity",
@@ -2300,9 +2301,6 @@ data_14_aes <- read_excel(
     patient, adverse_event, sae, grade, relationship, action_taken, start_date,
     end_date, outcome
     )
-
-data_14_aes <- data_14_aes %>% 
-  filter(adverse_event != "Death")
 
 data_14_aes$adverse_event <- str_to_title(data_14_aes$adverse_event)
 data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Asat Increase", "ASAT Increase")
@@ -2440,8 +2438,10 @@ tbl_saes
 #### **Table 16. Serious Adverse Events (SAEs) of grade ≥3 in the ITT population:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
+
+# Select adverse_events of grade 3, 4, and 5
 saes_g3 <- saes %>% 
-  filter(grade == c("Grade 3", "Grade 4", "Grade 5"))
+  filter(grade %in% c("Grade 3", "Grade 4", "Grade 5"))
 
 tbl_saes_g3 <- saes_g3 %>% 
   tbl_ae(
