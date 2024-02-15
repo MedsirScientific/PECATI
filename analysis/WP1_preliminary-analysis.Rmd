@@ -1398,8 +1398,6 @@ lenvatinib %>%
 
 ## Dose delays, reductions, and interruptions
 
-### Pembrolizumab
-
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 pembrolizumab_modifications <- data_01_cycles %>% 
   mutate(
