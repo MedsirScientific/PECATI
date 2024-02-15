@@ -1860,12 +1860,37 @@ data_14_aes <- read_excel(
     end_date, outcome
     )
 
+data_14_aes <- data_14_aes %>% 
+  filter(adverse_event != "Death")
+
 data_14_aes$adverse_event <- str_to_title(data_14_aes$adverse_event)
 data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Asat Increase", "ASAT Increase")
 data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Alat Increase", "ALAT Increase")
 data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Ggt Increase", "GGT Increase")
 data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Alp Increase", "ALP Increase")
+data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Asthenia", "Fatigue")
+data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Arterial Hypertension", "Hypertension")
+data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Hand Neuropathies", "Neuropathy")
+data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Intermittent Diarrhea", "Diarrhea")
+data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Appetite Loss", "Decreased appetite")
+data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Loss Of Appetite", "Decreased appetite")
+data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Pain On Toe Of Right Foot", "Pain")
+data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Polyneuropathy (Hands)", "Neuropathy")
+data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Shoulder Pain Bilaterally", "Pain")
+data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Worsening Of Abdominal Pain", "Pain")
+data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Systolic Hypertension", "Hypertension")
+data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Diarrhea", "Diarrhoea")
+data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Diahrrea", "Diarrhoea")
+data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Systolic Hypertension", "Hypertension")
+data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Dyspnea", "Dyspnoea")
+data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Exertional Dyspnoea", "Dyspnoea")
+data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Abdominal Pain", "Pain")
+data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Abdominal Pains", "Pain")
+
 data_14_aes$grade <- str_remove(data_14_aes$grade, "/.*")
+
+myocarditis <- data_14_aes %>% 
+  filter(adverse_event == "Myocarditis")
 
 data_14_aes <- merge(
   data_02_itt,
@@ -1874,7 +1899,7 @@ data_14_aes <- merge(
   all = FALSE
 )
 
-# Create a table to show which patients have any adverse event of grade "Not aplicable"
+# Create a table to show which patients have any adverse event of grade "Not applicable"
 data_14_aes_na <- data_14_aes %>% 
   filter(grade == "Not aplicable") %>% 
   select(patient, adverse_event, grade) %>% 
@@ -1912,6 +1937,9 @@ rmarkdown::paged_table(data_temp_aes_na_formatted)
 #### **Table 13. Adverse Events (AEs) by maximum severity in the ITT population:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
+data_14_aes <- data_14_aes %>% 
+  filter(grade != "Not aplicable")
+
 tbl_aes <- data_14_aes %>% 
   tbl_ae(
     id_df = data_02_itt,
@@ -1968,11 +1996,50 @@ tbl_saes %>%
 tbl_saes
 ```
 
-#### **Table 15. Adverse Events (AEs) that led to the permanent discontinuation of the study drug in the ITT population:**
+#### **Table 15. Serious Adverse Events (SAEs) of grade ≥3 in the ITT population:**
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+saes_g3 <- saes %>% 
+  filter(grade == c("Grade 3", "Grade 4", "Grade 5"))
+
+tbl_saes_g3 <- saes_g3 %>% 
+  tbl_ae(
+    id_df = data_02_itt,
+    id = patient,
+    ae = adverse_event,
+    by = grade,
+    digits = c(0, 0),
+    sort = c("ae")
+  ) %>% 
+  add_overall() %>%
+  modify_header(
+    all_ae_cols() ~ "**{by}**",
+    all_overall_cols() ~ "**Any grade**"
+    ) %>%
+  bold_labels()
+
+tbl_saes_g3 %>%
+  as_flex_table() %>%
+  flextable::save_as_docx(
+    path = here(paste0("output/", project_id, "_saes_g3_table_", as.Date(Sys.Date()), ".docx"))
+  )
+
+tbl_saes_g3
+```
+
+There are `r nrow(myocarditis)` with `r myocarditis$adverse_event` of  `r tolower(myocarditis$grade)`  `r tolower(myocarditis$relationship)`.
+
+#### **Table 16. Adverse Events (AEs) that led to the permanent discontinuation of the study drug in the ITT population:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 aes_discontinuation <- data_14_aes %>% 
   filter(!str_detect(action_taken, "permanent"))
+
+aes_discontinuation_pembro <- aes_discontinuation %>% 
+  filter(str_detect(action_taken, "Pembrolizumab"))
+
+aes_discontinuation_lenva <- aes_discontinuation %>% 
+  filter(str_detect(action_taken, "Lenvatinib"))
 
 tbl_discontinuations <- aes_discontinuation %>% 
   tbl_ae(
@@ -1998,3 +2065,45 @@ tbl_discontinuations %>%
 
 tbl_discontinuations
 ```
+
+There are `r nrow(unique(aes_discontinuation$patient))` patients with adverse events that led to the permanent discontinuation of any study drug. Pembrolizumab was discontinued in `r nrow(unique(aes_discontinuation_pembro$patient))` patients and Lenvatinib was discontinued in `r nrow(unique(aes_discontinuation_lenva$patient))` patients.
+
+#### **Table 17. Adverse Events (AEs) that led to dose reductions in the ITT population:**
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+aes_reductions <- data_14_aes %>% 
+  filter(str_detect(action_taken, "reduction"))
+
+aes_reductions_pembro <- aes_reductions %>% 
+  filter(str_detect(action_taken, "Pembrolizumab"))
+
+aes_reductions_lenva <- aes_reductions %>% 
+  filter(str_detect(action_taken, "Lenvatinib"))
+
+tbl_reductions <- aes_reductions %>% 
+  tbl_ae(
+    id_df = data_02_itt,
+    id = patient,
+    ae = adverse_event,
+    by = grade,
+    digits = c(0, 0),
+    sort = c("ae")
+  ) %>% 
+  add_overall() %>%
+  modify_header(
+    all_ae_cols() ~ "**{by}**",
+    all_overall_cols() ~ "**Any grade**"
+    ) %>%
+  bold_labels()
+
+tbl_reductions %>%
+  as_flex_table() %>%
+  flextable::save_as_docx(
+    path = here(paste0("output/", project_id, "_aes_dose-reductions_table_", as.Date(Sys.Date()), ".docx"))
+  )
+
+tbl_reductions
+```
+
+There are `r nrow(unique(aes_reductions$patient))` patients with adverse events that led to dose reductions of any study drug. Pembrolizumab was reduced in `r nrow(unique(aes_reductions_pembro$patient))` patients and Lenvatinib was reduced in `r nrow(unique(aes_reductions_lenva$patient))` patients.
+
