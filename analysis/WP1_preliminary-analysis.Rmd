@@ -1577,7 +1577,7 @@ lenvatinib_reductions <- lenvatinib_modifications %>%
   ungroup()
 
 # Print the median of mean_daily_dose
-median(lenvatinib_reductions$mean_daily_dose, na.rm = TRUE)
+mean(lenvatinib_reductions$mean_daily_dose, na.rm = TRUE)
 min(lenvatinib_reductions$min_daily_dose, na.rm = TRUE)
 max(lenvatinib_reductions$max_daily_dose, na.rm = TRUE)
 
@@ -1594,7 +1594,7 @@ max(lenvatinib_reductions$max_daily_dose, na.rm = TRUE)
 #   )
 ```
 
-#### **Figure 3. Lenvatinib daily dose (mg) across time**
+#### **Figure 3. Total Lenvatinib dose (mg) per cycle across time**
 
 ```{r, line-dot-plot-lenvatinib, fig.height = 15, message = FALSE, warning = FALSE, echo = FALSE}
 lenvatinib_daily_dose <- lenvatinib_modifications_s2 %>% 
@@ -1603,13 +1603,12 @@ lenvatinib_daily_dose <- lenvatinib_modifications_s2 %>%
   geom_point() +
   theme_minimal() +
   labs(
-    title = "Lenvatinib daily dose (mg) across time",
+    title = "Total Lenvatinib dose (mg) per cycle across time",
     x = "Cycle number",
     y = "Lenvatinib daily dose (mg)"
   ) +
-  facet_wrap(~patient)
-# Add a white background to the plot
-lenvatinib_daily_dose <- lenvatinib_daily_dose + theme(
+  facet_wrap(~patient) + 
+  theme(
   panel.background = element_rect(fill = "white"),
   panel.grid.major = element_line(colour = "grey", size = 0.5),
   panel.grid.minor = element_blank(),
