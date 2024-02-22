@@ -1313,7 +1313,7 @@ grid.draw(site_0301_figure)
 
 - Patient 0301-007 is stable after 13 cycles of study treatment (last registered Lenvatinib dose: 2024-01-24; last registered Pembrolizumab dose: 2024-01-04).
 
-- Patient 0301-008 is responding after 2 cycles of study treatment (last registered Lenvatinib dose: 2023-08-02; last registered Pembrolizumab dose: 2023-08-03).
+- Patient 0301-008 discontinued the study treatment after 2 cycles due to radiological progression (new lesions in the lung).
 
 - Patient 0301-009 is stable after 10 cycles of study treatment (last registered Lenvatinib dose: 2024-01-24; last registered Pembrolizumab dose: 2024-01-25).
 
