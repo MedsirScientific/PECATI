@@ -68,6 +68,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="PECATI_primary-endpoint_2024-02-22_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="PECATI_primary-endpoint_2024-02-22_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
 
+<link href="PECATI_primary-endpoint_2024-02-22_files/libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet">
+<script src="PECATI_primary-endpoint_2024-02-22_files/libs/pagedtable-1.1/js/pagedtable.js"></script>
+
 
 </head>
 
@@ -82,6 +85,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#patient-disposition" id="toc-patient-disposition" class="nav-link active" data-scroll-target="#patient-disposition"><span class="header-section-number">1</span> Patient Disposition</a>
   <ul class="collapse">
   <li><a href="#screening" id="toc-screening" class="nav-link" data-scroll-target="#screening"><span class="header-section-number">1.1</span> Screening</a></li>
+  <li><a href="#intention-to-treat-population-itt" id="toc-intention-to-treat-population-itt" class="nav-link" data-scroll-target="#intention-to-treat-population-itt"><span class="header-section-number">1.2</span> Intention-to-treat population (ITT)</a></li>
+  <li><a href="#study-treatment-discontinuation-eot" id="toc-study-treatment-discontinuation-eot" class="nav-link" data-scroll-target="#study-treatment-discontinuation-eot"><span class="header-section-number">1.3</span> Study treatment discontinuation (EoT)</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -114,44 +119,546 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define a function to clean and process screening data</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>process_screening_data <span class="ot">&lt;-</span> <span class="cf">function</span>(data) {</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  rename_list <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">patient =</span> <span class="st">"patient"</span>,</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">screening_date =</span> <span class="st">"visit_date"</span>,</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">eligible =</span> <span class="st">"is_the_patient_eligible_to_participate_in_the_study"</span>,</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">sf_date =</span> <span class="st">"non_eligible_date"</span>,</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">sf_reason =</span> <span class="st">"reason_not_eligible"</span>,</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">eligibility_date_1 =</span> <span class="st">"eligibility_date_v2"</span>,</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">eligibility_date_2 =</span> <span class="st">"eligibility_date_v3"</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Perform standard data processing steps</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rename</span>(<span class="sc">!!!</span>rename_list) <span class="sc">%&gt;%</span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate_at</span>(<span class="fu">vars</span>(<span class="fu">starts_with</span>(<span class="st">"eligibility_date"</span>)), dmy) <span class="sc">%&gt;%</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>      <span class="at">eligibility_date =</span> <span class="fu">if_else</span>(</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>        eligible <span class="sc">==</span> <span class="st">"Yes"</span> <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(eligibility_date_1), eligibility_date_1, eligibility_date_2</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>      ),</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>      <span class="at">eligibility_date =</span> <span class="fu">ymd</span>(eligibility_date),</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>      <span class="at">sf_date =</span> <span class="fu">dmy</span>(sf_date),</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>      <span class="at">sf_reason =</span> <span class="fu">if_else</span>(<span class="fu">is.na</span>(eligible), <span class="st">"Unknown"</span>, sf_reason),</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">screening_date =</span> <span class="fu">dmy</span>(screening_date)</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span></span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(patient, screening_date, eligible, sf_date, sf_reason, eligibility_date)</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(data)</span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Process screening data</span></span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>data_00_screening <span class="ot">&lt;-</span> <span class="fu">process_screening_data</span>(data_00_screening)</span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="co"># Manual modifications</span></span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>data_00_screening<span class="sc">$</span>eligible[data_00_screening<span class="sc">$</span>patient <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"0301-014"</span>, <span class="st">"0301-012"</span>)] <span class="ot">&lt;-</span> <span class="st">"Yes"</span></span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>data_00_screening<span class="sc">$</span>eligibility_date[data_00_screening<span class="sc">$</span>patient <span class="sc">==</span> <span class="st">"0301-014"</span>] <span class="ot">&lt;-</span> data_00_screening<span class="sc">$</span>screening_date[data_00_screening<span class="sc">$</span>patient <span class="sc">==</span> <span class="st">"0301-014"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># # Define a function to clean and process screening data</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># process_screening_data &lt;- function(data) {</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">#   rename_list &lt;- list(</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">#     patient = "patient",</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">#     screening_date = "visit_date",</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">#     eligible = "is_the_patient_eligible_to_participate_in_the_study",</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">#     sf_date = "non_eligible_date",</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">#     sf_reason = "reason_not_eligible",</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">#     eligibility_date_1 = "eligibility_date_v2",</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">#     eligibility_date_2 = "eligibility_date_v3"</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">#   )</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">#   # Perform standard data processing steps</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">#   data &lt;- data %&gt;%</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co">#     rename(!!!rename_list) %&gt;%</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co">#     mutate_at(vars(starts_with("eligibility_date")), dmy) %&gt;%</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co">#     mutate(</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co">#       eligibility_date = if_else(</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co">#         eligible == "Yes" &amp; !is.na(eligibility_date_1), eligibility_date_1, eligibility_date_2</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co">#       ),</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co">#       eligibility_date = ymd(eligibility_date),</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co">#       sf_date = dmy(sf_date),</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="co">#       sf_reason = if_else(is.na(eligible), "Unknown", sf_reason),</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="co">#       screening_date = dmy(screening_date)</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="co">#     ) %&gt;%</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="co">#     select(patient, screening_date, eligible, sf_date, sf_reason, eligibility_date)</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="co">#   </span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="co">#   return(data)</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="co"># }</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="co"># # Process screening data</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="co"># data_00_screening &lt;- process_screening_data(data_00_screening)</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="co"># # Manual modifications</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="co"># data_00_screening$eligible[data_00_screening$patient %in% c("0301-014", "0301-012")] &lt;- "Yes"</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="co"># data_00_screening$eligibility_date[data_00_screening$patient == "0301-014"] &lt;- data_00_screening$screening_date[data_00_screening$patient == "0301-014"]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
+<!-- ### Under development --------------------------------------------------->
+<p>Listing of patients who have undergone the screening phase (n = 59):</p>
+<div class="cell">
+<div class="cell-output-display">
+
+<div data-pagedtable="false">
+  <script data-pagedtable-source="" type="application/json">
+{"columns":[{"label":["Patient"],"name":[1],"type":["chr"],"align":["left"]},{"label":["Date of screening visit"],"name":[2],"type":["date"],"align":["right"]},{"label":["Eligible patient?"],"name":[3],"type":["chr"],"align":["left"]},{"label":["Date of screening failure"],"name":[4],"type":["date"],"align":["right"]},{"label":["Reason for screening failure"],"name":[5],"type":["chr"],"align":["left"]},{"label":["Date of confirmation of eligibility"],"name":[6],"type":["date"],"align":["right"]}],"data":[{"1":"0101-001","2":"2022-06-16","3":"No","4":"2022-07-05","5":"Non-fulfillment Selection Criteria","6":"<NA>"},{"1":"0102-001","2":"2022-06-22","3":"Yes","4":"<NA>","5":"NA","6":"2022-07-19"},{"1":"0102-002","2":"2022-09-13","3":"No","4":"2022-09-30","5":"Non-fulfillment Selection Criteria","6":"<NA>"},{"1":"0102-003","2":"2023-06-02","3":"Yes","4":"<NA>","5":"NA","6":"2023-06-02"},{"1":"0102-004","2":"2023-07-03","3":"Yes","4":"<NA>","5":"NA","6":"2023-07-12"},{"1":"0102-005","2":"2023-08-31","3":"No","4":"2023-09-12","5":"Non-fulfillment Selection Criteria","6":"<NA>"},{"1":"0103-001","2":"2022-07-28","3":"Yes","4":"<NA>","5":"NA","6":"2022-08-18"},{"1":"0103-002","2":"2022-07-29","3":"Yes","4":"<NA>","5":"NA","6":"2022-08-19"},{"1":"0103-003","2":"2022-11-30","3":"No","4":"2022-12-12","5":"Non-fulfillment Selection Criteria","6":"<NA>"},{"1":"0103-004","2":"2023-10-26","3":"No","4":"2023-10-27","5":"Non-fulfillment Selection Criteria","6":"<NA>"},{"1":"0104-001","2":"2022-01-05","3":"No","4":"2022-01-27","5":"Non-fulfillment Selection Criteria","6":"<NA>"},{"1":"0104-002","2":"<NA>","3":"No","4":"2023-11-15","5":"Non-fulfillment Selection Criteria","6":"<NA>"},{"1":"0105-001","2":"2022-05-03","3":"Yes","4":"<NA>","5":"NA","6":"2022-05-12"},{"1":"0105-002","2":"<NA>","3":"NA","4":"<NA>","5":"Unknown","6":"<NA>"},{"1":"0105-003","2":"2022-09-15","3":"Yes","4":"<NA>","5":"NA","6":"2022-09-27"},{"1":"0105-004","2":"2023-10-04","3":"No","4":"2023-10-04","5":"Non-fulfillment Selection Criteria","6":"<NA>"},{"1":"0106-001","2":"2024-01-17","3":"Yes","4":"<NA>","5":"NA","6":"2024-01-31"},{"1":"0201-001","2":"2023-02-28","3":"Yes","4":"<NA>","5":"NA","6":"2023-03-08"},{"1":"0201-002","2":"2023-02-27","3":"Yes","4":"<NA>","5":"NA","6":"2023-03-03"},{"1":"0201-003","2":"2023-03-27","3":"Yes","4":"<NA>","5":"NA","6":"2023-03-28"},{"1":"0201-004","2":"2023-05-24","3":"Yes","4":"<NA>","5":"NA","6":"2023-06-06"},{"1":"0201-005","2":"2023-06-29","3":"Yes","4":"<NA>","5":"NA","6":"2023-07-04"},{"1":"0202-001","2":"2022-04-29","3":"No","4":"2022-05-11","5":"Non-fulfillment Selection Criteria","6":"<NA>"},{"1":"0202-002","2":"2022-05-25","3":"Yes","4":"<NA>","5":"NA","6":"2022-06-08"},{"1":"0202-003","2":"2022-06-22","3":"Yes","4":"<NA>","5":"NA","6":"2022-07-20"},{"1":"0202-004","2":"2023-01-05","3":"Yes","4":"<NA>","5":"NA","6":"2023-01-18"},{"1":"0202-005","2":"2022-12-22","3":"Yes","4":"<NA>","5":"NA","6":"2023-01-20"},{"1":"0202-006","2":"2023-02-15","3":"No","4":"2023-03-03","5":"Non-fulfillment Selection Criteria","6":"<NA>"},{"1":"0202-007","2":"2023-03-06","3":"Yes","4":"<NA>","5":"NA","6":"2023-04-05"},{"1":"0202-008","2":"2023-11-13","3":"Yes","4":"<NA>","5":"NA","6":"2023-12-04"},{"1":"0203-001","2":"2023-02-16","3":"Yes","4":"<NA>","5":"NA","6":"2023-02-20"},{"1":"0203-002","2":"2023-08-23","3":"Yes","4":"<NA>","5":"NA","6":"2023-08-25"},{"1":"0203-003","2":"2023-11-30","3":"Yes","4":"<NA>","5":"NA","6":"2023-12-04"},{"1":"0203-004","2":"2023-12-28","3":"Yes","4":"<NA>","5":"NA","6":"2023-12-28"},{"1":"0204-001","2":"2023-05-30","3":"Yes","4":"<NA>","5":"NA","6":"2023-06-01"},{"1":"0204-002","2":"2023-10-09","3":"No","4":"2023-10-10","5":"Non-fulfillment Selection Criteria","6":"<NA>"},{"1":"0204-003","2":"2023-11-13","3":"Yes","4":"<NA>","5":"NA","6":"2023-11-16"},{"1":"0204-004","2":"2023-11-23","3":"No","4":"2023-12-11","5":"Non-fulfillment Selection Criteria","6":"<NA>"},{"1":"0204-005","2":"2023-12-18","3":"No","4":"2023-12-28","5":"Non-fulfillment Selection Criteria","6":"<NA>"},{"1":"0204-006","2":"2024-01-03","3":"No","4":"2024-01-16","5":"Non-fulfillment Selection Criteria","6":"<NA>"},{"1":"0205-001","2":"2023-04-18","3":"Yes","4":"<NA>","5":"NA","6":"2023-05-16"},{"1":"0205-002","2":"2023-10-04","3":"Yes","4":"<NA>","5":"NA","6":"2023-10-18"},{"1":"0206-001","2":"2023-06-21","3":"Yes","4":"<NA>","5":"NA","6":"2023-07-07"},{"1":"0206-002","2":"2023-09-25","3":"Yes","4":"<NA>","5":"NA","6":"2023-10-03"},{"1":"0206-003","2":"2023-11-30","3":"No","4":"2023-12-12","5":"Non-fulfillment Selection Criteria","6":"2023-12-12"},{"1":"0301-001","2":"2022-06-16","3":"Yes","4":"<NA>","5":"NA","6":"2022-06-17"},{"1":"0301-002","2":"2022-08-02","3":"Yes","4":"<NA>","5":"NA","6":"2022-08-03"},{"1":"0301-003","2":"2022-10-13","3":"Yes","4":"<NA>","5":"NA","6":"2022-10-13"},{"1":"0301-004","2":"2022-12-21","3":"Yes","4":"<NA>","5":"NA","6":"2022-12-23"},{"1":"0301-005","2":"2023-03-13","3":"Yes","4":"<NA>","5":"NA","6":"2023-03-13"},{"1":"0301-006","2":"2023-03-22","3":"Yes","4":"<NA>","5":"NA","6":"2023-03-22"},{"1":"0301-007","2":"2023-04-19","3":"Yes","4":"<NA>","5":"NA","6":"2023-04-19"},{"1":"0301-008","2":"2023-07-12","3":"Yes","4":"<NA>","5":"NA","6":"2023-07-12"},{"1":"0301-009","2":"2023-07-13","3":"Yes","4":"<NA>","5":"NA","6":"2023-07-14"},{"1":"0301-010","2":"2023-08-17","3":"Yes","4":"<NA>","5":"NA","6":"2023-07-17"},{"1":"0301-011","2":"2023-08-02","3":"Yes","4":"<NA>","5":"NA","6":"2023-08-02"},{"1":"0301-012","2":"2023-12-18","3":"Yes","4":"<NA>","5":"NA","6":"2023-12-18"},{"1":"0301-013","2":"2023-12-27","3":"Yes","4":"<NA>","5":"NA","6":"2023-12-27"},{"1":"0301-014","2":"2024-01-22","3":"Yes","4":"<NA>","5":"NA","6":"2024-01-22"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+</div>
+<section id="table-1.-patients-included-excluded-and-reasons-for-exclusion" class="level4" data-number="1.1.0.1">
+<h4 data-number="1.1.0.1" class="anchored" data-anchor-id="table-1.-patients-included-excluded-and-reasons-for-exclusion"><span class="header-section-number">1.1.0.1</span> <strong>Table 1. Patients included, excluded, and reasons for exclusion</strong></h4>
+<div class="cell">
+<div class="cell-output-display">
+
+<div id="etnazafnrd" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#etnazafnrd table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#etnazafnrd thead, #etnazafnrd tbody, #etnazafnrd tfoot, #etnazafnrd tr, #etnazafnrd td, #etnazafnrd th {
+  border-style: none;
+}
+
+#etnazafnrd p {
+  margin: 0;
+  padding: 0;
+}
+
+#etnazafnrd .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#etnazafnrd .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#etnazafnrd .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#etnazafnrd .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#etnazafnrd .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#etnazafnrd .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#etnazafnrd .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#etnazafnrd .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#etnazafnrd .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#etnazafnrd .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#etnazafnrd .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#etnazafnrd .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#etnazafnrd .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#etnazafnrd .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#etnazafnrd .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#etnazafnrd .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#etnazafnrd .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#etnazafnrd .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#etnazafnrd .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#etnazafnrd .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#etnazafnrd .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#etnazafnrd .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#etnazafnrd .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#etnazafnrd .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#etnazafnrd .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#etnazafnrd .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#etnazafnrd .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#etnazafnrd .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#etnazafnrd .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#etnazafnrd .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#etnazafnrd .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#etnazafnrd .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#etnazafnrd .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#etnazafnrd .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#etnazafnrd .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#etnazafnrd .gt_left {
+  text-align: left;
+}
+
+#etnazafnrd .gt_center {
+  text-align: center;
+}
+
+#etnazafnrd .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#etnazafnrd .gt_font_normal {
+  font-weight: normal;
+}
+
+#etnazafnrd .gt_font_bold {
+  font-weight: bold;
+}
+
+#etnazafnrd .gt_font_italic {
+  font-style: italic;
+}
+
+#etnazafnrd .gt_super {
+  font-size: 65%;
+}
+
+#etnazafnrd .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#etnazafnrd .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#etnazafnrd .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#etnazafnrd .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#etnazafnrd .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#etnazafnrd .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#etnazafnrd .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <thead>
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id=""></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="<strong>N = 59</strong><span class=&quot;gt_footnote_marks&quot; style=&quot;white-space:nowrap;font-style:italic;font-weight:normal;&quot;><sup>1</sup></span>"><strong>N = 59</strong><span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;"><sup>1</sup></span></th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="label" class="gt_row gt_left" style="font-weight: bold;">Included</td>
+<td headers="stat_0" class="gt_row gt_center">43 (74%)</td></tr>
+    <tr><td headers="label" class="gt_row gt_left" style="font-weight: bold;">Excluded</td>
+<td headers="stat_0" class="gt_row gt_center"><br></td></tr>
+    <tr><td headers="label" class="gt_row gt_left">&nbsp;&nbsp;&nbsp;&nbsp;Non-fulfillment Selection Criteria</td>
+<td headers="stat_0" class="gt_row gt_center">15 (94%)</td></tr>
+    <tr><td headers="label" class="gt_row gt_left">&nbsp;&nbsp;&nbsp;&nbsp;Unknown</td>
+<td headers="stat_0" class="gt_row gt_center">1 (6.3%)</td></tr>
+  </tbody>
+  
+  <tfoot class="gt_footnotes">
+    <tr>
+      <td class="gt_footnote" colspan="2"><span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;"><sup>1</sup></span> n (%)</td>
+    </tr>
+  </tfoot>
+</table>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="intention-to-treat-population-itt" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="intention-to-treat-population-itt"><span class="header-section-number">1.2</span> Intention-to-treat population (ITT)</h2>
+<p>Listing of patients who have started study treatment (n = 43):</p>
+<div class="cell">
+<div class="cell-output-display">
+
+<div data-pagedtable="false">
+  <script data-pagedtable-source="" type="application/json">
+{"columns":[{"label":["Patient"],"name":[1],"type":["chr"],"align":["left"]},{"label":["Date of screening visit"],"name":[2],"type":["date"],"align":["right"]},{"label":["Date of confirmation of eligibility"],"name":[3],"type":["date"],"align":["right"]}],"data":[{"1":"0102-001","2":"2022-06-22","3":"2022-07-19"},{"1":"0102-003","2":"2023-06-02","3":"2023-06-02"},{"1":"0102-004","2":"2023-07-03","3":"2023-07-12"},{"1":"0103-001","2":"2022-07-28","3":"2022-08-18"},{"1":"0103-002","2":"2022-07-29","3":"2022-08-19"},{"1":"0105-001","2":"2022-05-03","3":"2022-05-12"},{"1":"0105-003","2":"2022-09-15","3":"2022-09-27"},{"1":"0106-001","2":"2024-01-17","3":"2024-01-31"},{"1":"0201-001","2":"2023-02-28","3":"2023-03-08"},{"1":"0201-002","2":"2023-02-27","3":"2023-03-03"},{"1":"0201-003","2":"2023-03-27","3":"2023-03-28"},{"1":"0201-004","2":"2023-05-24","3":"2023-06-06"},{"1":"0201-005","2":"2023-06-29","3":"2023-07-04"},{"1":"0202-002","2":"2022-05-25","3":"2022-06-08"},{"1":"0202-003","2":"2022-06-22","3":"2022-07-20"},{"1":"0202-004","2":"2023-01-05","3":"2023-01-18"},{"1":"0202-005","2":"2022-12-22","3":"2023-01-20"},{"1":"0202-007","2":"2023-03-06","3":"2023-04-05"},{"1":"0202-008","2":"2023-11-13","3":"2023-12-04"},{"1":"0203-001","2":"2023-02-16","3":"2023-02-20"},{"1":"0203-002","2":"2023-08-23","3":"2023-08-25"},{"1":"0203-003","2":"2023-11-30","3":"2023-12-04"},{"1":"0203-004","2":"2023-12-28","3":"2023-12-28"},{"1":"0204-001","2":"2023-05-30","3":"2023-06-01"},{"1":"0204-003","2":"2023-11-13","3":"2023-11-16"},{"1":"0205-001","2":"2023-04-18","3":"2023-05-16"},{"1":"0205-002","2":"2023-10-04","3":"2023-10-18"},{"1":"0206-001","2":"2023-06-21","3":"2023-07-07"},{"1":"0206-002","2":"2023-09-25","3":"2023-10-03"},{"1":"0301-001","2":"2022-06-16","3":"2022-06-17"},{"1":"0301-002","2":"2022-08-02","3":"2022-08-03"},{"1":"0301-003","2":"2022-10-13","3":"2022-10-13"},{"1":"0301-004","2":"2022-12-21","3":"2022-12-23"},{"1":"0301-005","2":"2023-03-13","3":"2023-03-13"},{"1":"0301-006","2":"2023-03-22","3":"2023-03-22"},{"1":"0301-007","2":"2023-04-19","3":"2023-04-19"},{"1":"0301-008","2":"2023-07-12","3":"2023-07-12"},{"1":"0301-009","2":"2023-07-13","3":"2023-07-14"},{"1":"0301-010","2":"2023-08-17","3":"2023-07-17"},{"1":"0301-011","2":"2023-08-02","3":"2023-08-02"},{"1":"0301-012","2":"2023-12-18","3":"2023-12-18"},{"1":"0301-013","2":"2023-12-27","3":"2023-12-27"},{"1":"0301-014","2":"2024-01-22","3":"2024-01-22"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+</div>
+</section>
+<section id="study-treatment-discontinuation-eot" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="study-treatment-discontinuation-eot"><span class="header-section-number">1.3</span> Study treatment discontinuation (EoT)</h2>
 </section>
 </section>
 

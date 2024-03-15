@@ -6,6 +6,7 @@ format:
     toc: true
     number-sections: true
 editor: source
+output-dir: "../docs"
 ---
 
 ```{r, include = FALSE}
@@ -61,44 +62,44 @@ data_00_screening %>%
 ```
 
 <!-- ### Under development --------------------------------------------------->
+
 ```{r}
-# Define a function to clean and process screening data
-process_screening_data <- function(data) {
-  rename_list <- list(
-    patient = "patient",
-    screening_date = "visit_date",
-    eligible = "is_the_patient_eligible_to_participate_in_the_study",
-    sf_date = "non_eligible_date",
-    sf_reason = "reason_not_eligible",
-    eligibility_date_1 = "eligibility_date_v2",
-    eligibility_date_2 = "eligibility_date_v3"
-  )
-
-  # Perform standard data processing steps
-  data <- data %>%
-    rename(!!!rename_list) %>%
-    mutate_at(vars(starts_with("eligibility_date")), dmy) %>%
-    mutate(
-      eligibility_date = if_else(
-        eligible == "Yes" & !is.na(eligibility_date_1), eligibility_date_1, eligibility_date_2
-      ),
-      eligibility_date = ymd(eligibility_date),
-      sf_date = dmy(sf_date),
-      sf_reason = if_else(is.na(eligible), "Unknown", sf_reason),
-      screening_date = dmy(screening_date)
-    ) %>%
-    select(patient, screening_date, eligible, sf_date, sf_reason, eligibility_date)
-  
-  return(data)
-}
-
-# Process screening data
-data_00_screening <- process_screening_data(data_00_screening)
-
-# Manual modifications
-data_00_screening$eligible[data_00_screening$patient %in% c("0301-014", "0301-012")] <- "Yes"
-data_00_screening$eligibility_date[data_00_screening$patient == "0301-014"] <- data_00_screening$screening_date[data_00_screening$patient == "0301-014"]
-
+# # Define a function to clean and process screening data
+# process_screening_data <- function(data) {
+#   rename_list <- list(
+#     patient = "patient",
+#     screening_date = "visit_date",
+#     eligible = "is_the_patient_eligible_to_participate_in_the_study",
+#     sf_date = "non_eligible_date",
+#     sf_reason = "reason_not_eligible",
+#     eligibility_date_1 = "eligibility_date_v2",
+#     eligibility_date_2 = "eligibility_date_v3"
+#   )
+# 
+#   # Perform standard data processing steps
+#   data <- data %>%
+#     rename(!!!rename_list) %>%
+#     mutate_at(vars(starts_with("eligibility_date")), dmy) %>%
+#     mutate(
+#       eligibility_date = if_else(
+#         eligible == "Yes" & !is.na(eligibility_date_1), eligibility_date_1, eligibility_date_2
+#       ),
+#       eligibility_date = ymd(eligibility_date),
+#       sf_date = dmy(sf_date),
+#       sf_reason = if_else(is.na(eligible), "Unknown", sf_reason),
+#       screening_date = dmy(screening_date)
+#     ) %>%
+#     select(patient, screening_date, eligible, sf_date, sf_reason, eligibility_date)
+#   
+#   return(data)
+# }
+# 
+# # Process screening data
+# data_00_screening <- process_screening_data(data_00_screening)
+# 
+# # Manual modifications
+# data_00_screening$eligible[data_00_screening$patient %in% c("0301-014", "0301-012")] <- "Yes"
+# data_00_screening$eligibility_date[data_00_screening$patient == "0301-014"] <- data_00_screening$screening_date[data_00_screening$patient == "0301-014"]
 ```
 
 <!-- ### Under development --------------------------------------------------->
@@ -231,347 +232,3 @@ rmarkdown::paged_table(data_temp_itt_formatted)
 
 ## Study treatment discontinuation (EoT)
 
-```{r, message = FALSE, warning = FALSE, echo = FALSE}
-data_03_icf <- read_excel(
-  generate_file_path(project_id, cutoff_date, "ICF Screening"),
-  sheet = "ICF",
-  skip = 1
-  ) %>% 
-  clean_names() %>%
-  rename(icf_date = "date_consent_obtained") %>%
-  select(patient, icf_date) %>%
-  mutate(icf_date = dmy(icf_date))
-
-### Manual fix ### ------------------------------------------------------------
-# Add patient 0301-014 who was included recently and doesn't appear in the ICF sheet
-# I'm using one day before the screening visit date as the date of ICF
-data_03_icf <- rbind(
-  data_03_icf,
-  data.frame(patient = "0301-014", icf_date = as.Date("2024-01-21"))
-)
-### ---------------------------------------------------------------------------
-
-data_03_icf <- data_03_icf %>%
-  group_by(patient) %>%
-  filter(icf_date == min(icf_date)) %>%
-  ungroup()
-
-data_temp_icf <- merge(
-  data_temp_itt,
-  data_03_icf,
-  by = "patient",
-  all = FALSE
-)
-
-data_01_cycles <- data_01_cycles %>%
-  rename(
-    c1d1_date = "visit_date"
-  ) %>%
-  mutate(
-    c1d1_date = dmy(c1d1_date)
-  ) %>%
-  filter(
-    event_num == 1
-  ) %>%
-  select(
-    patient, c1d1_date
-  )
-
-data_temp_c1d1 <- merge(
-  data_temp_icf,
-  data_04_c1d1,
-  by = "patient",
-  all = FALSE
-)
-  
-data_05_eot <- read_excel(
-  generate_file_path(project_id, cutoff_date, "FU30-EOT"),
-  sheet = "FU30-EOT",
-  skip = 1
-) %>%
-  clean_names() %>%
-  rename(
-    eot_reason = "main_reason_for_treatment_discontinuation",
-    last_pembrolizumab_date = "date_of_last_dose_of_pembrolizumab",
-    last_lenvatinib_date = "date_of_last_dose_of_lenvatinib",
-    radiological_pd = "disease_progression_confirmed_by_recist_v1_1",
-    radiological_pd_date = "date_of_radiologial_progressive_disease",
-    clinical_pd = "clinical_progression_in_accordance_to_investigator_criteria",
-    clinical_pd_date = "date_of_clinical_progressive_disease"
-  ) %>%
-  mutate(
-    discontinuation_date = dmy(discontinuation_date),
-    last_pembrolizumab_date = dmy(last_pembrolizumab_date),
-    last_lenvatinib_date = dmy(last_lenvatinib_date),
-    radiological_pd_date = dmy(radiological_pd_date),
-    clinical_pd_date = dmy(clinical_pd_date)
-  ) %>%
-  ### Manual fixes ### --------------------------------------------------------
-  mutate(
-    eot_reason = if_else(
-      eot_reason == "Death (fill “End of Study” form)", "Exitus", eot_reason
-    ),
-    eot_reason = if_else(
-      patient == "0102-004" & eot_reason == "Other", "Second primary esophageal cancer", eot_reason
-    ),
-    eot_reason = if_else(
-      eot_reason == "General or specific changes in the patient’s condition render the patient unacceptable for further treatment in the judgment of the Investigator", "Investigator's decision", eot_reason
-    )
-    ### -------------------------------------------------------------------------
-  ) %>%
-  select(
-    patient, discontinuation_date, eot_reason, last_pembrolizumab_date,
-    last_lenvatinib_date, radiological_pd, radiological_pd_date, clinical_pd,
-    clinical_pd_date
-  )
-
-data_temp_eot <- merge(
-  data_temp_c1d1,
-  data_05_eot,
-  by = "patient",
-  all = TRUE
-)
-
-eot_n <- length(data_05_eot$patient)
-```
-
-Listing of patients who discontinued prematurely the study treatment (n = `r eot_n`):
-
-```{r, message = FALSE, warning = FALSE, echo = FALSE}
-listing3_formatted_names <- c(
-  "Patient",
-  "Date of end of treatment visit",
-  "Reason for end of treatment",
-  "Date of last dose of Pembrolizumab",
-  "Date of last dose of Lenvantinib",
-  "Radiological disease progression?",
-  "Date of radiological disease progression",
-  "Clinical disease progression?",
-  "Date of clinical disease progression"
-)
-
-data_05_eot_formatted <- data_05_eot %>%
-  set_names(listing3_formatted_names)
-
-rmarkdown::paged_table(data_05_eot_formatted)
-```
-
-#### **Table 2. Patients who discontinued prematurely the study treatment:**
-
-```{r, message = FALSE, warning = FALSE, echo = FALSE}
-data_05_eot %>%
-  tbl_summary(
-    missing = "no",
-    percent = "column",
-    sort = list(everything() ~ "frequency"),
-    label = list(eot_reason ~ "Reason for study treatment discontinuation"),
-    include = c(eot_reason),
-    missing_text = "Not reported"
-  ) %>%
-  modify_header(label = " ") %>%
-  bold_labels()
-```
-
-## Study discontinuation (EoS)
-
-```{r, message = FALSE, warning = FALSE, echo = FALSE}
-data_06_eos <- read_excel(
-  generate_file_path(project_id, cutoff_date, "End of Study"),
-  sheet = "End of Study",
-  skip = 1
-  ) %>% 
-  clean_names() %>%
-  rename(
-    eos = "has_the_patient_continued_the_follow_up_until_the_eo_s_date",
-    eos_date = "eo_s_date",
-    eos_reason = "end_of_study_follow_up_main_reason",
-    exitus_reason = "principal_cause_of_death"
-  ) %>%
-  select(patient, eos, eos_date, eos_reason, exitus_reason) %>%
-  mutate(
-    eos_date = dmy(eos_date),
-    ### Manual fixes ### ------------------------------------------------------
-    eos_reason = if_else(
-      eos_reason == "Death", "Exitus", eos_reason
-    ),
-    exitus_reason = if_else(
-      patient == "0102-003", "Disease progression", exitus_reason
-    ),
-    exitus_reason = if_else(
-      patient == "0202-002", "Disease progression", exitus_reason
-    ),
-    exitus_reason = if_else(
-      patient == "0202-003", "Disease progression", exitus_reason
-    ),
-    exitus_reason = if_else(
-      patient == "0301-005", "Disease progression", exitus_reason
-    ),
-    exitus_reason = if_else(
-      patient == "0301-002", "Myocardial ischaemia", exitus_reason
-    )
-  )
-
-data_temp_eos <- merge(
-  data_temp_eot,
-  data_06_eos,
-  by = "patient",
-  all = TRUE
-)
-
-eos_n <- length(data_06_eos$patient)
-```
-
-Listing of patients who discontinued the study (n = `r eos_n`):
-
-```{r, message = FALSE, warning = FALSE, echo = FALSE}
-listing4_formatted_names <- c(
-  "Patient",
-  "Did the patient complete the study?",
-  "Date of end of study",
-  "Resason for premature end of study",
-  "Main reason for exitus"
-)
-
-data_06_eos_formatted <- data_06_eos %>%
-  set_names(listing4_formatted_names)
-
-rmarkdown::paged_table(data_06_eos_formatted)
-```
-
-#### **Table 3. Patients who discontinued prematurely the study:**
-
-```{r, message = FALSE, warning = FALSE, echo = FALSE}
-data_06_eos_formatted %>%
-  tbl_summary(
-    missing = "no",
-    percent = "column",
-    sort = list(everything() ~ "frequency"),
-    label = list(
-      "Resason for premature end of study" ~ "Premature study discontinuation",
-      "Did the patient complete the study?" ~ "Study completion"
-    ),
-    include = c(
-      "Did the patient complete the study?", "Resason for premature end of study",
-      "Main reason for exitus"
-    ),
-    missing_text = "Not reported"
-  ) %>%
-  modify_header(label = " ") %>%
-  bold_labels()
-```
-
-```{r, message = FALSE, warning = FALSE, echo = FALSE}
-# Select the patient with the earliest c1d1_date in data_04_c1d1
-fpi <- data_04_c1d1 %>%
-  filter(c1d1_date == min(c1d1_date))
-
-lpi <- data_04_c1d1 %>%
-  filter(c1d1_date == max(c1d1_date))
-```
-
-First Patient In (FPI) started the study treatment on `r fpi$c1d1_date` and Last Patient In (LPI) started the study treatment on `r lpi$c1d1_date`.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
-```{r}
-1 + 1
-```
-
-You can add options to executable code like this
-
-```{r}
-#| echo: false
-2 * 2
-```
-
-The `echo: false` option disables the printing of code (only output is displayed).
-
-::: {.callout-important collapse="true"}
-A few notes that require specific attention!
-:::
-
-```{r}
-# Load library and example dataset:
-library(DT)
-data(iris)
-
-# Make a table
-datatable(iris, filter = "top")
-```
-
-```{r, warning="FALSE", message="FALSE"}
-library(dplyr)
-library(ggplot2)
-library(gapminder)
-library(plotly)
-
-p <- gapminder %>%
-  filter(year == 1977) %>%
-  ggplot(aes(gdpPercap, lifeExp, size = pop, color = continent)) +
-  geom_point() +
-  theme_bw()
-
-ggplotly(p)
-```
