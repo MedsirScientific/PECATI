@@ -1,5 +1,5 @@
 ---
-title: "PECATI | Preliminary data monitoring, cleaning, and analysis. February 2024"
+title: "PECATI | Preliminary data monitoring, cleaning, and analysis. May 2024"
 author: "Daniel Alcala"
 date: "`r format(Sys.time(), '%Y-%m-%d')`"
 output: html_document
@@ -27,7 +27,7 @@ library(broom)
 here("WP1_preliminary-analysis.Rmd")
 
 project_id <- "PECATI"
-cutoff_date <- as.Date("2024-02-09")
+cutoff_date <- as.Date("2024-05-02")
 ```
 
 The data cutoff date for these analyses is: `r cutoff_date`
@@ -43,19 +43,20 @@ cutoff_date_formatted <- format(cutoff_date, "%Y_%m_%d")
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE, include = FALSE}
 data_00_screening <- read_excel(
-    here(paste0("data/", cutoff_date, "/", project_id, "_ICF Screening_", cutoff_date_formatted, ".xlsx")),
-    sheet = "ICF Screening",
-    skip = 1) %>% 
+  here(paste0("data/", cutoff_date, "/", project_id, "_ICF Screening_", cutoff_date_formatted, ".xlsx")),
+  sheet = "ICF Screening",
+  skip = 1
+) %>%
   clean_names()
 
 # Print column names, excluding any columns that start with "inclusion_" or "exclusion_"
-data_00_screening %>% 
-  select(-starts_with("inclusion_"), -starts_with("exclusion_")) %>% 
+data_00_screening %>%
+  select(-starts_with("inclusion_"), -starts_with("exclusion_")) %>%
   names()
 ```
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-rename_list = list(
+rename_list <- list(
   patient = "patient",
   screening_date = "visit_date",
   eligible = "is_the_patient_eligible_to_participate_in_the_study",
@@ -63,32 +64,37 @@ rename_list = list(
   sf_reason = "reason_not_eligible",
   eligibility_date_1 = "eligibility_date_v2",
   eligibility_date_2 = "eligibility_date_v3"
-  )
+)
 
 data_00_screening <- read_excel(
-    here(paste0("data/", cutoff_date, "/", project_id, "_ICF Screening_", cutoff_date_formatted, ".xlsx")),
-    sheet = "ICF Screening",
-    skip = 1) %>% 
-  clean_names() %>% 
+  here(paste0("data/", cutoff_date, "/", project_id, "_ICF Screening_", cutoff_date_formatted, ".xlsx")),
+  sheet = "ICF Screening",
+  skip = 1
+) %>%
+  clean_names() %>%
   rename(
     !!!rename_list
-  ) %>% 
+  ) %>%
   mutate_at(
     vars(starts_with("eligibility_date")), dmy
-  ) %>% 
+  ) %>%
   mutate(
     eligibility_date = if_else(
-      eligible == "Yes" & !is.na(eligibility_date_1), eligibility_date_1, eligibility_date_2),
+      eligible == "Yes" & !is.na(eligibility_date_1), eligibility_date_1, eligibility_date_2
+    ),
     eligibility_date = ymd(eligibility_date),
     sf_date = dmy(sf_date),
     ### Manual fixes ### ------------------------------------------------------
     eligible = if_else(
-      patient == "0301-014", "Yes", eligible),
+      patient == "0301-014", "Yes", eligible
+    ),
     eligible = if_else(
-      patient == "0301-012", "Yes", eligible),
+      patient == "0301-012", "Yes", eligible
+    ),
     ### -----------------------------------------------------------------------
     sf_reason = if_else(
-      is.na(eligible), "Unknown", sf_reason),
+      is.na(eligible), "Unknown", sf_reason
+    ),
     screening_date = dmy(screening_date)
   ) %>%
   select(
@@ -101,7 +107,6 @@ data_00_screening$eligibility_date[which(data_00_screening$patient == "0301-014"
 ```
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-
 screening_n <- length(data_00_screening$patient)
 ```
 
@@ -115,9 +120,9 @@ listing1_formatted_names <- c(
   "Date of screening failure",
   "Reason for screening failure",
   "Date of confirmation of eligibility"
-  )
+)
 
-data_00_screening_formatted <- data_00_screening %>% 
+data_00_screening_formatted <- data_00_screening %>%
   set_names(listing1_formatted_names)
 
 rmarkdown::paged_table(data_00_screening_formatted)
@@ -126,7 +131,7 @@ rmarkdown::paged_table(data_00_screening_formatted)
 #### **Table 1. Patients included, excluded, and reasons for exclusion**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-data_00_screening %>% 
+data_00_screening %>%
   tbl_summary(
     include = c(eligible, sf_reason),
     missing = "no",
@@ -144,13 +149,15 @@ data_00_screening %>%
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_01_cycles <- read_excel(
   here(paste0("data/", cutoff_date, "/", project_id, "_Cycles_", cutoff_date_formatted, ".xlsx")),
-    sheet = "Cycles",
-    skip = 1) %>% 
+  sheet = "Cycles",
+  skip = 1
+) %>%
   clean_names()
 
-data_02_itt <- data_01_cycles %>% filter(
-  event_num == 1
-  ) %>% 
+data_02_itt <- data_01_cycles %>%
+  filter(
+    event_num == 1
+  ) %>%
   select(patient)
 
 data_temp_itt <- merge(
@@ -158,7 +165,7 @@ data_temp_itt <- merge(
   data_00_screening,
   by = "patient",
   all = FALSE
-  ) %>% 
+) %>%
   select(patient, screening_date, eligibility_date)
 
 itt_n <- length(data_temp_itt$patient)
@@ -171,9 +178,9 @@ listing2_formatted_names <- c(
   "Patient",
   "Date of screening visit",
   "Date of confirmation of eligibility"
-  )
+)
 
-data_temp_itt_formatted <- data_temp_itt %>% 
+data_temp_itt_formatted <- data_temp_itt %>%
   set_names(listing2_formatted_names)
 
 rmarkdown::paged_table(data_temp_itt_formatted)
@@ -184,14 +191,15 @@ rmarkdown::paged_table(data_temp_itt_formatted)
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_03_icf <- read_excel(
   here(paste0("data/", cutoff_date, "/", project_id, "_ICF Screening_", cutoff_date_formatted, ".xlsx")),
-    sheet = "ICF",
-    skip = 1) %>% 
-  clean_names() %>% 
-  rename(icf_date = "date_consent_obtained") %>% 
-  select(patient, icf_date) %>% 
+  sheet = "ICF",
+  skip = 1
+) %>%
+  clean_names() %>%
+  rename(icf_date = "date_consent_obtained") %>%
+  select(patient, icf_date) %>%
   mutate(
     icf_date = dmy(icf_date)
-    )
+  )
 
 ### Manual fix ### ------------------------------------------------------------
 # Add patient 0301-014 who was included recently and doesn't appear in the ICF sheet
@@ -199,35 +207,36 @@ data_03_icf <- read_excel(
 data_03_icf <- rbind(
   data_03_icf,
   data.frame(patient = "0301-014", icf_date = as.Date("2024-01-21"))
-  )
+)
 ### ---------------------------------------------------------------------------
 
-data_03_icf <- data_03_icf %>% 
-  group_by(patient) %>% 
-  filter(icf_date == min(icf_date)) %>% 
+data_03_icf <- data_03_icf %>%
+  group_by(patient) %>%
+  filter(icf_date == min(icf_date)) %>%
   ungroup()
 
 data_temp_icf <- merge(
   data_temp_itt,
   data_03_icf,
   by = "patient",
-  all = FALSE  
-  )
+  all = FALSE
+)
 
 data_04_c1d1 <- read_excel(
   here(paste0("data/", cutoff_date, "/", project_id, "_Cycles_", cutoff_date_formatted, ".xlsx")),
-    sheet = "Cycles",
-    skip = 1) %>% 
-  clean_names() %>% 
+  sheet = "Cycles",
+  skip = 1
+) %>%
+  clean_names() %>%
   rename(
     c1d1_date = "visit_date"
-  ) %>% 
+  ) %>%
   mutate(
     c1d1_date = dmy(c1d1_date)
-    ) %>% 
+  ) %>%
   filter(
     event_num == 1
-  ) %>% 
+  ) %>%
   select(
     patient, c1d1_date
   )
@@ -241,10 +250,10 @@ data_temp_c1d1 <- merge(
 
 data_05_eot <- read_excel(
   here(paste0("data/", cutoff_date, "/", project_id, "_FU30-EOT_", cutoff_date_formatted, ".xlsx")),
-    sheet = "FU30-EOT",
-    skip = 1
-  ) %>% 
-  clean_names() %>% 
+  sheet = "FU30-EOT",
+  skip = 1
+) %>%
+  clean_names() %>%
   rename(
     eot_reason = "main_reason_for_treatment_discontinuation",
     last_pembrolizumab_date = "date_of_last_dose_of_pembrolizumab",
@@ -253,36 +262,39 @@ data_05_eot <- read_excel(
     radiological_pd_date = "date_of_radiologial_progressive_disease",
     clinical_pd = "clinical_progression_in_accordance_to_investigator_criteria",
     clinical_pd_date = "date_of_clinical_progressive_disease"
-  ) %>% 
+  ) %>%
   mutate(
     discontinuation_date = dmy(discontinuation_date),
     last_pembrolizumab_date = dmy(last_pembrolizumab_date),
     last_lenvatinib_date = dmy(last_lenvatinib_date),
     radiological_pd_date = dmy(radiological_pd_date),
     clinical_pd_date = dmy(clinical_pd_date)
-    ) %>% 
+  ) %>%
   ### Manual fixes ### --------------------------------------------------------
   mutate(
     eot_reason = if_else(
-      eot_reason == "Death (fill “End of Study” form)", "Exitus", eot_reason),
+      eot_reason == "Death (fill “End of Study” form)", "Exitus", eot_reason
+    ),
     eot_reason = if_else(
-      patient == "0102-004" & eot_reason == "Other", "Second primary esophageal cancer", eot_reason),
+      patient == "0102-004" & eot_reason == "Other", "Second primary esophageal cancer", eot_reason
+    ),
     eot_reason = if_else(
-      eot_reason == "General or specific changes in the patient’s condition render the patient unacceptable for further treatment in the judgment of the Investigator", "Investigator's decision", eot_reason)
-  ### -------------------------------------------------------------------------
-  ) %>% 
+      eot_reason == "General or specific changes in the patient’s condition render the patient unacceptable for further treatment in the judgment of the Investigator", "Investigator's decision", eot_reason
+    )
+    ### -------------------------------------------------------------------------
+  ) %>%
   select(
     patient, discontinuation_date, eot_reason, last_pembrolizumab_date,
     last_lenvatinib_date, radiological_pd, radiological_pd_date, clinical_pd,
     clinical_pd_date
-    )
+  )
 
 data_temp_eot <- merge(
   data_temp_c1d1,
   data_05_eot,
   by = "patient",
   all = TRUE
-  )
+)
 
 eot_n <- length(data_05_eot$patient)
 ```
@@ -300,9 +312,9 @@ listing3_formatted_names <- c(
   "Date of radiological disease progression",
   "Clinical disease progression?",
   "Date of clinical disease progression"
-  )
+)
 
-data_05_eot_formatted <- data_05_eot %>% 
+data_05_eot_formatted <- data_05_eot %>%
   set_names(listing3_formatted_names)
 
 rmarkdown::paged_table(data_05_eot_formatted)
@@ -331,7 +343,7 @@ data_06_eos <- read_excel(
   here(paste0("data/", cutoff_date, "/", project_id, "_End of Study_", cutoff_date_formatted, ".xlsx")),
   sheet = "End of Study",
   skip = 1
-  ) %>%
+) %>%
   clean_names() %>%
   rename(
     eos = "has_the_patient_continued_the_follow_up_until_the_eo_s_date",
@@ -344,17 +356,23 @@ data_06_eos <- read_excel(
     eos_date = dmy(eos_date),
     ### Manual fixes ### ------------------------------------------------------
     eos_reason = if_else(
-      eos_reason == "Death", "Exitus", eos_reason),
+      eos_reason == "Death", "Exitus", eos_reason
+    ),
     exitus_reason = if_else(
-      patient == "0102-003", "Disease progression", exitus_reason),
+      patient == "0102-003", "Disease progression", exitus_reason
+    ),
     exitus_reason = if_else(
-      patient == "0202-002", "Disease progression", exitus_reason),
+      patient == "0202-002", "Disease progression", exitus_reason
+    ),
     exitus_reason = if_else(
-      patient == "0202-003", "Disease progression", exitus_reason),
+      patient == "0202-003", "Disease progression", exitus_reason
+    ),
     exitus_reason = if_else(
-      patient == "0301-005", "Disease progression", exitus_reason),
+      patient == "0301-005", "Disease progression", exitus_reason
+    ),
     exitus_reason = if_else(
-      patient == "0301-002", "Myocardial ischaemia", exitus_reason)
+      patient == "0301-002", "Myocardial ischaemia", exitus_reason
+    )
   )
 
 data_temp_eos <- merge(
@@ -376,9 +394,9 @@ listing4_formatted_names <- c(
   "Date of end of study",
   "Resason for premature end of study",
   "Main reason for exitus"
-  )
+)
 
-data_06_eos_formatted <- data_06_eos %>% 
+data_06_eos_formatted <- data_06_eos %>%
   set_names(listing4_formatted_names)
 
 rmarkdown::paged_table(data_06_eos_formatted)
@@ -392,10 +410,14 @@ data_06_eos_formatted %>%
     missing = "no",
     percent = "column",
     sort = list(everything() ~ "frequency"),
-    label = list("Resason for premature end of study" ~ "Premature study discontinuation",
-                 "Did the patient complete the study?" ~ "Study completion"),
-    include = c("Did the patient complete the study?", "Resason for premature end of study",
-                "Main reason for exitus"),
+    label = list(
+      "Resason for premature end of study" ~ "Premature study discontinuation",
+      "Did the patient complete the study?" ~ "Study completion"
+    ),
+    include = c(
+      "Did the patient complete the study?", "Resason for premature end of study",
+      "Main reason for exitus"
+    ),
     missing_text = "Not reported"
   ) %>%
   modify_header(label = " ") %>%
@@ -404,10 +426,10 @@ data_06_eos_formatted %>%
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Select the patient with the earliest c1d1_date in data_04_c1d1
-fpi <- data_04_c1d1 %>% 
+fpi <- data_04_c1d1 %>%
   filter(c1d1_date == min(c1d1_date))
 
-lpi <- data_04_c1d1 %>% 
+lpi <- data_04_c1d1 %>%
   filter(c1d1_date == max(c1d1_date))
 ```
 
@@ -416,14 +438,17 @@ First Patient In (FPI) started the study treatment on `r fpi$c1d1_date` and Last
 ## Swimmer plot
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-data_temp_eos <- data_temp_eos %>% 
+data_temp_eos <- data_temp_eos %>%
   mutate(
     exitus = if_else(
-      eos_reason == "Exitus", eos_date, as.Date(NA_real_)),
+      eos_reason == "Exitus", eos_date, as.Date(NA_real_)
+    ),
     progression = if_else(
-      radiological_pd == "Yes", discontinuation_date, as.Date(NA_real_)),
+      radiological_pd == "Yes", discontinuation_date, as.Date(NA_real_)
+    ),
     progression = if_else(
-      clinical_pd == "Yes", discontinuation_date, as.Date(NA_real_))
+      clinical_pd == "Yes", discontinuation_date, as.Date(NA_real_)
+    )
   )
 
 ### Manual fix ### ------------------------------------------------------------
@@ -433,7 +458,8 @@ data_temp_eos$progression[which(data_temp_eos$patient == "0202-005")] <- data_te
 
 # Fill the NAs in the eos_date column with today's date
 data_temp_eos$eos_date <- if_else(
-  is.na(data_temp_eos$eos_date), cutoff_date, data_temp_eos$eos_date)
+  is.na(data_temp_eos$eos_date), cutoff_date, data_temp_eos$eos_date
+)
 
 # Get the earliest date across columns for each patient and make it a date column
 data_temp_eos$earliest_date <- apply(data_temp_eos[, sapply(data_temp_eos, is.Date)], 1, min, na.rm = TRUE)
@@ -446,7 +472,7 @@ data_07_swimmer_long <- data_temp_eos %>%
   mutate(
     earliest_date = ymd(earliest_date),
     latest_date = ymd(latest_date)
-  ) %>% 
+  ) %>%
   rowwise() %>%
   mutate(study_day = list(seq.Date(from = earliest_date, to = latest_date, by = "day"))) %>%
   unnest(study_day)
@@ -456,31 +482,31 @@ data_07_swimmer_long <- data_07_swimmer_long %>%
   group_by(patient) %>%
   mutate(event_num = row_number())
 
-data_07_swimmer_long <- data_07_swimmer_long %>% 
+data_07_swimmer_long <- data_07_swimmer_long %>%
   mutate(
     month = event_num * 0.0328767
   )
 
 data_07_swimmer_long$icf_this_day <- ifelse(
   data_07_swimmer_long$icf_date == data_07_swimmer_long$study_day, data_07_swimmer_long$month, NA
-  )
+)
 
 data_07_swimmer_long$c1d1_this_day <- ifelse(
   data_07_swimmer_long$c1d1_date == data_07_swimmer_long$study_day, data_07_swimmer_long$month, NA
-  )
+)
 
 data_07_swimmer_long$pd_this_day <- ifelse(
   data_07_swimmer_long$progression == data_07_swimmer_long$study_day, data_07_swimmer_long$month, NA
-  )
+)
 
 data_07_swimmer_long$exitus_this_day <- ifelse(
   data_07_swimmer_long$exitus == data_07_swimmer_long$study_day, data_07_swimmer_long$month, NA
-  )
+)
 
-data_07_swimmer_long <- data_07_swimmer_long %>% 
-  group_by(patient) %>% 
-  mutate(max_day = max(event_num)) %>% 
-  ungroup() %>% 
+data_07_swimmer_long <- data_07_swimmer_long %>%
+  group_by(patient) %>%
+  mutate(max_day = max(event_num)) %>%
+  ungroup() %>%
   mutate(patient = fct_reorder(factor(patient), max_day))
 ```
 
@@ -495,12 +521,13 @@ cols <- c(
 
 shape_override <- c(21, 21, 21)
 stroke_override <- c(1, 1, 1)
-size_override <-  c(2, 2, 2)
+size_override <- c(2, 2, 2)
 
 swimmer <- data_07_swimmer_long %>%
   ggplot(
-    aes(y = patient, group = patient)) +
-  theme_bw() + 
+    aes(y = patient, group = patient)
+  ) +
+  theme_bw() +
   theme(
     panel.grid.minor.x = element_blank(),
     panel.border = element_blank()
@@ -509,44 +536,50 @@ swimmer <- data_07_swimmer_long %>%
   geom_line(aes(x = month), linewidth = 2.5, color = "#9A99A0", alpha = 0.25) +
   # 2 data layer: dot plot showing when the ICF was signed
   geom_point(aes(x = icf_this_day),
-             size = 2.5,
-             stroke = 0.5,
-             shape = 21,
-             color = "#74AAFF",
-             fill = "#74AAFF",
-             alpha = 0.65) +
+    size = 2.5,
+    stroke = 0.5,
+    shape = 21,
+    color = "#74AAFF",
+    fill = "#74AAFF",
+    alpha = 0.65
+  ) +
   # 3 data layer: dot plot showing the study treatment start date
   geom_point(aes(x = c1d1_this_day),
-             size = 2.5,
-             stroke = 0.5,
-             shape = 1,
-             color = "#74AAFF") +
+    size = 2.5,
+    stroke = 0.5,
+    shape = 1,
+    color = "#74AAFF"
+  ) +
   # 4 data layer: dot plot showing whether disease progression
   geom_point(aes(x = pd_this_day),
-             size = 2.5,
-             stroke = 0.5,
-             shape = 21,
-             color = "#040404",
-             fill = "#FFD966",
-             alpha = 0.95) +
+    size = 2.5,
+    stroke = 0.5,
+    shape = 21,
+    color = "#040404",
+    fill = "#FFD966",
+    alpha = 0.95
+  ) +
   # 5 data layer: dot plot showing TAs with an OR = SD
   geom_point(aes(x = exitus_this_day),
-             size = 2.5,
-             stroke = 0.5,
-             shape = 21,
-             color = "#040404",
-             fill = "#040404") +
+    size = 2.5,
+    stroke = 0.5,
+    shape = 21,
+    color = "#040404",
+    fill = "#040404"
+  ) +
   # Final aesthetics adjustments
-  scale_color_manual(values = cols,
-                     name = "XXXX") +
+  scale_color_manual(
+    values = cols,
+    name = "XXXX"
+  ) +
   scale_x_continuous(breaks = seq(0, 36, 5)) +
   guides(color = guide_legend(
-  override.aes = list(
-    shape = shape_override,
-    stroke = stroke_override,
-    size = size_override
-  )
-)) +
+    override.aes = list(
+      shape = shape_override,
+      stroke = stroke_override,
+      size = size_override
+    )
+  )) +
   labs(
     x = "Time since ICF sign (months)",
     y = "Patient"
@@ -560,7 +593,7 @@ ggsave(
   height = 4096,
   units = "px",
   dpi = 300
-  )
+)
 
 swimmer
 ```
@@ -583,34 +616,35 @@ First, we extract data from patients with measurable lesions at baseline:
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_08a_baseline_target <- read_excel(
-    here(paste0("data/", cutoff_date, "/", project_id, "_ICF Screening_", cutoff_date_formatted, ".xlsx")),
-    sheet = "TARGET",
-    skip = 1) %>% 
-    clean_names() %>% 
-    # The variable "event_num" encodes the tumour assessment number in the post-baseline assessments.
-    # Create this variable and assign a 0 to mark these data as the baseline assessment.
-    mutate(
-      event_num = 0
-    ) %>%
-    group_by(patient, event_num) %>%
-    # We collect the length of the longest diameter of each reported target (i.e., measurable) lesion individually.
-    # Calculate the sum of longest diameter of all lesions.
-    mutate(
-      sum_of_lesions = sum(longest_diameter_short_axis_mm)
-    ) %>%
-    # Since we now have the sum of longest diameters repeated as many times as there are measurable lesions, we can keep either any row
-    group_by(patient) %>%
-    filter(row_number() == 1) %>%
-    mutate(
-      evaluation_date = dmy(evaluation_date)
-    ) %>% 
-    # Create a dummy variable to code that the patient had measurable disease at baseline.
-    mutate(
-      baseline_target = 0
-    ) %>% 
-    select(
-        patient, event_num, baseline_target, evaluation_date, sum_of_lesions
-        )
+  here(paste0("data/", cutoff_date, "/", project_id, "_ICF Screening_", cutoff_date_formatted, ".xlsx")),
+  sheet = "TARGET",
+  skip = 1
+) %>%
+  clean_names() %>%
+  # The variable "event_num" encodes the tumour assessment number in the post-baseline assessments.
+  # Create this variable and assign a 0 to mark these data as the baseline assessment.
+  mutate(
+    event_num = 0
+  ) %>%
+  group_by(patient, event_num) %>%
+  # We collect the length of the longest diameter of each reported target (i.e., measurable) lesion individually.
+  # Calculate the sum of longest diameter of all lesions.
+  mutate(
+    sum_of_lesions = sum(longest_diameter_short_axis_mm)
+  ) %>%
+  # Since we now have the sum of longest diameters repeated as many times as there are measurable lesions, we can keep either any row
+  group_by(patient) %>%
+  filter(row_number() == 1) %>%
+  mutate(
+    evaluation_date = dmy(evaluation_date)
+  ) %>%
+  # Create a dummy variable to code that the patient had measurable disease at baseline.
+  mutate(
+    baseline_target = 0
+  ) %>%
+  select(
+    patient, event_num, baseline_target, evaluation_date, sum_of_lesions
+  )
 
 data_08a_baseline_target <- merge(
   data_02_itt,
@@ -629,12 +663,12 @@ listing5_formatted_names <- c(
   "Patient",
   "Date of baseline tumor assessment",
   "Sum of longest diameters (SLDs)"
-  )
+)
 
-data_08a_baseline_target_formatted <- data_08a_baseline_target %>% 
-  select(patient, evaluation_date, sum_of_lesions) %>% 
+data_08a_baseline_target_formatted <- data_08a_baseline_target %>%
+  select(patient, evaluation_date, sum_of_lesions) %>%
   set_names(listing5_formatted_names)
-  
+
 rmarkdown::paged_table(data_08a_baseline_target_formatted)
 ```
 
@@ -644,24 +678,25 @@ Then, we extract data from non-measurable lesions at baseline for all patients:
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_08b_baseline_nontarget <- read_excel(
-    here(paste0("data/", cutoff_date, "/", project_id, "_ICF Screening_", cutoff_date_formatted, ".xlsx")),
-    sheet = "NON_TARGET",
-    skip = 1) %>% 
-    clean_names() %>% 
-    # The variable "event_num" encodes the tumour assessment number in the post-baseline assessments.
-    # Create this variable and assign a 0 to mark this as the baseline assessment.
-    mutate(
-      event_num = 0
-    ) %>%
-    # Since we only care about the number of patients with non-measurable disease at baseline, we can keep either any row
-    group_by(patient) %>%
-    filter(row_number() == 1) %>%
-    mutate(
-      evaluation_date = dmy(evaluation_date)
-    ) %>% 
-    select(
-      patient, event_num, evaluation_date
-    )
+  here(paste0("data/", cutoff_date, "/", project_id, "_ICF Screening_", cutoff_date_formatted, ".xlsx")),
+  sheet = "NON_TARGET",
+  skip = 1
+) %>%
+  clean_names() %>%
+  # The variable "event_num" encodes the tumour assessment number in the post-baseline assessments.
+  # Create this variable and assign a 0 to mark this as the baseline assessment.
+  mutate(
+    event_num = 0
+  ) %>%
+  # Since we only care about the number of patients with non-measurable disease at baseline, we can keep either any row
+  group_by(patient) %>%
+  filter(row_number() == 1) %>%
+  mutate(
+    evaluation_date = dmy(evaluation_date)
+  ) %>%
+  select(
+    patient, event_num, evaluation_date
+  )
 
 data_08b_baseline_nontarget <- merge(
   data_02_itt,
@@ -679,10 +714,10 @@ Listing of patients with measurable disease at baseline phase (n = `r baseline_n
 listing6_formatted_names <- c(
   "Patient",
   "Date of baseline tumor assessment"
-  )
+)
 
-data_08b_baseline_nontarget_formatted <- data_08b_baseline_nontarget %>% 
-  select(patient, evaluation_date) %>% 
+data_08b_baseline_nontarget_formatted <- data_08b_baseline_nontarget %>%
+  select(patient, evaluation_date) %>%
   set_names(listing6_formatted_names)
 
 rmarkdown::paged_table(data_08b_baseline_nontarget_formatted)
@@ -693,7 +728,7 @@ data_08_baseline_all <- full_join(
   data_08a_baseline_target,
   data_08b_baseline_nontarget,
   by = c("patient", "event_num")
-  ) %>%
+) %>%
   # If a patient had measurable lesions at baseline, we want to keep that data.
   # Only if there were no measurable lesions, we want to keep the tumour assessment date when the non-measurable lesions were detected.
   mutate(
@@ -705,7 +740,7 @@ data_08_baseline_all <- full_join(
   mutate(
     baseline_nontarget = if_else(is.na(baseline_target) == 0, 1, 0),
     baseline_nontarget = na_if(baseline_nontarget, 1)
-  ) %>% 
+  ) %>%
   select(
     patient, event_num, evaluation_date, baseline_target, sum_of_lesions, baseline_nontarget
   )
@@ -717,13 +752,15 @@ A histogram with the sum of the longest diameters of each patient at baseline is
 
 ```{r baseline-sld-histogram, message = FALSE, warning = FALSE, echo = FALSE}
 ggplot(
-  data_08_baseline_all, 
-  aes(x = sum_of_lesions)) +
+  data_08_baseline_all,
+  aes(x = sum_of_lesions)
+) +
   geom_histogram(
-    fill = "#F3656C", 
-    alpha = 0.5, 
+    fill = "#F3656C",
+    alpha = 0.5,
     color = "#F3656C",
-    bins = 54) +
+    bins = 54
+  ) +
   theme(
     panel.background = element_rect(fill = "#FFFFFF", colour = "#FFFFFF"),
     panel.grid.major = element_blank(),
@@ -745,39 +782,41 @@ Similarly, a histogram with the sum of the longest diameters of each patient aft
 ```{r post-baseline-sld-histogram, message = FALSE, warning = FALSE, echo = FALSE}
 data_09a_postbaseline_target <- read_excel(
   here(paste0("data/", cutoff_date, "/", project_id, "_Tumor Assessment_", cutoff_date_formatted, ".xlsx")),
-    sheet = "TARGET",
-    skip = 1) %>% 
-    clean_names() %>%
-    # We collect the length of the longest diameter of each reported target (i.e., measurable) lesion individually.
-    # Calculate the sum of longest diameter of all lesions for each tumour assessment.
-    group_by(patient, event_num) %>%
-    mutate(
-      sum_of_lesions = sum(longest_diameter_short_axis_mm)
-    ) %>%
-    # Since we now have the sum of longest diameters repeated as many times as there are measurable lesions, we can keep either any row
-    group_by(patient, event_num) %>%
-    filter(row_number() == 1) %>%
-    mutate(
-      evaluation_date = dmy(evaluation_date)
-    ) %>% 
-    select(
-      patient, event_num, evaluation_date, sum_of_lesions
-    )
+  sheet = "TARGET",
+  skip = 1
+) %>%
+  clean_names() %>%
+  # We collect the length of the longest diameter of each reported target (i.e., measurable) lesion individually.
+  # Calculate the sum of longest diameter of all lesions for each tumour assessment.
+  group_by(patient, event_num) %>%
+  mutate(
+    sum_of_lesions = sum(longest_diameter_short_axis_mm)
+  ) %>%
+  # Since we now have the sum of longest diameters repeated as many times as there are measurable lesions, we can keep either any row
+  group_by(patient, event_num) %>%
+  filter(row_number() == 1) %>%
+  mutate(
+    evaluation_date = dmy(evaluation_date)
+  ) %>%
+  select(
+    patient, event_num, evaluation_date, sum_of_lesions
+  )
 
 data_09b_postbaseline_nontarget <- read_excel(
-    here(paste0("data/", cutoff_date, "/", project_id, "_Tumor Assessment_", cutoff_date_formatted, ".xlsx")),
-    sheet = "NON_TARGET",
-    skip = 1) %>% 
-    clean_names() %>%
-    # Since we now have the sum of longest diameters repeated as many times as there are measurable lesions, we can keep either any row
-    group_by(patient, event_num) %>%
-    filter(row_number() == 1) %>%
-    mutate(
-      evaluation_date = dmy(evaluation_date)
-    ) %>% 
-    select(
-      patient, event_num, evaluation_date
-    )
+  here(paste0("data/", cutoff_date, "/", project_id, "_Tumor Assessment_", cutoff_date_formatted, ".xlsx")),
+  sheet = "NON_TARGET",
+  skip = 1
+) %>%
+  clean_names() %>%
+  # Since we now have the sum of longest diameters repeated as many times as there are measurable lesions, we can keep either any row
+  group_by(patient, event_num) %>%
+  filter(row_number() == 1) %>%
+  mutate(
+    evaluation_date = dmy(evaluation_date)
+  ) %>%
+  select(
+    patient, event_num, evaluation_date
+  )
 
 data_09_postbaseline <- merge(
   data_09a_postbaseline_target,
@@ -787,16 +826,18 @@ data_09_postbaseline <- merge(
 )
 
 # Manual fix
-data_09_postbaseline <- data_09_postbaseline[!(data_09_postbaseline$patient == '0204-001' & is.na(data_09_postbaseline$sum_of_lesions)), ]
+data_09_postbaseline <- data_09_postbaseline[!(data_09_postbaseline$patient == "0204-001" & is.na(data_09_postbaseline$sum_of_lesions)), ]
 
 ggplot(
-  data_09_postbaseline, 
-  aes(x = sum_of_lesions)) +
+  data_09_postbaseline,
+  aes(x = sum_of_lesions)
+) +
   geom_histogram(
-    fill = "#6561FF", 
-    alpha = 0.5, 
+    fill = "#6561FF",
+    alpha = 0.5,
     color = "#6561FF",
-    bins = 54) +
+    bins = 54
+  ) +
   theme(
     panel.background = element_rect(fill = "#FFFFFF", colour = "#FFFFFF"),
     panel.grid.major = element_blank(),
@@ -811,75 +852,77 @@ ggplot(
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_10_new_lesions <- read_excel(
-    here(paste0("data/", cutoff_date, "/", project_id, "_Tumor Assessment_", cutoff_date_formatted, ".xlsx")),
-    sheet = "NEW_LESIONS",
-    skip = 1) %>% 
-    clean_names() %>% 
-    # Create a new variable that encodes whether the patient had a new lesion at any tumour assessment
-    mutate(
-      new_lesions = "Yes"
-    ) %>% 
-    mutate(
-      evaluation_date = dmy(evaluation_date)
-    ) %>% 
-    # Since the presentation of a single new lesion already implies disease progression, we only keep the record of one new lesion, regardless of which one.
-    group_by(patient) %>%
-    filter(row_number() == 1) %>% 
-    select(
-      patient, event_num, evaluation_date, new_lesions
-    )
+  here(paste0("data/", cutoff_date, "/", project_id, "_Tumor Assessment_", cutoff_date_formatted, ".xlsx")),
+  sheet = "NEW_LESIONS",
+  skip = 1
+) %>%
+  clean_names() %>%
+  # Create a new variable that encodes whether the patient had a new lesion at any tumour assessment
+  mutate(
+    new_lesions = "Yes"
+  ) %>%
+  mutate(
+    evaluation_date = dmy(evaluation_date)
+  ) %>%
+  # Since the presentation of a single new lesion already implies disease progression, we only keep the record of one new lesion, regardless of which one.
+  group_by(patient) %>%
+  filter(row_number() == 1) %>%
+  select(
+    patient, event_num, evaluation_date, new_lesions
+  )
 
 data_11_recist <- read_excel(
-    here(paste0("data/", cutoff_date, "/", project_id, "_Tumor Assessment_", cutoff_date_formatted, ".xlsx")),
-    sheet = "Tumor Assessment",
-    skip = 1) %>% 
-    clean_names() %>% 
-    select(
-      patient, event_num, target_lesions_response, non_target_lesions_response, overall_response
-      )
+  here(paste0("data/", cutoff_date, "/", project_id, "_Tumor Assessment_", cutoff_date_formatted, ".xlsx")),
+  sheet = "Tumor Assessment",
+  skip = 1
+) %>%
+  clean_names() %>%
+  select(
+    patient, event_num, target_lesions_response, non_target_lesions_response, overall_response
+  )
 
 data_12_or_recist <- merge(
-    data_08_baseline_all,
-    data_09_postbaseline,
-    by = c("patient", "event_num", "evaluation_date","sum_of_lesions"),
-    all = TRUE
-    ) %>% 
-    # We create a new variable with the sum of lesion diameters at baseline to later calculate the change from baseline.
-    group_by(patient) %>%
-    mutate(
-  # Manual fix ###########################
-      # sum_of_lesions = if_else(
-      #   patient == "0107-007" & event_num == 0, 22.2, sum_of_lesions),
-      # sum_of_lesions = if_else(
-      #   patient == "0107-008" & event_num == 0, 41, sum_of_lesions),
-      baseline_sld = sum_of_lesions[event_num == 0]
-      ) %>%
-    mutate(
-      change_from_baseline = sum_of_lesions - baseline_sld
-    ) %>%
-    mutate(
-      percent_change_from_baseline = ((sum_of_lesions - baseline_sld) / baseline_sld) * 100
-    ) %>% 
-    # For coding disease progression, RECIST sets the criterion of an increase of at least 20% with respect to the smallest sum of lesion diameters (nadir).
-    group_by(patient) %>%
-    mutate(
-      nadir = ifelse(event_num == 0, sum_of_lesions, pmin(sum_of_lesions, lag(sum_of_lesions)))
-    ) %>%
-    mutate(
-      change_from_nadir = sum_of_lesions - nadir
-    ) %>%
-    mutate(
-      percent_change_from_nadir = ((sum_of_lesions - nadir) / nadir) * 100
-    )
+  data_08_baseline_all,
+  data_09_postbaseline,
+  by = c("patient", "event_num", "evaluation_date", "sum_of_lesions"),
+  all = TRUE
+) %>%
+  # We create a new variable with the sum of lesion diameters at baseline to later calculate the change from baseline.
+  group_by(patient) %>%
+  mutate(
+    # Manual fix ###########################
+    # sum_of_lesions = if_else(
+    #   patient == "0107-007" & event_num == 0, 22.2, sum_of_lesions),
+    # sum_of_lesions = if_else(
+    #   patient == "0107-008" & event_num == 0, 41, sum_of_lesions),
+    baseline_sld = sum_of_lesions[event_num == 0]
+  ) %>%
+  mutate(
+    change_from_baseline = sum_of_lesions - baseline_sld
+  ) %>%
+  mutate(
+    percent_change_from_baseline = ((sum_of_lesions - baseline_sld) / baseline_sld) * 100
+  ) %>%
+  # For coding disease progression, RECIST sets the criterion of an increase of at least 20% with respect to the smallest sum of lesion diameters (nadir).
+  group_by(patient) %>%
+  mutate(
+    nadir = ifelse(event_num == 0, sum_of_lesions, pmin(sum_of_lesions, lag(sum_of_lesions)))
+  ) %>%
+  mutate(
+    change_from_nadir = sum_of_lesions - nadir
+  ) %>%
+  mutate(
+    percent_change_from_nadir = ((sum_of_lesions - nadir) / nadir) * 100
+  )
 
-data_12_or_recist <- data_12_or_recist[!(data_12_or_recist$patient == '0301-007' & is.na(data_12_or_recist$sum_of_lesions)), ]
+data_12_or_recist <- data_12_or_recist[!(data_12_or_recist$patient == "0301-007" & is.na(data_12_or_recist$sum_of_lesions)), ]
 
 data_12_or_recist <- merge(
   data_12_or_recist,
   data_10_new_lesions,
   by = c("patient", "event_num", "evaluation_date"),
   all = TRUE
-) %>% 
+) %>%
   mutate(
     new_lesions = if_else(
       is.na(new_lesions), "No", new_lesions
@@ -894,18 +937,23 @@ data_12_or_recist <- merge(
 ) %>%
   filter(
     !is.na(evaluation_date)
-    ) %>% 
+  ) %>%
   mutate(
     overall_response = if_else(
-      overall_response == "Progressive Disease (PD)", "PD", overall_response),
+      overall_response == "Progressive Disease (PD)", "PD", overall_response
+    ),
     overall_response = if_else(
-      overall_response == "Complete Response (CR)", "CR", overall_response),
+      overall_response == "Complete Response (CR)", "CR", overall_response
+    ),
     overall_response = if_else(
-      overall_response == "Partial Response (PR)", "PR", overall_response),
+      overall_response == "Partial Response (PR)", "PR", overall_response
+    ),
     overall_response = if_else(
-      overall_response == "Stable Disease (SD)", "SD", overall_response),
+      overall_response == "Stable Disease (SD)", "SD", overall_response
+    ),
     overall_response = if_else(
-      overall_response == "Non-CR/Non-PD", "Non-CR/Non-PD", overall_response),
+      overall_response == "Non-CR/Non-PD", "Non-CR/Non-PD", overall_response
+    ),
     PD = if_else(overall_response == "PD", 1, 0),
     CR = if_else(overall_response == "CR", 1, 0),
     PR = if_else(overall_response == "PR", 1, 0),
@@ -936,215 +984,269 @@ cols <- c(
 
 shape_override <- c(23, 19, 15, 15, 4)
 stroke_override <- c(1, 1, 1, .9, 1)
-size_override <-  c(2, 2, 2, 2, 2)
+size_override <- c(2, 2, 2, 2, 2)
 
 swimmer_spider_plot <- function(site, comment, name) {
   swimmer_ta <- data_12_or_recist %>%
-  filter(
-    site == {{site}}
-  ) %>% 
-  ggplot(
-    aes(y = patient, group = patient)) +
-  theme_bw() + 
-  theme(
-    panel.grid.minor.x = element_blank(),
-    panel.border = element_blank()
-  ) +
-  # 1 data layer: line plot showing number of TAs
-  geom_line(aes(x = event_num), size = 1.5) +
-  # 2 data layer: dot plot showing whether each patient had measurable disease at baseline
-  geom_point(aes(x = baseline_target,
-                 col = "Measurable disease"),
-             size = 3.5,
-             stroke = 0.75,
-             shape = 13) +
-  # 3 data layer: dot plot showing whether each patient had only non-measurable disease at baseline 
-  geom_point(aes(x = baseline_nontarget,
-                 col = "Non-measurable disease"),
-             size = 3.5,
-             stroke = 0.75,
-             shape = 1) +
-  # 4 data layer: dot plot showing TAs with an OR = SD
-  geom_point(aes(x = sd_this_ta,
-                 col = "SD"),
-             stroke = 2,
-             shape = 15) +
-  # 5 data layer: dot plot showing TAs with an OR = PR
-  geom_point(aes(x = pr_this_ta,
-                 col = "PR"),
-             size = 2,
-             stroke = 1.5,
-             shape = 19,
-             fill = "#74AAFF") +
-  # 6 data layer: dot plot showing TAs with an OR = CR
-  geom_point(aes(x = cr_this_ta,
-                 col = "CR"),
-             size = 2,
-             stroke = 1.5,
-             shape = 23,
-             fill = "#153D99") +
-  # 7 data layer: dot plot showing TAs with an OR = PD
-  geom_point(aes(x = pd_this_ta,
-                 col = "PD"),
-             size = 2,
-             stroke = 1.5,
-             shape = 4) +
-  # 8 data layer: dot plot showing TAs with an OR = Non-CR/Non-PD
-  geom_point(aes(x = nn_this_ta,
-                 col = "Non-CR/Non-PD"),
-             stroke = 2,
-             shape = 15) +
-  # Final aesthetics adjustments
-  scale_color_manual(values = cols,
-                     limits = c('CR', 'PR', 'SD', 'Non-CR/Non-PD', 'PD'),
-                     name = "Overall Response") +
-  scale_x_continuous(breaks = seq(1, 9, 1)) +
-  guides(color = guide_legend(
-    override.aes = list(
-      shape = shape_override,
-      stroke = stroke_override,
-      size = size_override
+    filter(
+      site == {{ site }}
+    ) %>%
+    ggplot(
+      aes(y = patient, group = patient)
+    ) +
+    theme_bw() +
+    theme(
+      panel.grid.minor.x = element_blank(),
+      panel.border = element_blank()
+    ) +
+    # 1 data layer: line plot showing number of TAs
+    geom_line(aes(x = event_num), size = 1.5) +
+    # 2 data layer: dot plot showing whether each patient had measurable disease at baseline
+    geom_point(
+      aes(
+        x = baseline_target,
+        col = "Measurable disease"
+      ),
+      size = 3.5,
+      stroke = 0.75,
+      shape = 13
+    ) +
+    # 3 data layer: dot plot showing whether each patient had only non-measurable disease at baseline
+    geom_point(
+      aes(
+        x = baseline_nontarget,
+        col = "Non-measurable disease"
+      ),
+      size = 3.5,
+      stroke = 0.75,
+      shape = 1
+    ) +
+    # 4 data layer: dot plot showing TAs with an OR = SD
+    geom_point(
+      aes(
+        x = sd_this_ta,
+        col = "SD"
+      ),
+      stroke = 2,
+      shape = 15
+    ) +
+    # 5 data layer: dot plot showing TAs with an OR = PR
+    geom_point(
+      aes(
+        x = pr_this_ta,
+        col = "PR"
+      ),
+      size = 2,
+      stroke = 1.5,
+      shape = 19,
+      fill = "#74AAFF"
+    ) +
+    # 6 data layer: dot plot showing TAs with an OR = CR
+    geom_point(
+      aes(
+        x = cr_this_ta,
+        col = "CR"
+      ),
+      size = 2,
+      stroke = 1.5,
+      shape = 23,
+      fill = "#153D99"
+    ) +
+    # 7 data layer: dot plot showing TAs with an OR = PD
+    geom_point(
+      aes(
+        x = pd_this_ta,
+        col = "PD"
+      ),
+      size = 2,
+      stroke = 1.5,
+      shape = 4
+    ) +
+    # 8 data layer: dot plot showing TAs with an OR = Non-CR/Non-PD
+    geom_point(
+      aes(
+        x = nn_this_ta,
+        col = "Non-CR/Non-PD"
+      ),
+      stroke = 2,
+      shape = 15
+    ) +
+    # Final aesthetics adjustments
+    scale_color_manual(
+      values = cols,
+      limits = c("CR", "PR", "SD", "Non-CR/Non-PD", "PD"),
+      name = "Overall Response"
+    ) +
+    scale_x_continuous(breaks = seq(1, 9, 1)) +
+    guides(color = guide_legend(
+      override.aes = list(
+        shape = shape_override,
+        stroke = stroke_override,
+        size = size_override
+      )
+    )) +
+    labs(
+      x = "Tumor assessment",
+      y = "Patient"
     )
-  )) +
-  labs(
-    x = "Tumor assessment",
-    y = "Patient"
-  )
 
   ggsave(
-    paste("../output/swimmer-spider-plot/materials/", project_id, "_site-", as.character({{site}}), "_swimmer_TAs_", as.Date(Sys.Date()), ".png", sep = ""),
+    paste("../output/swimmer-spider-plot/materials/", project_id, "_site-", as.character({{ site }}), "_swimmer_TAs_", as.Date(Sys.Date()), ".png", sep = ""),
     swimmer_ta,
     width = 20,
     height = 20,
     units = "cm",
     dpi = 300
-    )
-  
-  spider_ta <- data_12_or_recist %>% 
-  filter(
-    site == {{site}}
+  )
+
+  spider_ta <- data_12_or_recist %>%
+    filter(
+      site == {{ site }}
     ) %>%
-  ggplot(
-  aes(x = event_num, y = percent_change_from_baseline)
-  ) + 
-  # Line plot showing SDL percent change from baseline
-  geom_line(aes(color = patient), size = 1.2) +
-  scale_color_manual(values = c(
-    rep("#000000", 200))
-  ) +
-  # Second data layer: dot plot showing TAs with an OR = SD
-  geom_point(aes(x = sd_this_ta,
-                 col = "SD"),
-             stroke = 1.5,
-             shape = 22,
-             colour = "#FFD966",
-             fill = "#FFD966") +
-  # Third data layer: dot plot showing TAs with an OR = PR
-  geom_point(aes(x = pr_this_ta,
-                 col = "PR"),
-             size = 2,
-             stroke = 1.5,
-             shape = 21,
-             colour = "#74AAFF",
-             fill = "#74AAFF") +
-  # Fourth data layer: dot plot showing TAs with an OR = CR
-  geom_point(aes(x = cr_this_ta,
-                 col = "CR"),
-             size = 2,
-             stroke = 1.5,
-             shape = 23,
-             colour = "#153D99",
-             fill = "#153D99") +
-  # Fifth data layer: dot plot showing TAs with an OR = PD
-  geom_point(aes(x = pd_this_ta,
-                 col = "PD"),
-             size = 2,
-             stroke = 1.5,
-             shape = 4,
-             colour = "#B24745") +
-  # Final aesthetics adjustments
-  scale_fill_manual(values = cols,
-                    name = "Overall Response") +
-  theme_minimal() +
-  theme(
-    panel.border = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    panel.background = element_rect(fill = "#FFFFFF", colour = "#FFFFFF"),
-    plot.background  = element_rect(fill = "#FFFFFF", colour = "#FFFFFF"),
-    legend.title = element_text(size = 5),
-    legend.text = element_text(size = 5),
-    legend.justification = "top",
-    legend.position = c(0.95, 0.95),
-    legend.direction = "vertical"
-  ) +
-  labs(
-    x = "Tumor assessment",
-    y = "Change in SLD from baseline (%)",
-    shape = "Overall response"
-  ) +
-  guides(size = "none",
-         color = "none"
-  ) +
-  scale_x_continuous(breaks = seq(1, 9, 1)) +
-  scale_y_continuous(breaks = seq(-100, 100 , 20))
+    ggplot(
+      aes(x = event_num, y = percent_change_from_baseline)
+    ) +
+    # Line plot showing SDL percent change from baseline
+    geom_line(aes(color = patient), size = 1.2) +
+    scale_color_manual(values = c(
+      rep("#000000", 200)
+    )) +
+    # Second data layer: dot plot showing TAs with an OR = SD
+    geom_point(
+      aes(
+        x = sd_this_ta,
+        col = "SD"
+      ),
+      stroke = 1.5,
+      shape = 22,
+      colour = "#FFD966",
+      fill = "#FFD966"
+    ) +
+    # Third data layer: dot plot showing TAs with an OR = PR
+    geom_point(
+      aes(
+        x = pr_this_ta,
+        col = "PR"
+      ),
+      size = 2,
+      stroke = 1.5,
+      shape = 21,
+      colour = "#74AAFF",
+      fill = "#74AAFF"
+    ) +
+    # Fourth data layer: dot plot showing TAs with an OR = CR
+    geom_point(
+      aes(
+        x = cr_this_ta,
+        col = "CR"
+      ),
+      size = 2,
+      stroke = 1.5,
+      shape = 23,
+      colour = "#153D99",
+      fill = "#153D99"
+    ) +
+    # Fifth data layer: dot plot showing TAs with an OR = PD
+    geom_point(
+      aes(
+        x = pd_this_ta,
+        col = "PD"
+      ),
+      size = 2,
+      stroke = 1.5,
+      shape = 4,
+      colour = "#B24745"
+    ) +
+    # Final aesthetics adjustments
+    scale_fill_manual(
+      values = cols,
+      name = "Overall Response"
+    ) +
+    theme_minimal() +
+    theme(
+      panel.border = element_blank(),
+      panel.grid.minor.y = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      panel.background = element_rect(fill = "#FFFFFF", colour = "#FFFFFF"),
+      plot.background = element_rect(fill = "#FFFFFF", colour = "#FFFFFF"),
+      legend.title = element_text(size = 5),
+      legend.text = element_text(size = 5),
+      legend.justification = "top",
+      legend.position = c(0.95, 0.95),
+      legend.direction = "vertical"
+    ) +
+    labs(
+      x = "Tumor assessment",
+      y = "Change in SLD from baseline (%)",
+      shape = "Overall response"
+    ) +
+    guides(
+      size = "none",
+      color = "none"
+    ) +
+    scale_x_continuous(breaks = seq(1, 9, 1)) +
+    scale_y_continuous(breaks = seq(-100, 100, 20))
 
   spider_ta <- spider_ta + scale_shape(na.translate = FALSE)
-  
+
   ggsave(
-    paste("../output/swimmer-spider-plot/materials/", project_id, "_site-", as.character({{site}}), "_spider_TAs_", as.Date(Sys.Date()), ".png", sep = ""),
+    paste("../output/swimmer-spider-plot/materials/", project_id, "_site-", as.character({{ site }}), "_spider_TAs_", as.Date(Sys.Date()), ".png", sep = ""),
     spider_ta,
     width = 15,
     height = 20,
     units = "cm",
     dpi = 300
-    )
-
-  spider_ta <- spider_ta +
-    annotate("rect", xmin = 0, xmax = 9, ymin = -30, ymax = -100,
-             alpha = .1,fill = "#74AAFF") +
-    annotate("rect", xmin = 0, xmax = 9, ymin = 20, ymax = 100,
-             alpha = .0, fill = "#B24745")
-  
-  combined_ta <- plot_grid(
-  swimmer_ta,
-  spider_ta,
-  nrow = 2,
-  rel_heights = c(3, 5)
   )
 
-  title <- ggdraw() + 
-    draw_label({{name}},
-      fontface = 'bold',
+  spider_ta <- spider_ta +
+    annotate("rect",
+      xmin = 0, xmax = 9, ymin = -30, ymax = -100,
+      alpha = .1, fill = "#74AAFF"
+    ) +
+    annotate("rect",
+      xmin = 0, xmax = 9, ymin = 20, ymax = 100,
+      alpha = .0, fill = "#B24745"
+    )
+
+  combined_ta <- plot_grid(
+    swimmer_ta,
+    spider_ta,
+    nrow = 2,
+    rel_heights = c(3, 5)
+  )
+
+  title <- ggdraw() +
+    draw_label({{ name }},
+      fontface = "bold",
       x = 0,
       hjust = 0
     ) +
     theme(
       plot.margin = margin(0, 0, 0, 7)
     )
-  
+
   combined_ta <- plot_grid(
     title, combined_ta,
     ncol = 1,
     rel_heights = c(0.1, 1)
   )
-    
+
   combined_ta <- add_sub(
-    combined_ta, {{comment}},
+    combined_ta, {{ comment }},
     x = 0, hjust = 0,
-    fontface = 'plain',
+    fontface = "plain",
     size = 8
   )
-  
+
   ggsave(
-    paste("../output/swimmer-spider-plot/", project_id, "_site-", as.character({{site}}), "_TAs_", as.Date(Sys.Date()), ".png", sep = ""),
+    paste("../output/swimmer-spider-plot/", project_id, "_site-", as.character({{ site }}), "_TAs_", as.Date(Sys.Date()), ".png", sep = ""),
     combined_ta,
     width = 30,
     height = 75,
     units = "cm",
     dpi = 300
-    )
-  
+  )
+
   return(combined_ta)
 }
 ```
@@ -1330,25 +1432,25 @@ grid.draw(site_0301_figure)
 ## Last Lenvatinib Dose
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-last_lenvatinib <- data_01_cycles %>% 
-  select(patient, event_num, visit_date, has_the_patient_taken_any_lenvatinib_dose_during_the_cycle) %>% 
-  filter(has_the_patient_taken_any_lenvatinib_dose_during_the_cycle == "Yes") %>% 
+last_lenvatinib <- data_01_cycles %>%
+  select(patient, event_num, visit_date, has_the_patient_taken_any_lenvatinib_dose_during_the_cycle) %>%
+  filter(has_the_patient_taken_any_lenvatinib_dose_during_the_cycle == "Yes") %>%
   group_by(patient) %>%
   filter(event_num == max(event_num)) %>%
-  ungroup() %>% 
+  ungroup() %>%
   mutate(
     visit_date = dmy(visit_date)
   )
 
-patients_not_in_last_lenvatinib <- data_02_itt %>% 
-  anti_join(last_lenvatinib, by = "patient") %>% 
+patients_not_in_last_lenvatinib <- data_02_itt %>%
+  anti_join(last_lenvatinib, by = "patient") %>%
   select(patient)
 
-last_lenvatinib <- last_lenvatinib %>% 
+last_lenvatinib <- last_lenvatinib %>%
   bind_rows(
-    data_02_itt %>% 
-      anti_join(last_lenvatinib, by = "patient") %>% 
-      select(patient) %>% 
+    data_02_itt %>%
+      anti_join(last_lenvatinib, by = "patient") %>%
+      select(patient) %>%
       mutate(
         event_num = NA,
         visit_date = NA,
@@ -1356,7 +1458,7 @@ last_lenvatinib <- last_lenvatinib %>%
       )
   )
 
-last_lenvatinib <- last_lenvatinib %>% 
+last_lenvatinib <- last_lenvatinib %>%
   rename(
     last_cycle_visit_date = visit_date
   )
@@ -1366,14 +1468,16 @@ lenvatinib <- merge(
   last_lenvatinib,
   by = "patient",
   all = TRUE
-) %>% 
-  select(-has_the_patient_taken_any_lenvatinib_dose_during_the_cycle) %>% 
+) %>%
+  select(-has_the_patient_taken_any_lenvatinib_dose_during_the_cycle) %>%
   # Create a new variable with the number of weeks between last_cycle_visit_date dose and c1d1_date
   mutate(
     last_lenvatinib = if_else(
-      is.na(last_cycle_visit_date), NA, as.numeric(last_cycle_visit_date - c1d1_date, units = "weeks")),
+      is.na(last_cycle_visit_date), NA, as.numeric(last_cycle_visit_date - c1d1_date, units = "weeks")
+    ),
     lenvatinib_8w = if_else(
-      last_lenvatinib >= 8, "Yes", "No")
+      last_lenvatinib >= 8, "Yes", "No"
+    )
   )
 ```
 
@@ -1399,49 +1503,56 @@ lenvatinib %>%
 ## Dose delays, reductions, and interruptions
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-### Pembrolizumb ### ---------------------------------------------------------- 
-pembrolizumab_modifications <- data_01_cycles %>% 
+### Pembrolizumb ### ----------------------------------------------------------
+pembrolizumab_modifications <- data_01_cycles %>%
   mutate(
     visit_date = dmy(visit_date)
-  ) %>% 
-  select(patient, event_num, pembrolizumab_administered, reason_no_administration, specify_ae_no_dose, date_of_administration,
-         treatment_delay_reason, pembrolizumab_administered_dose, other_dose_mg) %>% 
+  ) %>%
+  select(
+    patient, event_num, pembrolizumab_administered, reason_no_administration, specify_ae_no_dose, date_of_administration,
+    treatment_delay_reason, pembrolizumab_administered_dose, other_dose_mg
+  ) %>%
   mutate(
     date_of_administration = dmy(date_of_administration),
     temporary_interruption = if_else(
-      pembrolizumab_administered == "No" & !is.na(reason_no_administration) & !str_detect(reason_no_administration, "permanent"), "Yes", "No"),
+      pembrolizumab_administered == "No" & !is.na(reason_no_administration) & !str_detect(reason_no_administration, "permanent"), "Yes", "No"
+    ),
     delay = if_else(
-      pembrolizumab_administered == "Yes" & !is.na(treatment_delay_reason), "Yes", "No"),
+      pembrolizumab_administered == "Yes" & !is.na(treatment_delay_reason), "Yes", "No"
+    ),
     reduction = if_else(
-      !is.na(other_dose_mg), "Yes", "No"),
+      !is.na(other_dose_mg), "Yes", "No"
+    ),
     permanent_discontinuation = if_else(
-      pembrolizumab_administered == "No" & str_detect(reason_no_administration, "permanent"), "Yes", "No")
-  ) %>% 
+      pembrolizumab_administered == "No" & str_detect(reason_no_administration, "permanent"), "Yes", "No"
+    )
+  ) %>%
   select(
     patient, event_num, pembrolizumab_administered, date_of_administration,
-    delay, treatment_delay_reason, 
+    delay, treatment_delay_reason,
     reduction, pembrolizumab_administered_dose, other_dose_mg,
     temporary_interruption, reason_no_administration,
     permanent_discontinuation
   )
 
 ### Lenvatinib ### ------------------------------------------------------------
-lenvatinib_modifications_s1 <- data_01_cycles %>% 
+lenvatinib_modifications_s1 <- data_01_cycles %>%
   mutate(
     visit_date = dmy(visit_date)
-  ) %>% 
+  ) %>%
   select(
     patient, event_num, has_the_patient_taken_any_lenvatinib_dose_during_the_cycle, number_capsules_taken_10_mg, number_capsules_taken_4_mg
-  ) %>% 
+  ) %>%
   mutate(
     lenvatinib_dose_mg = (number_capsules_taken_10_mg * 10) + (number_capsules_taken_4_mg * 4)
   )
 
 lenvatinib_modifications_s2 <- read_excel(
-    here(paste0("data/", cutoff_date, "/", project_id, "_Cycles_", cutoff_date_formatted, ".xlsx")),
-    sheet = "LENVATINIB",
-    skip = 1) %>% 
-  clean_names() %>% 
+  here(paste0("data/", cutoff_date, "/", project_id, "_Cycles_", cutoff_date_formatted, ".xlsx")),
+  sheet = "LENVATINIB",
+  skip = 1
+) %>%
+  clean_names() %>%
   mutate(
     date = dmy(date),
     lenvatinib_dose_mg = case_when(
@@ -1451,68 +1562,120 @@ lenvatinib_modifications_s2 <- read_excel(
       dose == "20 mg (2 capsules 10 mg)" ~ 20,
       dose == "No dose" ~ 0
     )
-  ) %>% 
+  ) %>%
   group_by(patient, event_num) %>%
   mutate(
     lenvatinib_daily_dose_mg = sum(lenvatinib_dose_mg)
-  ) %>% 
+  ) %>%
   filter(
     day == "#1"
-  ) %>% 
-  select(patient, event_num, date, lenvatinib_daily_dose_mg,
-         reason_of_no_dose_other_dose_or_dose_reduction, specify_ae_interruption
-         )
+  ) %>%
+  select(
+    patient, event_num, date, lenvatinib_daily_dose_mg,
+    reason_of_no_dose_other_dose_or_dose_reduction, specify_ae_interruption
+  )
 
-lenvatinib_modifications <- lenvatinib_modifications_s1 %>% 
+lenvatinib_modifications <- lenvatinib_modifications_s1 %>%
   left_join(
-    lenvatinib_modifications_s2, by = c("patient", "event_num")
-    ) %>% 
+    lenvatinib_modifications_s2,
+    by = c("patient", "event_num")
+  ) %>%
   rename(
     lenvatinib_administered = has_the_patient_taken_any_lenvatinib_dose_during_the_cycle,
-  ) %>% 
+  ) %>%
   select(
     patient, event_num, date, lenvatinib_administered, lenvatinib_daily_dose_mg,
     reason_of_no_dose_other_dose_or_dose_reduction, specify_ae_interruption
   )
 
 ### Treatment delay ### -------------------------------------------------------
-### Pembrolizumb ### ---------------------------------------------------------- 
+### Pembrolizumb ### ----------------------------------------------------------
 ## Patients with treatment delay
-pembrolizumab_delay <- pembrolizumab_modifications %>% 
-  group_by(patient) %>% 
+pembrolizumab_delay <- pembrolizumab_modifications %>%
+  group_by(patient) %>%
   filter(
     delay == "Yes"
-  ) %>% 
+  ) %>%
   filter(
     event_num == min(event_num)
-  ) %>% 
-  ungroup() %>% 
+  ) %>%
+  ungroup() %>%
   select(-event_num)
 
 ## Patients without any treatment delay
-pembrolizumab_no_delay <- pembrolizumab_modifications %>% 
-  group_by(patient) %>% 
+pembrolizumab_no_delay <- pembrolizumab_modifications %>%
+  group_by(patient) %>%
   filter(
     delay == "No"
-  ) %>% 
+  ) %>%
   filter(
     event_num == min(event_num)
-  ) %>% 
-  ungroup() %>% 
+  ) %>%
+  ungroup() %>%
   select(-event_num)
 
-pembrolizumab_no_delay_clean <- pembrolizumab_no_delay %>% 
-  anti_join(pembrolizumab_delay, by = "patient") %>% 
+pembrolizumab_no_delay_clean <- pembrolizumab_no_delay %>%
+  anti_join(pembrolizumab_delay, by = "patient") %>%
   select(patient, everything())
 
 pembrolizumab_delays <- bind_rows(pembrolizumab_delay, pembrolizumab_no_delay_clean)
 
-pembrolizumab_delays <- pembrolizumab_delays %>% 
+pembrolizumab_delays <- pembrolizumab_delays %>%
   mutate(
     treatment_delay_reason = if_else(
-      treatment_delay_reason == "Adverse Event/toxicity (please, record it in the AEs form)", "Adverse Event/toxicity", treatment_delay_reason)
+      treatment_delay_reason == "Adverse Event/toxicity (please, record it in the AEs form)", "Adverse Event/toxicity", treatment_delay_reason
+    )
   )
 ```
+
+<!-- ### Under development ### ----------------------------------------------->
+
+```{r}
+# temp <- read_excel( # lenvatinib_modifications_s2
+#   here(paste0("data/", cutoff_date, "/", project_id, "_Cycles_", cutoff_date_formatted, ".xlsx")),
+#   sheet = "LENVATINIB",
+#   skip = 1
+# ) %>%
+#   clean_names() %>%
+#   mutate(
+#     date = dmy(date),
+#     lenvatinib_dose_mg = case_when(
+#       dose == "10 mg (1 capsule 10 mg)" ~ 10,
+#       dose == "12 mg (3 capsules 4 mg)" ~ 12,
+#       dose == "16 mg (4 capsules 4 mg )" ~ 16,
+#       dose == "20 mg (2 capsules 10 mg)" ~ 20,
+#       dose == "No dose" ~ 0
+#     )
+#   )
+# 
+# temp_min <- temp %>%
+#   group_by(patient) %>% 
+#   filter(lenvatinib_dose_mg != 0) %>% 
+#   filter(lenvatinib_dose_mg == min(lenvatinib_dose_mg) & lenvatinib_dose_mg != 0) %>%
+#   filter(row_number() == 1) %>% 
+#   # Summarize column lenvatinib_dose_mg
+#   summarize(
+#     lenvatinib_dose_mg = sum(lenvatinib_dose_mg)
+#   )
+# 
+# temp_table <- temp_min %>%
+#   tbl_summary(
+#     missing = "no",
+#     percent = "column",
+#     type = all_dichotomous() ~ "categorical",
+#     sort = list(everything() ~ "frequency"),
+#     label = list(
+#       lenvatinib_dose_mg ~ "Min Lenvatinib dose"
+#     ),
+#     include = c(lenvatinib_dose_mg)
+#   ) %>%
+#   modify_header(label = " ") %>%
+#   bold_labels()
+# 
+# temp_table
+```
+
+<!---------------------------------------------------------------------------->
 
 <!-- #### **Table X.1. Pembrolizumab dose delay:** -->
 
@@ -1523,8 +1686,10 @@ tbl_pembrolizumab_delays <- pembrolizumab_delays %>%
     percent = "column",
     type = all_dichotomous() ~ "categorical",
     sort = list(everything() ~ "frequency"),
-    label = list(delay ~ "Pembrolizumab dose delay",
-                 treatment_delay_reason ~ "Reason for dose delay"),
+    label = list(
+      delay ~ "Pembrolizumab dose delay",
+      treatment_delay_reason ~ "Reason for dose delay"
+    ),
     include = c(delay, treatment_delay_reason)
   ) %>%
   modify_header(label = " ") %>%
@@ -1532,34 +1697,34 @@ tbl_pembrolizumab_delays <- pembrolizumab_delays %>%
 ```
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-### Pembrolizumb ### ---------------------------------------------------------- 
+### Pembrolizumb ### ----------------------------------------------------------
 # Treatment reduction
 ## Patients with treatment reduction
-pembrolizumab_reduction <- pembrolizumab_modifications %>% 
-  group_by(patient) %>% 
+pembrolizumab_reduction <- pembrolizumab_modifications %>%
+  group_by(patient) %>%
   filter(
     reduction == "Yes"
-  ) %>% 
+  ) %>%
   filter(
     event_num == min(event_num)
-  ) %>% 
-  ungroup() %>% 
+  ) %>%
+  ungroup() %>%
   select(-event_num)
 
 ## Patients without any treatment reduction
-pembrolizumab_no_reduction <- pembrolizumab_modifications %>% 
-  group_by(patient) %>% 
+pembrolizumab_no_reduction <- pembrolizumab_modifications %>%
+  group_by(patient) %>%
   filter(
     reduction == "No"
-  ) %>% 
+  ) %>%
   filter(
     event_num == min(event_num)
-  ) %>% 
-  ungroup() %>% 
+  ) %>%
+  ungroup() %>%
   select(-event_num)
 
-pembrolizumab_no_reduction_clean <- pembrolizumab_no_reduction %>% 
-  anti_join(pembrolizumab_reduction, by = "patient") %>% 
+pembrolizumab_no_reduction_clean <- pembrolizumab_no_reduction %>%
+  anti_join(pembrolizumab_reduction, by = "patient") %>%
   select(patient, everything())
 
 pembrolizumab_reductions <- bind_rows(pembrolizumab_reduction, pembrolizumab_no_reduction_clean)
@@ -1567,13 +1732,13 @@ pembrolizumab_reductions <- bind_rows(pembrolizumab_reduction, pembrolizumab_no_
 ### Lenvatinib ### ------------------------------------------------------------
 # Treatment reduction
 ## Patients with treatment reduction
-lenvatinib_reductions <- lenvatinib_modifications %>% 
-  group_by(patient) %>% 
+lenvatinib_reductions <- lenvatinib_modifications %>%
+  group_by(patient) %>%
   summarise(
     mean_daily_dose = mean(lenvatinib_daily_dose_mg, na.rm = TRUE),
     min_daily_dose = min(lenvatinib_daily_dose_mg, na.rm = TRUE),
     max_daily_dose = max(lenvatinib_daily_dose_mg, na.rm = TRUE)
-  ) %>% 
+  ) %>%
   ungroup()
 
 ### The following information was a petition from the PI ### ------------------
@@ -1583,7 +1748,7 @@ lenvatinib_reductions <- lenvatinib_modifications %>%
 # max(lenvatinib_reductions$max_daily_dose, na.rm = TRUE)
 
 ### Line and dot plot of lenvatinib daily dose across time ### ----------------
-# lenvatinib_modifications_s2 %>% 
+# lenvatinib_modifications_s2 %>%
 #   ggplot(aes(x = event_num, y = lenvatinib_daily_dose_mg, group = patient)) +
 #   geom_line() +
 #   geom_point() +
@@ -1598,7 +1763,7 @@ lenvatinib_reductions <- lenvatinib_modifications %>%
 #### **Figure 3. Total Lenvatinib dose (mg) per cycle across time**
 
 ```{r, line-dot-plot-lenvatinib, fig.height = 15, message = FALSE, warning = FALSE, echo = FALSE}
-lenvatinib_daily_dose <- lenvatinib_modifications_s2 %>% 
+lenvatinib_daily_dose <- lenvatinib_modifications_s2 %>%
   ggplot(aes(x = event_num, y = lenvatinib_daily_dose_mg, group = patient)) +
   geom_line() +
   geom_point() +
@@ -1608,7 +1773,7 @@ lenvatinib_daily_dose <- lenvatinib_modifications_s2 %>%
     x = "Cycle number",
     y = "Lenvatinib daily dose (mg)"
   ) +
-  facet_wrap(~patient) # + 
+  facet_wrap(~patient) # +
 #   theme(
 #   panel.background = element_rect(fill = "white"),
 #   panel.grid.major = element_line(colour = "grey", size = 0.5),
@@ -1630,9 +1795,9 @@ ggsave(
   height = 50,
   units = "cm",
   dpi = 300
-  )
+)
 
-lenvatinib_daily_dose 
+lenvatinib_daily_dose
 ```
 
 <!-- #### **Table X.2. Pembrolizumab dose reduction:** -->
@@ -1644,8 +1809,10 @@ tbl_pembrolizumab_reductions <- pembrolizumab_reductions %>%
     percent = "column",
     type = all_dichotomous() ~ "categorical",
     sort = list(everything() ~ "frequency"),
-    label = list(reduction ~ "Pembrolizumab dose reduction",
-                 pembrolizumab_administered_dose ~ "Dose administered"),
+    label = list(
+      reduction ~ "Pembrolizumab dose reduction",
+      pembrolizumab_administered_dose ~ "Dose administered"
+    ),
     include = c(reduction, pembrolizumab_administered_dose)
   ) %>%
   modify_header(label = " ") %>%
@@ -1656,83 +1823,88 @@ tbl_pembrolizumab_reductions <- pembrolizumab_reductions %>%
 ### Pembrolizumab ### ---------------------------------------------------------
 # Treatment temporary interruption
 ## Patients with treatment temporary interruption
-pembrolizumab_temporary <- pembrolizumab_modifications %>% 
-  group_by(patient) %>% 
+pembrolizumab_temporary <- pembrolizumab_modifications %>%
+  group_by(patient) %>%
   filter(
     temporary_interruption == "Yes"
-  ) %>% 
+  ) %>%
   filter(
     event_num == min(event_num)
-  ) %>% 
-  ungroup() %>% 
+  ) %>%
+  ungroup() %>%
   select(-event_num)
 
 ## Patients without any treatment reduction
-pembrolizumab_no_temporary <- pembrolizumab_modifications %>% 
-  group_by(patient) %>% 
+pembrolizumab_no_temporary <- pembrolizumab_modifications %>%
+  group_by(patient) %>%
   filter(
     temporary_interruption == "No"
-  ) %>% 
+  ) %>%
   filter(
     event_num == min(event_num)
-  ) %>% 
-  ungroup() %>% 
+  ) %>%
+  ungroup() %>%
   select(-event_num)
 
-pembrolizumab_no_temporary_clean <- pembrolizumab_no_temporary %>% 
-  anti_join(pembrolizumab_temporary, by = "patient") %>% 
+pembrolizumab_no_temporary_clean <- pembrolizumab_no_temporary %>%
+  anti_join(pembrolizumab_temporary, by = "patient") %>%
   select(patient, everything())
 
 pembrolizumab_temporary_interruptions <- bind_rows(pembrolizumab_temporary, pembrolizumab_no_temporary_clean)
 
-pembrolizumab_temporary_interruptions <- pembrolizumab_temporary_interruptions %>% 
+pembrolizumab_temporary_interruptions <- pembrolizumab_temporary_interruptions %>%
   mutate(
     reason_no_administration = if_else(
-      reason_no_administration == "Dose withhold due to toxicity or other medical reason (record in AEs form)", "Adverse Event/toxicity", reason_no_administration),
+      reason_no_administration == "Dose withhold due to toxicity or other medical reason (record in AEs form)", "Adverse Event/toxicity", reason_no_administration
+    ),
     reason_no_administration = if_else(
-      reason_no_administration == "Non-Medical Reason", "Non-medical reasons", reason_no_administration)
+      reason_no_administration == "Non-Medical Reason", "Non-medical reasons", reason_no_administration
+    )
   )
 
 ### Lenvatinib ### ------------------------------------------------------------
 # Treatment temporary interruption
 ## Patients with treatment temporary interruption
-lenvatinib_temporary <- lenvatinib_modifications %>% 
-  group_by(patient) %>% 
+lenvatinib_temporary <- lenvatinib_modifications %>%
+  group_by(patient) %>%
   filter(
     str_detect(lenvatinib_administered, "temporal")
-  ) %>% 
+  ) %>%
   filter(
     event_num == min(event_num)
-  ) %>% 
-  ungroup() %>% 
+  ) %>%
+  ungroup() %>%
   select(-event_num)
 
 ## Patients without any treatment reduction
-lenvatinib_no_temporary <- lenvatinib_modifications %>% 
-  group_by(patient) %>% 
+lenvatinib_no_temporary <- lenvatinib_modifications %>%
+  group_by(patient) %>%
   filter(
     !str_detect(lenvatinib_administered, "temporal")
-  ) %>% 
+  ) %>%
   filter(
     event_num == min(event_num)
-  ) %>% 
-  ungroup() %>% 
+  ) %>%
+  ungroup() %>%
   select(-event_num)
 
-lenvatinib_no_temporary_clean <- lenvatinib_no_temporary %>% 
-  anti_join(lenvatinib_temporary, by = "patient") %>% 
+lenvatinib_no_temporary_clean <- lenvatinib_no_temporary %>%
+  anti_join(lenvatinib_temporary, by = "patient") %>%
   select(patient, everything())
 
 lenvatinib_temporary_interruptions <- bind_rows(lenvatinib_temporary, lenvatinib_no_temporary_clean)
 
-lenvatinib_temporary_interruptions <- lenvatinib_temporary_interruptions %>% 
+lenvatinib_temporary_interruptions <- lenvatinib_temporary_interruptions %>%
   mutate(
     temporary_interruption = if_else(
-      str_detect(lenvatinib_administered, "temporal"), "Yes", "No"),
+      str_detect(lenvatinib_administered, "temporal"), "Yes", "No"
+    ),
     reason_of_no_dose_other_dose_or_dose_reduction = if_else(
-      reason_of_no_dose_other_dose_or_dose_reduction == "Toxicity (record in AEs form)", "Adverse Event/toxicity", reason_of_no_dose_other_dose_or_dose_reduction),
+      reason_of_no_dose_other_dose_or_dose_reduction == "Toxicity (record in AEs form)", "Adverse Event/toxicity", reason_of_no_dose_other_dose_or_dose_reduction
+    ),
     reason_of_no_dose_other_dose_or_dose_reduction = if_else(
-      temporary_interruption == "Yes" & reason_of_no_dose_other_dose_or_dose_reduction == "NA", "Unknown", reason_of_no_dose_other_dose_or_dose_reduction)
+      temporary_interruption == "Yes" & reason_of_no_dose_other_dose_or_dose_reduction == "NA", "Unknown", reason_of_no_dose_other_dose_or_dose_reduction
+    )
   )
 ```
 
@@ -1745,8 +1917,10 @@ tbl_pembrolizumab_temporary <- pembrolizumab_temporary_interruptions %>%
     percent = "column",
     type = all_dichotomous() ~ "categorical",
     sort = list(everything() ~ "frequency"),
-    label = list(temporary_interruption ~ "Pembrolizumab dose temporary interruption",
-                 reason_no_administration ~ "Reason for temporary interruption"),
+    label = list(
+      temporary_interruption ~ "Pembrolizumab dose temporary interruption",
+      reason_no_administration ~ "Reason for temporary interruption"
+    ),
     include = c(temporary_interruption, reason_no_administration)
   ) %>%
   modify_header(label = " ") %>%
@@ -1762,8 +1936,10 @@ tbl_lenvatinib_temporary <- lenvatinib_temporary_interruptions %>%
     percent = "column",
     type = all_dichotomous() ~ "categorical",
     sort = list(everything() ~ "frequency"),
-    label = list(temporary_interruption ~ "Lenvatinib temporary dose interruption",
-                 reason_of_no_dose_other_dose_or_dose_reduction ~ "Reason for temporary interruption"),
+    label = list(
+      temporary_interruption ~ "Lenvatinib temporary dose interruption",
+      reason_of_no_dose_other_dose_or_dose_reduction ~ "Reason for temporary interruption"
+    ),
     include = c(temporary_interruption, reason_of_no_dose_other_dose_or_dose_reduction)
   ) %>%
   modify_header(label = " ") %>%
@@ -1774,31 +1950,31 @@ tbl_lenvatinib_temporary <- lenvatinib_temporary_interruptions %>%
 ### Pembrolizumab ### ---------------------------------------------------------
 # Treatment permanent discontinuation
 ## Patients with treatment permanent discontinuation
-pembrolizumab_permanent <- pembrolizumab_modifications %>% 
-  group_by(patient) %>% 
+pembrolizumab_permanent <- pembrolizumab_modifications %>%
+  group_by(patient) %>%
   filter(
     permanent_discontinuation == "Yes"
-  ) %>% 
+  ) %>%
   filter(
     event_num == min(event_num)
-  ) %>% 
-  ungroup() %>% 
+  ) %>%
+  ungroup() %>%
   select(-event_num)
 
 ## Patients without any treatment reduction
-pembrolizumab_no_permanent <- pembrolizumab_modifications %>% 
-  group_by(patient) %>% 
+pembrolizumab_no_permanent <- pembrolizumab_modifications %>%
+  group_by(patient) %>%
   filter(
     permanent_discontinuation == "No"
-  ) %>% 
+  ) %>%
   filter(
     event_num == min(event_num)
-  ) %>% 
-  ungroup() %>% 
+  ) %>%
+  ungroup() %>%
   select(-event_num)
 
-pembrolizumab_no_permanent_clean <- pembrolizumab_no_permanent %>% 
-  anti_join(pembrolizumab_permanent, by = "patient") %>% 
+pembrolizumab_no_permanent_clean <- pembrolizumab_no_permanent %>%
+  anti_join(pembrolizumab_permanent, by = "patient") %>%
   select(patient, everything())
 
 pembrolizumab_permanent_discontinuations <- bind_rows(pembrolizumab_permanent, pembrolizumab_no_permanent_clean)
@@ -1806,41 +1982,43 @@ pembrolizumab_permanent_discontinuations <- bind_rows(pembrolizumab_permanent, p
 ### Lenvatinib ### ------------------------------------------------------------
 # Treatment permanent discontinuation
 ## Patients with treatment permanent discontinuation
-lenvatinib_permanent <- lenvatinib_modifications %>% 
-  group_by(patient) %>% 
+lenvatinib_permanent <- lenvatinib_modifications %>%
+  group_by(patient) %>%
   filter(
     str_detect(lenvatinib_administered, "permanent")
-  ) %>% 
+  ) %>%
   filter(
     event_num == min(event_num)
-  ) %>% 
-  ungroup() %>% 
+  ) %>%
+  ungroup() %>%
   select(-event_num)
 
 ## Patients without any treatment reduction
-lenvatinib_no_permanent <- lenvatinib_modifications %>% 
-  group_by(patient) %>% 
+lenvatinib_no_permanent <- lenvatinib_modifications %>%
+  group_by(patient) %>%
   filter(
     !str_detect(lenvatinib_administered, "permanent")
-  ) %>% 
+  ) %>%
   filter(
     event_num == min(event_num)
-  ) %>% 
-  ungroup() %>% 
+  ) %>%
+  ungroup() %>%
   select(-event_num)
 
-lenvatinib_no_permanent_clean <- lenvatinib_no_permanent %>% 
-  anti_join(lenvatinib_permanent, by = "patient") %>% 
+lenvatinib_no_permanent_clean <- lenvatinib_no_permanent %>%
+  anti_join(lenvatinib_permanent, by = "patient") %>%
   select(patient, everything())
 
 lenvatinib_permanent_interruptions <- bind_rows(lenvatinib_permanent, lenvatinib_no_permanent_clean)
 
-lenvatinib_permanent_interruptions <- lenvatinib_permanent_interruptions %>% 
+lenvatinib_permanent_interruptions <- lenvatinib_permanent_interruptions %>%
   mutate(
     permanent_interruption = if_else(
-      str_detect(lenvatinib_administered, "permanent"), "Yes", "No"),
+      str_detect(lenvatinib_administered, "permanent"), "Yes", "No"
+    ),
     lenvatinib_administered = if_else(
-      lenvatinib_administered == "No, temporal interruption", "Yes", lenvatinib_administered)
+      lenvatinib_administered == "No, temporal interruption", "Yes", lenvatinib_administered
+    )
   )
 ```
 
@@ -1889,10 +2067,10 @@ row5 <- tbl_merge(list(tbl_lenvatinib_temporary))
 row6 <- tbl_merge(list(tbl_lenvatinib_permanent))
 
 tbl_stack <-
-  tbl_stack(list(row1, row2, row3, row4, row5, row6)) %>% 
+  tbl_stack(list(row1, row2, row3, row4, row5, row6)) %>%
   modify_spanning_header(all_stat_cols() ~ "")
 
-tbl_stack 
+tbl_stack
 ```
 
 # Preliminary Efficacy Analysis
@@ -1900,10 +2078,9 @@ tbl_stack
 ### Follow-up
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-
-data_temp_eos <- data_temp_eos %>% 
+data_temp_eos <- data_temp_eos %>%
   mutate(
-    fu = as.numeric(eos_date - c1d1_date + 1)/(365.25/12)
+    fu = as.numeric(eos_date - c1d1_date + 1) / (365.25 / 12)
   )
 
 fu_median <- round(median(data_temp_eos$fu), digits = 1)
@@ -1914,21 +2091,24 @@ fu_max <- round(max(data_temp_eos$fu), digits = 1)
 The median (range) follow-up time is: `r fu_median` months (`r fu_min`-`r fu_max`)
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-customize_labels <- function (p, font.title = NULL,
-                              font.subtitle = NULL, font.caption = NULL,
-                              font.x = NULL, font.y = NULL, font.xtickslab = NULL, font.ytickslab = NULL)
-{
+customize_labels <- function(p, font.title = NULL,
+                             font.subtitle = NULL, font.caption = NULL,
+                             font.x = NULL, font.y = NULL, font.xtickslab = NULL, font.ytickslab = NULL) {
   original.p <- p
-  if(is.ggplot(original.p)) list.plots <- list(original.p)
-  else if(is.list(original.p)) list.plots <- original.p
-  else stop("Can't handle an object of class ", class (original.p))
-  .set_font <- function(font){
-    font <- ggpubr:::.parse_font(font)
-    ggtext::element_markdown (size = font$size, face = font$face, colour = font$color)
+  if (is.ggplot(original.p)) {
+    list.plots <- list(original.p)
+  } else if (is.list(original.p)) {
+    list.plots <- original.p
+  } else {
+    stop("Can't handle an object of class ", class(original.p))
   }
-  for(i in 1:length(list.plots)){
+  .set_font <- function(font) {
+    font <- ggpubr:::.parse_font(font)
+    ggtext::element_markdown(size = font$size, face = font$face, colour = font$color)
+  }
+  for (i in 1:length(list.plots)) {
     p <- list.plots[[i]]
-    if(is.ggplot(p)){
+    if (is.ggplot(p)) {
       if (!is.null(font.title)) p <- p + theme(plot.title = .set_font(font.title))
       if (!is.null(font.subtitle)) p <- p + theme(plot.subtitle = .set_font(font.subtitle))
       if (!is.null(font.caption)) p <- p + theme(plot.caption = .set_font(font.caption))
@@ -1939,34 +2119,43 @@ customize_labels <- function (p, font.title = NULL,
       list.plots[[i]] <- p
     }
   }
-  if(is.ggplot(original.p)) list.plots[[1]]
-  else list.plots
+  if (is.ggplot(original.p)) {
+    list.plots[[1]]
+  } else {
+    list.plots
+  }
 }
 
-data_13_survival <- data_temp_eos %>% 
+data_13_survival <- data_temp_eos %>%
   # Create a new column "pfs event" that contains a 1 if the column "progression" is not NA and a 0 otherwise
   mutate(pfs_event = if_else(
-    is.na(progression), 0, 1)) %>%
+    is.na(progression), 0, 1
+  )) %>%
   # Create a new column "pfs" that contains the number of days between the study treatment start date and the date of progression
   mutate(pfs = if_else(
-    is.na(progression), eos_date - c1d1_date, progression - c1d1_date)) %>%
+    is.na(progression), eos_date - c1d1_date, progression - c1d1_date
+  )) %>%
   mutate(pfs = if_else(
-    patient == "0202-005", discontinuation_date - c1d1_date, pfs)) %>%
+    patient == "0202-005", discontinuation_date - c1d1_date, pfs
+  )) %>%
   # Create a new column "os event" that contains a 1 if the column "exitus" is not NA and a 0 otherwise
   mutate(os_event = if_else(
-    is.na(exitus), 0, 1)) %>%
+    is.na(exitus), 0, 1
+  )) %>%
   # Create a new column "os" that contains the number of days between the study treatment start date and the date of end of study
   mutate(os = if_else(
-    is.na(exitus), eos_date - c1d1_date, exitus - c1d1_date)) %>%
+    is.na(exitus), eos_date - c1d1_date, exitus - c1d1_date
+  )) %>%
   select(
     patient, pfs_event, pfs, os_event, os
   ) %>%
   mutate(pfs_event = if_else(
-    pfs_event == 0 & os_event == 1, 1, pfs_event)) %>% 
+    pfs_event == 0 & os_event == 1, 1, pfs_event
+  )) %>%
   ### Manually add clinical progressions as PD events ### ---------------------
   mutate(
     pfs_event = if_else(patient == "0202-005", 1, pfs_event)
-    )
+  )
 
 data_13_survival$pfs <- data_13_survival$pfs / 30.4375
 data_13_survival$os <- data_13_survival$os / 30.4375
@@ -1987,7 +2176,7 @@ formatted_pfs_results <- tidy_pfs_results %>%
     std.error = round(std.error, 2),
     conf.low = round(conf.low, 2),
     conf.high = round(conf.high, 2)
-    )
+  )
 
 rmarkdown::paged_table(formatted_pfs_results)
 ```
@@ -2007,18 +2196,19 @@ tbl_survfit(
 
 ```{r 5mo-pfs-kaplan-meier-plot, message = FALSE, warning = FALSE, echo = FALSE}
 pfs5 <- summary(
-  survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival, conf.type = "log-log"), times = c(5)
-  )
+  survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival, conf.type = "log-log"),
+  times = c(5)
+)
 
 ### Plot ----------------------------------------------------------------------
 pfs_5mo <- ggsurvplot(
   fit = survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival),
-  xlab = "Time since study treatment start date (months)", 
+  xlab = "Time since study treatment start date (months)",
   ylab = "Progression-Free Survival",
   conf.int = FALSE,
   surv.median.line = "hv",
-  xlim = c(0,18.9),
-  ylim = c(0,1.009),
+  xlim = c(0, 18.9),
+  ylim = c(0, 1.009),
   censor.size = 3.5,
   size = 1,
   break.time.by = 3,
@@ -2036,29 +2226,30 @@ pfs_5mo <- ggsurvplot(
 ### Modify theme --------------------------------------------------------------
 pfs_5mo <- customize_labels(
   pfs_5mo,
-  font.title     = c(8, "bold",  "#0a0908"),
+  font.title     = c(8, "bold", "#0a0908"),
   font.caption   = c(8, "plain", "#0a0908"),
-  font.x         = c(8, "bold",  "#0a0908"),          
-  font.y         = c(8, "bold",  "#0a0908"),      
+  font.x         = c(8, "bold", "#0a0908"),
+  font.y         = c(8, "bold", "#0a0908"),
   font.xtickslab = c(8, "plain", "#0a0908"),
   font.ytickslab = c(8, "plain", "#0a0908")
 )
 
-grid.draw.ggsurvplot <- function(x){
+grid.draw.ggsurvplot <- function(x) {
   survminer:::print.ggsurvplot(x, newpage = FALSE)
 }
 
 pfs_5mo$plot <- pfs_5mo$plot + geom_vline(xintercept = 5, linetype = "dashed", size = 0.35)
 
 caption1 <- paste(strwrap(
-  "5-month PFS is 95% (95% CI 81.5-98.7)", 90), collapse = "\n"
-  )
+  "5-month PFS is 93% (95% CI 79.9-97.7)", 90
+), collapse = "\n")
 
 pfs_5mo$plot <- pfs_5mo$plot + annotate(
-  "text", x = 5.5, y = 0.10,
+  "text",
+  x = 5.5, y = 0.10,
   label = caption1,
   cex = 3.5, vjust = "center", hjust = "left", fontface = 20
-  )
+)
 
 ### Save plot ---------------------------------------------------------------
 ggsave(
@@ -2068,7 +2259,7 @@ ggsave(
   height = 12,
   units = "cm",
   dpi = 300
-  )
+)
 
 ### Show plot --------------------------------------------------------------
 pfs_5mo
@@ -2085,17 +2276,19 @@ listing7_formatted_names <- c(
   "Time to PFS event (months)",
   "OS event (exitus)",
   "Time to OS event (months)"
-  )
+)
 
-data_13_survival_formatted <- data_13_survival %>% 
+data_13_survival_formatted <- data_13_survival %>%
   mutate(
     pfs_event = if_else(
-      pfs_event == 0, "No", "Yes"),
+      pfs_event == 0, "No", "Yes"
+    ),
     os_event = if_else(
-      os_event == 0, "No", "Yes"),
+      os_event == 0, "No", "Yes"
+    ),
     pfs = round(as.numeric(pfs), digits = 1),
     os = round(as.numeric(os), digits = 1)
-  ) %>% 
+  ) %>%
   set_names(listing7_formatted_names)
 
 rmarkdown::paged_table(data_13_survival_formatted)
@@ -2114,7 +2307,7 @@ formatted_os_results <- tidy_os_results %>%
     std.error = round(std.error, 2),
     conf.low = round(conf.low, 2),
     conf.high = round(conf.high, 2)
-    )
+  )
 
 rmarkdown::paged_table(formatted_os_results)
 ```
@@ -2137,7 +2330,7 @@ tbl_survfit(
   survfit(Surv(os, os_event) ~ 1, data = data_13_survival, conf.type = "log-log"),
   times = c(6),
   label_header = "**{time}-Month OS**"
-  ) %>%
+) %>%
   modify_header(label = " ")
 ```
 
@@ -2147,12 +2340,12 @@ tbl_survfit(
 ### Plot ----------------------------------------------------------------------
 os_global <- ggsurvplot(
   fit = survfit(Surv(os, os_event) ~ 1, data = data_13_survival),
-  xlab = "Time since study treatment start date (months)", 
+  xlab = "Time since study treatment start date (months)",
   ylab = "Overall Survival",
   conf.int = FALSE,
   surv.median.line = "hv",
-  xlim = c(0,18.9),
-  ylim = c(0,1.009),
+  xlim = c(0, 18.9),
+  ylim = c(0, 1.009),
   censor.size = 3.5,
   size = 1,
   break.time.by = 3,
@@ -2170,37 +2363,39 @@ os_global <- ggsurvplot(
 ### Modify theme --------------------------------------------------------------
 os_global <- customize_labels(
   os_global,
-  font.title     = c(8, "bold",  "#0a0908"),
+  font.title     = c(8, "bold", "#0a0908"),
   font.caption   = c(8, "plain", "#0a0908"),
-  font.x         = c(8, "bold",  "#0a0908"),          
-  font.y         = c(8, "bold",  "#0a0908"),      
+  font.x         = c(8, "bold", "#0a0908"),
+  font.y         = c(8, "bold", "#0a0908"),
   font.xtickslab = c(8, "plain", "#0a0908"),
   font.ytickslab = c(8, "plain", "#0a0908")
 )
 
-grid.draw.ggsurvplot <- function(x){
+grid.draw.ggsurvplot <- function(x) {
   survminer:::print.ggsurvplot(x, newpage = FALSE)
 }
 
 caption1 <- paste(strwrap(
-  "Medidan OS is 17 months (12.9 - NR). Events: 5/43 (11.6%)", 90), collapse = "\n"
-  )
+  "Medidan OS has not been reached yet (14.8 - NR). Events: 7/43 (16.3%)", 90
+), collapse = "\n")
 
 caption2 <- paste(strwrap(
-  "12-month OS is 93.4% (95% CI 75.2-98.4)", 90), collapse = "\n"
-  )
+  "12-month OS is 89.3% (95% CI 68.4-96.7)", 90
+), collapse = "\n")
 
 os_global$plot <- os_global$plot + annotate(
-  "text", x = 0.5, y = 0.20,
+  "text",
+  x = 0.5, y = 0.20,
   label = caption1,
   cex = 3.5, vjust = "center", hjust = "left", fontface = 20
-  )
+)
 
 os_global$plot <- os_global$plot + annotate(
-  "text", x = 0.5, y = 0.10,
+  "text",
+  x = 0.5, y = 0.10,
   label = caption2,
   cex = 3.5, vjust = "center", hjust = "left", fontface = 20
-  )
+)
 
 ### Save plot ---------------------------------------------------------------
 ggsave(
@@ -2210,7 +2405,7 @@ ggsave(
   height = 12,
   units = "cm",
   dpi = 300
-  )
+)
 
 
 ### Show plot --------------------------------------------------------------
@@ -2232,7 +2427,7 @@ formatted_pfs_results <- tidy_pfs_results %>%
     std.error = round(std.error, 2),
     conf.low = round(conf.low, 2),
     conf.high = round(conf.high, 2)
-    )
+  )
 
 rmarkdown::paged_table(formatted_pfs_results)
 ```
@@ -2265,12 +2460,12 @@ tbl_survfit(
 ### Plot ----------------------------------------------------------------------
 pfs_global <- ggsurvplot(
   fit = survfit(Surv(pfs, pfs_event) ~ 1, data = data_13_survival),
-  xlab = "Time since study treatment start date (months)", 
+  xlab = "Time since study treatment start date (months)",
   ylab = "Progression-Free Survival",
   conf.int = FALSE,
   surv.median.line = "hv",
-  xlim = c(0,18.9),
-  ylim = c(0,1.009),
+  xlim = c(0, 18.9),
+  ylim = c(0, 1.009),
   censor.size = 3.5,
   size = 1,
   break.time.by = 3,
@@ -2288,37 +2483,39 @@ pfs_global <- ggsurvplot(
 ### Modify theme --------------------------------------------------------------
 pfs_global <- customize_labels(
   pfs_global,
-  font.title     = c(8, "bold",  "#0a0908"),
+  font.title     = c(8, "bold", "#0a0908"),
   font.caption   = c(8, "plain", "#0a0908"),
-  font.x         = c(8, "bold",  "#0a0908"),          
-  font.y         = c(8, "bold",  "#0a0908"),      
+  font.x         = c(8, "bold", "#0a0908"),
+  font.y         = c(8, "bold", "#0a0908"),
   font.xtickslab = c(8, "plain", "#0a0908"),
   font.ytickslab = c(8, "plain", "#0a0908")
 )
 
-grid.draw.ggsurvplot <- function(x){
+grid.draw.ggsurvplot <- function(x) {
   survminer:::print.ggsurvplot(x, newpage = FALSE)
 }
 
 caption1 <- paste(strwrap(
-  "Medidan PFS is Not Reached (12.9 - NR). Events: 8/43 (18.6%)", 90), collapse = "\n"
-  )
+  "Medidan PFS has not been reached yet (12.9 - NR). Events: 10/43 (23.3%)", 90
+), collapse = "\n")
 
 caption2 <- paste(strwrap(
-  "12-month PFS is 76.4% (95% CI 52.9-89.2)", 90), collapse = "\n"
-  )
+  "12-month PFS is 78.3% (95% CI 58.7-89.4)", 90
+), collapse = "\n")
 
 pfs_global$plot <- pfs_global$plot + annotate(
-  "text", x = 0.5, y = 0.20,
+  "text",
+  x = 0.5, y = 0.20,
   label = caption1,
   cex = 3.5, vjust = "center", hjust = "left", fontface = 20
-  )
+)
 
 pfs_global$plot <- pfs_global$plot + annotate(
-  "text", x = 0.5, y = 0.10,
+  "text",
+  x = 0.5, y = 0.10,
   label = caption2,
   cex = 3.5, vjust = "center", hjust = "left", fontface = 20
-  )
+)
 
 ### Save plot ---------------------------------------------------------------
 ggsave(
@@ -2328,7 +2525,7 @@ ggsave(
   height = 12,
   units = "cm",
   dpi = 300
-  )
+)
 
 ### Show plot --------------------------------------------------------------
 pfs_global
@@ -2338,27 +2535,28 @@ pfs_global
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_14_aes <- read_excel(
-    here(paste0("data/", cutoff_date, "/", project_id, "_Adverse Events_", cutoff_date_formatted, ".xlsx")),
-    sheet = "Adverse Events Table"
-    ) %>% 
-  clean_names() %>% 
-  drop_na(adverse_event) %>% 
-  filter(adverse_event != c("Death", "death")) %>% 
+  here(paste0("data/", cutoff_date, "/", project_id, "_Adverse Events_", cutoff_date_formatted, ".xlsx")),
+  sheet = "Adverse Events Table"
+) %>%
+  clean_names() %>%
+  drop_na(adverse_event) %>%
+  filter(adverse_event != c("Death", "death")) %>%
   rename(
     sae = "serious_seriousness_criteria",
     grade = "severity_intensity",
     relationship = "relationship_to_study_drug"
-  ) %>% 
+  ) %>%
   mutate(
     start_date = dmy(start_date),
     end_date = dmy(end_date),
     sae = if_else(
-      sae != "Not serious", "Yes", "No")
-  ) %>% 
+      sae != "Not serious", "Yes", "No"
+    )
+  ) %>%
   select(
     patient, adverse_event, sae, grade, relationship, action_taken, start_date,
     end_date, outcome
-    )
+  )
 
 data_14_aes$adverse_event <- str_to_title(data_14_aes$adverse_event)
 data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Asat Increase", "ASAT Increase")
@@ -2386,7 +2584,7 @@ data_14_aes$adverse_event <- str_replace_all(data_14_aes$adverse_event, "Abdomin
 
 data_14_aes$grade <- str_remove(data_14_aes$grade, "/.*")
 
-myocarditis <- data_14_aes %>% 
+myocarditis <- data_14_aes %>%
   filter(adverse_event == "Myocarditis")
 
 data_14_aes <- merge(
@@ -2397,12 +2595,12 @@ data_14_aes <- merge(
 )
 
 # Create a table to show which patients have any adverse event of grade "Not applicable"
-data_14_aes_na <- data_14_aes %>% 
-  filter(grade == "Not aplicable") %>% 
-  select(patient, adverse_event, grade) %>% 
-  distinct(patient, .keep_all = TRUE) %>% 
-  group_by(grade) %>% 
-  distinct(patient, .keep_all = FALSE) %>% 
+data_14_aes_na <- data_14_aes %>%
+  filter(grade == "Not aplicable") %>%
+  select(patient, adverse_event, grade) %>%
+  distinct(patient, .keep_all = TRUE) %>%
+  group_by(grade) %>%
+  distinct(patient, .keep_all = FALSE) %>%
   summarise(n = n())
 ```
 
@@ -2410,7 +2608,7 @@ There are `r data_14_aes_na$n` patients with adverse events of grade "Not aplica
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Filter patients with adverse events of grade "Not aplicable"
-data_temp_aes_na <- data_14_aes %>% 
+data_temp_aes_na <- data_14_aes %>%
   filter(grade == "Not aplicable")
 
 listing8_formatted_names <- c(
@@ -2422,10 +2620,10 @@ listing8_formatted_names <- c(
   "Start Date",
   "End Date",
   "Outcome"
-  )
+)
 
-data_temp_aes_na_formatted <- data_temp_aes_na %>% 
-  select(-grade) %>% 
+data_temp_aes_na_formatted <- data_temp_aes_na %>%
+  select(-grade) %>%
   set_names(listing8_formatted_names)
 
 rmarkdown::paged_table(data_temp_aes_na_formatted)
@@ -2434,10 +2632,10 @@ rmarkdown::paged_table(data_temp_aes_na_formatted)
 #### **Table 14. Adverse Events (AEs) by maximum severity in the ITT population:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-data_14_aes <- data_14_aes %>% 
+data_14_aes <- data_14_aes %>%
   filter(grade != "Not aplicable")
 
-tbl_aes <- data_14_aes %>% 
+tbl_aes <- data_14_aes %>%
   tbl_ae(
     id_df = data_02_itt,
     id = patient,
@@ -2445,12 +2643,12 @@ tbl_aes <- data_14_aes %>%
     by = grade,
     digits = c(0, 0),
     sort = c("ae")
-  ) %>% 
+  ) %>%
   add_overall() %>%
   modify_header(
     all_ae_cols() ~ "**{by}**",
     all_overall_cols() ~ "**Any grade**"
-    ) %>%
+  ) %>%
   bold_labels()
 
 tbl_aes %>%
@@ -2465,10 +2663,10 @@ tbl_aes
 #### **Table 15. Serious Adverse Events (SAEs) by maximum severity in the ITT population:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-saes <- data_14_aes %>% 
+saes <- data_14_aes %>%
   filter(sae == "Yes")
 
-tbl_saes <- saes %>% 
+tbl_saes <- saes %>%
   tbl_ae(
     id_df = data_02_itt,
     id = patient,
@@ -2476,12 +2674,12 @@ tbl_saes <- saes %>%
     by = grade,
     digits = c(0, 0),
     sort = c("ae")
-  ) %>% 
+  ) %>%
   add_overall() %>%
   modify_header(
     all_ae_cols() ~ "**{by}**",
     all_overall_cols() ~ "**Any grade**"
-    ) %>%
+  ) %>%
   bold_labels()
 
 tbl_saes %>%
@@ -2496,12 +2694,11 @@ tbl_saes
 #### **Table 16. Serious Adverse Events (SAEs) of grade ≥3 in the ITT population:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-
 # Select adverse_events of grade 3, 4, and 5
-saes_g3 <- saes %>% 
+saes_g3 <- saes %>%
   filter(grade %in% c("Grade 3", "Grade 4", "Grade 5"))
 
-tbl_saes_g3 <- saes_g3 %>% 
+tbl_saes_g3 <- saes_g3 %>%
   tbl_ae(
     id_df = data_02_itt,
     id = patient,
@@ -2509,12 +2706,12 @@ tbl_saes_g3 <- saes_g3 %>%
     by = grade,
     digits = c(0, 0),
     sort = c("ae")
-  ) %>% 
+  ) %>%
   add_overall() %>%
   modify_header(
     all_ae_cols() ~ "**{by}**",
     all_overall_cols() ~ "**Any grade**"
-    ) %>%
+  ) %>%
   bold_labels()
 
 tbl_saes_g3 %>%
@@ -2531,16 +2728,16 @@ There is `r nrow(myocarditis)` patient with `r myocarditis$adverse_event` of  `r
 #### **Table 17. Adverse Events (AEs) that led to the permanent discontinuation of the study drug in the ITT population:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-aes_discontinuation <- data_14_aes %>% 
+aes_discontinuation <- data_14_aes %>%
   filter(!str_detect(action_taken, "permanent"))
 
-aes_discontinuation_pembro <- aes_discontinuation %>% 
+aes_discontinuation_pembro <- aes_discontinuation %>%
   filter(str_detect(action_taken, "Pembrolizumab"))
 
-aes_discontinuation_lenva <- aes_discontinuation %>% 
+aes_discontinuation_lenva <- aes_discontinuation %>%
   filter(str_detect(action_taken, "Lenvatinib"))
 
-tbl_discontinuations <- aes_discontinuation %>% 
+tbl_discontinuations <- aes_discontinuation %>%
   tbl_ae(
     id_df = data_02_itt,
     id = patient,
@@ -2548,12 +2745,12 @@ tbl_discontinuations <- aes_discontinuation %>%
     by = grade,
     digits = c(0, 0),
     sort = c("ae")
-  ) %>% 
+  ) %>%
   add_overall() %>%
   modify_header(
     all_ae_cols() ~ "**{by}**",
     all_overall_cols() ~ "**Any grade**"
-    ) %>%
+  ) %>%
   bold_labels()
 
 tbl_discontinuations %>%
@@ -2570,16 +2767,16 @@ There are `r length(unique(aes_discontinuation$patient))` patients with adverse 
 #### **Table 18. Adverse Events (AEs) that led to dose reductions in the ITT population:**
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-aes_reductions <- data_14_aes %>% 
+aes_reductions <- data_14_aes %>%
   filter(str_detect(action_taken, "reduction"))
 
-aes_reductions_pembro <- aes_reductions %>% 
+aes_reductions_pembro <- aes_reductions %>%
   filter(str_detect(action_taken, "Pembrolizumab"))
 
-aes_reductions_lenva <- aes_reductions %>% 
+aes_reductions_lenva <- aes_reductions %>%
   filter(str_detect(action_taken, "Lenvatinib"))
 
-tbl_reductions <- aes_reductions %>% 
+tbl_reductions <- aes_reductions %>%
   tbl_ae(
     id_df = data_02_itt,
     id = patient,
@@ -2587,12 +2784,12 @@ tbl_reductions <- aes_reductions %>%
     by = grade,
     digits = c(0, 0),
     sort = c("ae")
-  ) %>% 
+  ) %>%
   add_overall() %>%
   modify_header(
     all_ae_cols() ~ "**{by}**",
     all_overall_cols() ~ "**Any grade**"
-    ) %>%
+  ) %>%
   bold_labels()
 
 tbl_reductions %>%
@@ -2605,4 +2802,3 @@ tbl_reductions
 ```
 
 There are `r length(unique(aes_reductions$patient))` patients with adverse events that led to dose reductions of any study drug. Pembrolizumab was reduced in `r length(unique(aes_reductions_pembro$patient))` patients and Lenvatinib was reduced in `r length(unique(aes_reductions_lenva$patient))` patients.
-
