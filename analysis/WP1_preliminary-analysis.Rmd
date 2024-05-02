@@ -426,6 +426,12 @@ First Patient In (FPI) started the study treatment on `r fpi$c1d1_date` and Last
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_temp_eos <- data_temp_eos %>%
   mutate(
+    clinical_pd = if_else(
+      eot_reason == "Clinical progression", "Yes", clinical_pd
+    ),
+    clinical_pd_date = if_else(
+      clinical_pd == "Yes" & is.na(clinical_pd_date), discontinuation_date, clinical_pd_date
+    ),
     exitus = if_else(
       eos_reason == "Exitus", eos_date, as.Date(NA_real_)
     ),
@@ -433,7 +439,10 @@ data_temp_eos <- data_temp_eos %>%
       radiological_pd == "Yes", discontinuation_date, as.Date(NA_real_)
     ),
     progression = if_else(
-      clinical_pd == "Yes", discontinuation_date, as.Date(NA_real_)
+      is.na(progression) & clinical_pd == "Yes", discontinuation_date, progression
+    ),
+    progression = if_else(
+      is.na(progression) & !is.na(exitus), exitus, progression
     )
   )
 
@@ -520,13 +529,13 @@ swimmer <- data_07_swimmer_long %>%
     panel.border = element_blank()
   ) +
   # 1 data layer: line plot showing number of TAs
-  geom_line(aes(x = month), linewidth = 2.5, color = "#9A99A0", alpha = 0.25) +
-    geom_point(aes(x = eos_this_day),
-    size = 2.5,
-    stroke = 1,
-    shape = 13,
-    color = "#040404",
-    fill = "#040404"
+  geom_line(aes(x = month), linewidth = 2.5, color = "#E1E1E4") +
+  geom_point(aes(x = eos_this_day),
+    size = 5.5,
+    stroke = 1.5,
+    shape = 73,
+    color = "#E1E1E4",
+    fill = "#E1E1E4"
   ) +
   # geom_line(data = subset(data_07_swimmer_long, eos == "Yes"), aes(x = month), linewidth = 2.5, color = "#2a2a2a", alpha = 0.25, arrow = arrow(type = "closed")) +
   # 2 data layer: dot plot showing when the ICF was signed
