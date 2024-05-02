@@ -362,6 +362,12 @@ data_06_eos <- read_excel(
       patient == "0102-003", "Disease progression", exitus_reason
     ),
     exitus_reason = if_else(
+      patient == "0103-001", "Disease progression", exitus_reason
+    ),
+    exitus_reason = if_else(
+      patient == "0201-001", "Disease progression", exitus_reason
+    ),
+    exitus_reason = if_else(
       patient == "0202-002", "Disease progression", exitus_reason
     ),
     exitus_reason = if_else(
@@ -1630,7 +1636,7 @@ pembrolizumab_delays <- pembrolizumab_delays %>%
 
 <!-- ### Under development ### ----------------------------------------------->
 
-```{r}
+```{r, message = FALSE, warning = FALSE, echo = FALSE} 
 # temp <- read_excel( # lenvatinib_modifications_s2
 #   here(paste0("data/", cutoff_date, "/", project_id, "_Cycles_", cutoff_date_formatted, ".xlsx")),
 #   sheet = "LENVATINIB",
