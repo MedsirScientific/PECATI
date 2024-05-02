@@ -49,13 +49,6 @@ data_00_screening <- read_excel(
 ) %>%
   clean_names()
 
-# Print column names, excluding any columns that start with "inclusion_" or "exclusion_"
-data_00_screening %>%
-  select(-starts_with("inclusion_"), -starts_with("exclusion_")) %>%
-  names()
-```
-
-```{r, message = FALSE, warning = FALSE, echo = FALSE}
 rename_list <- list(
   patient = "patient",
   screening_date = "visit_date",
@@ -84,14 +77,6 @@ data_00_screening <- read_excel(
     ),
     eligibility_date = ymd(eligibility_date),
     sf_date = dmy(sf_date),
-    ### Manual fixes ### ------------------------------------------------------
-    eligible = if_else(
-      patient == "0301-014", "Yes", eligible
-    ),
-    eligible = if_else(
-      patient == "0301-012", "Yes", eligible
-    ),
-    ### -----------------------------------------------------------------------
     sf_reason = if_else(
       is.na(eligible), "Unknown", sf_reason
     ),
@@ -101,9 +86,13 @@ data_00_screening <- read_excel(
     patient, screening_date, eligible, sf_date, sf_reason, eligibility_date
   )
 
-### Manual fix ### ------------------------------------------------------------
+### Manual fix ### ------------------------------------------------------------  ### Query ### -----------------------------------------------------------------
 # Change eligibility_date for patient 0301-014 to screening_date
 data_00_screening$eligibility_date[which(data_00_screening$patient == "0301-014")] <- data_00_screening$screening_date[which(data_00_screening$patient == "0301-014")]
+
+### Query ### -----------------------------------------------------------------  ### Query ### -----------------------------------------------------------------
+# What happened to the eligibility date of patient 0301-014?
+### ---------------------------------------------------------------------------  ### Query ### -----------------------------------------------------------------
 ```
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
@@ -201,15 +190,6 @@ data_03_icf <- read_excel(
     icf_date = dmy(icf_date)
   )
 
-### Manual fix ### ------------------------------------------------------------
-# Add patient 0301-014 who was included recently and doesn't appear in the ICF sheet
-# I'm using one day before the screening visit date as the date of ICF
-data_03_icf <- rbind(
-  data_03_icf,
-  data.frame(patient = "0301-014", icf_date = as.Date("2024-01-21"))
-)
-### ---------------------------------------------------------------------------
-
 data_03_icf <- data_03_icf %>%
   group_by(patient) %>%
   filter(icf_date == min(icf_date)) %>%
@@ -281,8 +261,8 @@ data_05_eot <- read_excel(
     eot_reason = if_else(
       eot_reason == "General or specific changes in the patient’s condition render the patient unacceptable for further treatment in the judgment of the Investigator", "Investigator's decision", eot_reason
     )
-    ### -------------------------------------------------------------------------
   ) %>%
+    ### -------------------------------------------------------------------------
   select(
     patient, discontinuation_date, eot_reason, last_pembrolizumab_date,
     last_lenvatinib_date, radiological_pd, radiological_pd_date, clinical_pd,
@@ -457,11 +437,6 @@ data_temp_eos <- data_temp_eos %>%
     )
   )
 
-### Manual fix ### ------------------------------------------------------------
-# Change progression for patient 0202-005 to radiological_pd_date
-data_temp_eos$progression[which(data_temp_eos$patient == "0202-005")] <- data_temp_eos$radiological_pd_date[which(data_temp_eos$patient == "0202-005")]
-### ---------------------------------------------------------------------------
-
 # Fill the NAs in the eos_date column with today's date
 data_temp_eos$eos_date <- if_else(
   is.na(data_temp_eos$eos_date), cutoff_date, data_temp_eos$eos_date
@@ -509,6 +484,12 @@ data_07_swimmer_long$exitus_this_day <- ifelse(
   data_07_swimmer_long$exitus == data_07_swimmer_long$study_day, data_07_swimmer_long$month, NA
 )
 
+### Under development ### -----------------------------------------------------
+data_07_swimmer_long$eos_this_day <- ifelse(
+  !is.na(data_07_swimmer_long$eos) & data_07_swimmer_long$eos_date == data_07_swimmer_long$study_day, data_07_swimmer_long$month, NA
+)
+### ---------------------------------------------------------------------------
+
 data_07_swimmer_long <- data_07_swimmer_long %>%
   group_by(patient) %>%
   mutate(max_day = max(event_num)) %>%
@@ -540,6 +521,13 @@ swimmer <- data_07_swimmer_long %>%
   ) +
   # 1 data layer: line plot showing number of TAs
   geom_line(aes(x = month), linewidth = 2.5, color = "#9A99A0", alpha = 0.25) +
+    geom_point(aes(x = eos_this_day),
+    size = 2.5,
+    stroke = 0.5,
+    shape = 13,
+    color = "#2A2A2A"
+  ) +
+  # geom_line(data = subset(data_07_swimmer_long, eos == "Yes"), aes(x = month), linewidth = 2.5, color = "#2a2a2a", alpha = 0.25, arrow = arrow(type = "closed")) +
   # 2 data layer: dot plot showing when the ICF was signed
   geom_point(aes(x = icf_this_day),
     size = 2.5,
