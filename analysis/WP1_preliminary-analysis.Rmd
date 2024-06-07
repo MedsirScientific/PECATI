@@ -27,7 +27,7 @@ library(broom)
 here("WP1_preliminary-analysis.Rmd")
 
 project_id <- "PECATI"
-cutoff_date <- as.Date("2024-05-02")
+cutoff_date <- as.Date("2024-06-07")
 ```
 
 The data cutoff date for these analyses is: `r cutoff_date`
@@ -1445,17 +1445,17 @@ patients_not_in_last_lenvatinib <- data_02_itt %>%
   anti_join(last_lenvatinib, by = "patient") %>%
   select(patient)
 
-last_lenvatinib <- last_lenvatinib %>%
-  bind_rows(
-    data_02_itt %>%
-      anti_join(last_lenvatinib, by = "patient") %>%
-      select(patient) %>%
-      mutate(
-        event_num = NA,
-        visit_date = NA,
-        has_the_patient_taken_any_lenvatinib_dose_during_the_cycle = NA
-      )
-  )
+# last_lenvatinib <- last_lenvatinib %>%
+#   bind_rows(
+#     data_02_itt %>%
+#       anti_join(last_lenvatinib, by = "patient") %>%
+#       select(patient) %>%
+#       mutate(
+#         event_num = NA,
+#         visit_date = NA,
+#         has_the_patient_taken_any_lenvatinib_dose_during_the_cycle = NA
+#       )
+#   )
 
 last_lenvatinib <- last_lenvatinib %>%
   rename(
@@ -2337,7 +2337,7 @@ tbl_survfit(
 ### Plot ----------------------------------------------------------------------
 os_global <- ggsurvplot(
   fit = survfit(Surv(os, os_event) ~ 1, data = data_13_survival),
-  xlab = "Time since study treatment start date (months)",
+  xlab = "Time since start of the study treatment (months)",
   ylab = "Overall Survival",
   conf.int = FALSE,
   surv.median.line = "hv",
@@ -2360,10 +2360,10 @@ os_global <- ggsurvplot(
 ### Modify theme --------------------------------------------------------------
 os_global <- customize_labels(
   os_global,
-  font.title     = c(8, "bold", "#0a0908"),
-  font.caption   = c(8, "plain", "#0a0908"),
-  font.x         = c(8, "bold", "#0a0908"),
-  font.y         = c(8, "bold", "#0a0908"),
+  font.title     = c(10, "bold",  "#0a0908"),
+  font.caption   = c(10, "plain", "#0a0908"),
+  font.x         = c(11, "bold",  "#0a0908"),
+  font.y         = c(11, "bold",  "#0a0908"),
   font.xtickslab = c(8, "plain", "#0a0908"),
   font.ytickslab = c(8, "plain", "#0a0908")
 )
