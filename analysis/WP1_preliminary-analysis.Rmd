@@ -1,5 +1,5 @@
 ---
-title: "PECATI | Preliminary data monitoring, cleaning, and analysis. May 2024"
+title: "PECATI | Preliminary data monitoring, cleaning, and analysis. June 2024"
 author: "Daniel Alcala"
 date: "`r format(Sys.time(), '%Y-%m-%d')`"
 output: html_document
@@ -27,7 +27,7 @@ library(broom)
 here("WP1_preliminary-analysis.Rmd")
 
 project_id <- "PECATI"
-cutoff_date <- as.Date("2024-06-07")
+cutoff_date <- as.Date("2024-06-20")
 ```
 
 The data cutoff date for these analyses is: `r cutoff_date`
@@ -42,13 +42,6 @@ cutoff_date_formatted <- format(cutoff_date, "%Y_%m_%d")
 ## Screening
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE, include = FALSE}
-data_00_screening <- read_excel(
-  here(paste0("data/", cutoff_date, "/", project_id, "_ICF Screening_", cutoff_date_formatted, ".xlsx")),
-  sheet = "ICF Screening",
-  skip = 1
-) %>%
-  clean_names()
-
 rename_list <- list(
   patient = "patient",
   screening_date = "visit_date",
@@ -81,18 +74,110 @@ data_00_screening <- read_excel(
       is.na(eligible), "Unknown", sf_reason
     ),
     screening_date = dmy(screening_date)
-  ) %>%
-  select(
-    patient, screening_date, eligible, sf_date, sf_reason, eligibility_date
   )
 
-### Manual fix ### ------------------------------------------------------------  ### Query ### -----------------------------------------------------------------
-# Change eligibility_date for patient 0301-014 to screening_date
+# Step 1: Filter patients who failed screening due to "Non-fulfillment Selection Criteria"
+screening_failures <- data_00_screening %>%
+  filter(sf_reason == "Non-fulfillment Selection Criteria")
+
+# Step 2: Identify inclusion and exclusion criteria columns
+inclusion_criteria_cols <- grep("inclusion_criteria", colnames(screening_failures), value = TRUE)
+exclusion_criteria_cols <- grep("exclusion_criteria", colnames(screening_failures), value = TRUE)
+
+# Step 3: Check which criteria were not met for each patient
+# For inclusion criteria, "No" indicates failure
+# For exclusion criteria, "Yes" indicates failure
+
+# Create a function to summarize the failed criteria
+find_failed_criteria <- function(patient_row) {
+  failed_inclusion <- inclusion_criteria_cols[which(patient_row[inclusion_criteria_cols] == "No")]
+  failed_exclusion <- exclusion_criteria_cols[which(patient_row[exclusion_criteria_cols] == "Yes")]
+  
+  failed_criteria <- c(failed_inclusion, failed_exclusion)
+  return(failed_criteria)
+}
+
+# Apply the function to each row in the screening_failures dataset
+screening_failures <- screening_failures %>%
+  rowwise() %>%
+  mutate(failed_criteria = list(find_failed_criteria(cur_data())))
+
+# Ungroup to return to a data frame
+screening_failures <- ungroup(screening_failures)
+screening_failures <- screening_failures %>%
+  select(patient, failed_criteria)
+
+criteria_list <- list(
+  inclusion_criteria_2_v2 = "No progression to prior platinum for advanced disease",
+  inclusion_criteria_3_v2 = "Myasthenia Gravis",
+  inclusion_criteria_5_v2 = "ECOG ≥2",
+  inclusion_criteria_7_v2 = "Radiological progression to a prior line",
+  exclusion_criteria_3_v2 = "Prior therapy with sunitinib",
+  exclusion_criteria_7_v2 = "Proteinuria",
+  exclusion_criteria_24_v2 = "Prior radiotherapy within 2 weeks",
+  exclusion_criteria_26_v2 = "Investigator decision",
+  inclusion_criteria_1_v3 = "No relapsed/recurrent B3-Thymoma or TC, or amenable to curative intent",
+  inclusion_criteria_3_v3 = "Myasthenia Gravis",
+  inclusion_criteria_9_v3 = "Unable to provide tumor biopsy specimens",
+  exclusion_criteria_6_v3 = "Intratumor cavitation, invasion of mediastinal blood vessels or bleeding",
+  exclusion_criteria_11_v3 = "Not adequately recovered from prior interventions"
+)
+
+### Manual fix ### ------------------------------------------------------------
+### Mapping for a patient with specific criteria to keep given more than one unmet criteria
+patient_criteria_mapping <- list(
+  "0103-003" = "exclusion_criteria_3_v2"
+)
+
+# Function to filter and keep specified criteria for certain patients
+filter_criteria <- function(patient_id, criteria, patient_criteria_mapping) {
+  if (patient_id %in% names(patient_criteria_mapping)) {
+    return(patient_criteria_mapping[[patient_id]])
+  }
+  return(criteria)
+}
+
+# Function to substitute criteria codes with explanations
+substitute_criteria <- function(criteria_codes, criteria_list) {
+  criteria_explanations <- map(criteria_codes, ~ criteria_list[[.x]])
+  return(criteria_explanations)
+}
+
+# Apply the function to filter criteria and substitute explanations
+screening_failures <- screening_failures %>%
+  rowwise() %>%
+  mutate(failed_criteria = list(filter_criteria(patient, failed_criteria, patient_criteria_mapping))) %>%
+  ungroup() %>%
+  mutate(
+    failed_criteria_explanations = map(
+      failed_criteria, substitute_criteria, criteria_list
+      ),
+    failed_criteria_explanations = map_chr(
+      failed_criteria_explanations, ~ paste(unlist(.), collapse = "; ")
+      )
+    ) %>% 
+  select(
+    patient, failed_criteria_explanations
+  )
+
+data_00_screening <- merge(
+  data_00_screening,
+  screening_failures,
+  by = "patient",
+  all = TRUE
+) %>%
+  select(
+    patient, screening_date, eligible, sf_date, sf_reason, failed_criteria_explanations, eligibility_date
+    )
+
+### Manual fix ### ------------------------------------------------------------  ### Query ### 
+### Change eligibility_date for patient 0301-014 to screening_date ### --------
+
 data_00_screening$eligibility_date[which(data_00_screening$patient == "0301-014")] <- data_00_screening$screening_date[which(data_00_screening$patient == "0301-014")]
 
-### Query ### -----------------------------------------------------------------  ### Query ### -----------------------------------------------------------------
-# What happened to the eligibility date of patient 0301-014?
-### ---------------------------------------------------------------------------  ### Query ### -----------------------------------------------------------------
+### Query ### -----------------------------------------------------------------  ### Query ###
+### What happened to the eligibility date of patient 0301-014? ###-------------
+### ---------------------------------------------------------------------------  ### Query ###
 ```
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
@@ -108,6 +193,7 @@ listing1_formatted_names <- c(
   "Eligible patient?",
   "Date of screening failure",
   "Reason for screening failure",
+  "Main unmet inclusion or exclusion criteria",
   "Date of confirmation of eligibility"
 )
 
@@ -122,12 +208,14 @@ rmarkdown::paged_table(data_00_screening_formatted)
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 data_00_screening %>%
   tbl_summary(
-    include = c(eligible, sf_reason),
+    include = c(eligible, sf_reason, failed_criteria_explanations),
     missing = "no",
     label = list(
       eligible ~ "Included",
-      sf_reason ~ "Excluded"
-    )
+      sf_reason ~ "Excluded",
+      failed_criteria_explanations ~ "Main unmet criteria"
+    ),
+    sort = list(everything() ~ "frequency")
   ) %>%
   modify_header(label = " ") %>%
   bold_labels()
