@@ -1,0 +1,4257 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Daniel Alcala" />
+
+<meta name="date" content="2024-08-27" />
+
+<title>PECATI | Data monitoring, cleaning, and analysis for the presentation at ESMO 2024. August 2024</title>
+
+<script src="site_libs/header-attrs-2.27/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">PECATI</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="WP1_preliminary-analysis.html">FEB24</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">PECATI | Data monitoring, cleaning, and
+analysis for the presentation at ESMO 2024. August 2024</h1>
+<h4 class="author">Daniel Alcala</h4>
+<h4 class="date">2024-08-27</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2024-08-27
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>PECATI/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.1). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20231024code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20231024)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20231024code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20231024)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomMedsirScientificPECATItreea3df5936983d99f37186598b9d518c011203f0c2targetblanka3df593a">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/MedsirScientific/PECATI/tree/a3df5936983d99f37186598b9d518c011203f0c2" target="_blank">a3df593</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomMedsirScientificPECATItreea3df5936983d99f37186598b9d518c011203f0c2targetblanka3df593a"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/MedsirScientific/PECATI/tree/a3df5936983d99f37186598b9d518c011203f0c2" target="_blank">a3df593</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.DS_Store
+    Ignored:    data/
+
+Untracked files:
+    Untracked:  output/(old) PECATI_lenvatinib-modifications_8w_2024-08-19.xlsx
+    Untracked:  output/PECATI_12-mo_OS_global_2024-08-14.png
+    Untracked:  output/PECATI_12-mo_OS_global_2024-08-16.png
+    Untracked:  output/PECATI_12-mo_OS_global_2024-08-26.png
+    Untracked:  output/PECATI_12-mo_OS_global_2024-08-27.png
+    Untracked:  output/PECATI_12_or_recist_2024-06-20.xlsx
+    Untracked:  output/PECATI_5-mo_PFS_PD-L1_2024-08-14.png
+    Untracked:  output/PECATI_5-mo_PFS_PD-L1_2024-08-16.png
+    Untracked:  output/PECATI_5-mo_PFS_PD-L1_2024-08-26.png
+    Untracked:  output/PECATI_5-mo_PFS_PD-L1_2024-08-27.png
+    Untracked:  output/PECATI_5-mo_PFS_PP_2024-08-14.png
+    Untracked:  output/PECATI_5-mo_PFS_PP_2024-08-16.png
+    Untracked:  output/PECATI_5-mo_PFS_PP_2024-08-26.png
+    Untracked:  output/PECATI_5-mo_PFS_PP_2024-08-27.png
+    Untracked:  output/PECATI_5-mo_PFS_global_2024-02-09.png
+    Untracked:  output/PECATI_5-mo_PFS_global_2024-02-14.png
+    Untracked:  output/PECATI_5-mo_PFS_global_2024-02-15.png
+    Untracked:  output/PECATI_5-mo_PFS_global_2024-02-16.png
+    Untracked:  output/PECATI_5-mo_PFS_global_2024-02-21.png
+    Untracked:  output/PECATI_5-mo_PFS_global_2024-02-22.png
+    Untracked:  output/PECATI_5-mo_PFS_global_2024-03-13.png
+    Untracked:  output/PECATI_5-mo_PFS_global_2024-03-25.png
+    Untracked:  output/PECATI_5-mo_PFS_global_2024-05-02.png
+    Untracked:  output/PECATI_5-mo_PFS_global_2024-05-23.png
+    Untracked:  output/PECATI_5-mo_PFS_global_2024-08-13.png
+    Untracked:  output/PECATI_5-mo_PFS_global_2024-08-14.png
+    Untracked:  output/PECATI_5-mo_PFS_global_2024-08-16.png
+    Untracked:  output/PECATI_5-mo_PFS_global_2024-08-26.png
+    Untracked:  output/PECATI_5mo_PFS_global_2024-08-26.png
+    Untracked:  output/PECATI_5mo_PFS_global_2024-08-27.png
+    Untracked:  output/PECATI_ESMO-2024_v.1.0.pptx
+    Untracked:  output/PECATI_ESMO-2024_v.1.1_rev_JR.pptx
+    Untracked:  output/PECATI_ESMO-2024_v.1.1_rev_JR_DA.pptx
+    Untracked:  output/PECATI_ESMO-2024_v.1.2_rev_JR_DA.pptx
+    Untracked:  output/PECATI_ORR_confirmed_waterfall_/
+    Untracked:  output/PECATI_ORR_confirmed_waterfall_2024-07-17.png
+    Untracked:  output/PECATI_OS_global_2024-02-09.png
+    Untracked:  output/PECATI_OS_global_2024-02-14.png
+    Untracked:  output/PECATI_OS_global_2024-02-15.png
+    Untracked:  output/PECATI_OS_global_2024-02-16.png
+    Untracked:  output/PECATI_OS_global_2024-02-21.png
+    Untracked:  output/PECATI_OS_global_2024-02-22.png
+    Untracked:  output/PECATI_OS_global_2024-03-13.png
+    Untracked:  output/PECATI_OS_global_2024-03-25.png
+    Untracked:  output/PECATI_OS_global_2024-05-02.png
+    Untracked:  output/PECATI_OS_global_2024-05-23.png
+    Untracked:  output/PECATI_OS_global_2024-08-13.png
+    Untracked:  output/PECATI_OS_global_2024-08-26.png
+    Untracked:  output/PECATI_PFS_global_2024-02-09.png
+    Untracked:  output/PECATI_PFS_global_2024-02-14.png
+    Untracked:  output/PECATI_PFS_global_2024-02-15.png
+    Untracked:  output/PECATI_PFS_global_2024-02-16.png
+    Untracked:  output/PECATI_PFS_global_2024-02-21.png
+    Untracked:  output/PECATI_PFS_global_2024-02-22.png
+    Untracked:  output/PECATI_PFS_global_2024-03-13.png
+    Untracked:  output/PECATI_PFS_global_2024-03-25.png
+    Untracked:  output/PECATI_PFS_global_2024-05-02.png
+    Untracked:  output/PECATI_PFS_global_2024-08-13.png
+    Untracked:  output/PECATI_PFS_global_2024-08-26.png
+    Untracked:  output/PECATI_aes_discontinuations_table_2024-02-09.docx
+    Untracked:  output/PECATI_aes_discontinuations_table_2024-02-13.docx
+    Untracked:  output/PECATI_aes_discontinuations_table_2024-02-14.docx
+    Untracked:  output/PECATI_aes_discontinuations_table_2024-02-15.docx
+    Untracked:  output/PECATI_aes_discontinuations_table_2024-02-16.docx
+    Untracked:  output/PECATI_aes_discontinuations_table_2024-02-21.docx
+    Untracked:  output/PECATI_aes_discontinuations_table_2024-02-22.docx
+    Untracked:  output/PECATI_aes_discontinuations_table_2024-03-13.docx
+    Untracked:  output/PECATI_aes_discontinuations_table_2024-03-25.docx
+    Untracked:  output/PECATI_aes_discontinuations_table_2024-05-02.docx
+    Untracked:  output/PECATI_aes_discontinuations_table_2024-06-07.docx
+    Untracked:  output/PECATI_aes_discontinuations_table_2024-06-21.docx
+    Untracked:  output/PECATI_aes_discontinuations_table_2024-08-13.docx
+    Untracked:  output/PECATI_aes_discontinuations_table_2024-08-26.docx
+    Untracked:  output/PECATI_aes_discontinuations_table_2024-08-27.docx
+    Untracked:  output/PECATI_aes_dose-reductions_table_2024-02-15.docx
+    Untracked:  output/PECATI_aes_dose-reductions_table_2024-02-16.docx
+    Untracked:  output/PECATI_aes_dose-reductions_table_2024-02-21.docx
+    Untracked:  output/PECATI_aes_dose-reductions_table_2024-02-22.docx
+    Untracked:  output/PECATI_aes_dose-reductions_table_2024-03-13.docx
+    Untracked:  output/PECATI_aes_dose-reductions_table_2024-03-25.docx
+    Untracked:  output/PECATI_aes_dose-reductions_table_2024-05-02.docx
+    Untracked:  output/PECATI_aes_dose-reductions_table_2024-06-07.docx
+    Untracked:  output/PECATI_aes_dose-reductions_table_2024-06-21.docx
+    Untracked:  output/PECATI_aes_dose-reductions_table_2024-08-13.docx
+    Untracked:  output/PECATI_aes_dose-reductions_table_2024-08-26.docx
+    Untracked:  output/PECATI_aes_dose-reductions_table_2024-08-27.docx
+    Untracked:  output/PECATI_aes_table_2024-02-09.docx
+    Untracked:  output/PECATI_aes_table_2024-02-13.docx
+    Untracked:  output/PECATI_aes_table_2024-02-14.docx
+    Untracked:  output/PECATI_aes_table_2024-02-15.docx
+    Untracked:  output/PECATI_aes_table_2024-02-16.docx
+    Untracked:  output/PECATI_aes_table_2024-02-21.docx
+    Untracked:  output/PECATI_aes_table_2024-02-22.docx
+    Untracked:  output/PECATI_aes_table_2024-03-13.docx
+    Untracked:  output/PECATI_aes_table_2024-03-25.docx
+    Untracked:  output/PECATI_aes_table_2024-05-02.docx
+    Untracked:  output/PECATI_aes_table_2024-06-07.docx
+    Untracked:  output/PECATI_aes_table_2024-06-21.docx
+    Untracked:  output/PECATI_aes_table_2024-08-13.docx
+    Untracked:  output/PECATI_aes_table_2024-08-26.docx
+    Untracked:  output/PECATI_aes_table_2024-08-27.docx
+    Untracked:  output/PECATI_irAEs_2024-08-19.xlsx
+    Untracked:  output/PECATI_lenvatinib-modifications_8w_2024-08-19.xlsx
+    Untracked:  output/PECATI_lenvatinib_dose2024-02-15.png
+    Untracked:  output/PECATI_lenvatinib_dose2024-02-16.png
+    Untracked:  output/PECATI_lenvatinib_dose2024-02-21.png
+    Untracked:  output/PECATI_lenvatinib_dose2024-02-22.png
+    Untracked:  output/PECATI_lenvatinib_dose2024-03-13.png
+    Untracked:  output/PECATI_lenvatinib_dose2024-03-25.png
+    Untracked:  output/PECATI_lenvatinib_dose2024-05-02.png
+    Untracked:  output/PECATI_lenvatinib_dose2024-05-23.png
+    Untracked:  output/PECATI_lenvatinib_dose2024-06-14.png
+    Untracked:  output/PECATI_lenvatinib_dose2024-08-13.png
+    Untracked:  output/PECATI_lenvatinib_dose2024-08-16.png
+    Untracked:  output/PECATI_lenvatinib_dose2024-08-26.png
+    Untracked:  output/PECATI_saes_g3_table_2024-02-15.docx
+    Untracked:  output/PECATI_saes_g3_table_2024-02-16.docx
+    Untracked:  output/PECATI_saes_g3_table_2024-02-21.docx
+    Untracked:  output/PECATI_saes_g3_table_2024-02-22.docx
+    Untracked:  output/PECATI_saes_g3_table_2024-03-13.docx
+    Untracked:  output/PECATI_saes_g3_table_2024-03-25.docx
+    Untracked:  output/PECATI_saes_g3_table_2024-05-02.docx
+    Untracked:  output/PECATI_saes_g3_table_2024-06-07.docx
+    Untracked:  output/PECATI_saes_g3_table_2024-06-21.docx
+    Untracked:  output/PECATI_saes_g3_table_2024-08-13.docx
+    Untracked:  output/PECATI_saes_g3_table_2024-08-26.docx
+    Untracked:  output/PECATI_saes_g3_table_2024-08-27.docx
+    Untracked:  output/PECATI_saes_table_2024-02-09.docx
+    Untracked:  output/PECATI_saes_table_2024-02-13.docx
+    Untracked:  output/PECATI_saes_table_2024-02-14.docx
+    Untracked:  output/PECATI_saes_table_2024-02-15.docx
+    Untracked:  output/PECATI_saes_table_2024-02-16.docx
+    Untracked:  output/PECATI_saes_table_2024-02-21.docx
+    Untracked:  output/PECATI_saes_table_2024-02-22.docx
+    Untracked:  output/PECATI_saes_table_2024-03-13.docx
+    Untracked:  output/PECATI_saes_table_2024-03-25.docx
+    Untracked:  output/PECATI_saes_table_2024-05-02.docx
+    Untracked:  output/PECATI_saes_table_2024-06-07.docx
+    Untracked:  output/PECATI_saes_table_2024-06-21.docx
+    Untracked:  output/PECATI_saes_table_2024-08-13.docx
+    Untracked:  output/PECATI_saes_table_2024-08-26.docx
+    Untracked:  output/PECATI_saes_table_2024-08-27.docx
+    Untracked:  output/PECATI_spider_TAs_2024-08-14.png
+    Untracked:  output/PECATI_spider_TAs_2024-08-16.png
+    Untracked:  output/PECATI_spider_TAs_2024-08-26.png
+    Untracked:  output/PECATI_spider_TAs_2024-08-27.png
+    Untracked:  output/PECATI_swimmer-plot_patient-disposition_2024-02-09.png
+    Untracked:  output/PECATI_swimmer-plot_patient-disposition_2024-02-13.png
+    Untracked:  output/PECATI_swimmer-plot_patient-disposition_2024-02-14.png
+    Untracked:  output/PECATI_swimmer-plot_patient-disposition_2024-02-15.png
+    Untracked:  output/PECATI_swimmer-plot_patient-disposition_2024-02-16.png
+    Untracked:  output/PECATI_swimmer-plot_patient-disposition_2024-02-21.png
+    Untracked:  output/PECATI_swimmer-plot_patient-disposition_2024-02-22.png
+    Untracked:  output/PECATI_swimmer-plot_patient-disposition_2024-03-13.png
+    Untracked:  output/PECATI_swimmer-plot_patient-disposition_2024-03-25.png
+    Untracked:  output/PECATI_swimmer-plot_patient-disposition_2024-05-02.png
+    Untracked:  output/PECATI_swimmer-plot_patient-disposition_2024-05-23.png
+    Untracked:  output/PECATI_swimmer-plot_patient-disposition_2024-06-07.png
+    Untracked:  output/PECATI_swimmer-plot_patient-disposition_2024-06-14.png
+    Untracked:  output/PECATI_swimmer-plot_patient-disposition_2024-08-13.png
+    Untracked:  output/PECATI_swimmer-plot_patient-disposition_2024-08-16.png
+    Untracked:  output/PECATI_swimmer-plot_patient-disposition_2024-08-26.png
+    Untracked:  output/PECATI_swimmer-plot_patient-disposition_2024-08-27.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0102_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0102_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0102_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0102_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0102_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0102_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0102_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0102_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0102_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0102_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0102_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0102_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0102_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0102_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0102_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0102_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0103_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0103_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0103_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0103_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0103_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0103_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0103_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0103_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0103_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0103_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0103_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0103_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0103_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0103_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0103_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0103_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0105_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0105_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0105_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0105_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0105_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0105_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0105_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0105_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0105_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0105_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0105_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0105_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0105_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0105_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0105_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0105_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0201_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0201_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0201_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0201_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0201_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0201_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0201_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0201_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0201_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0201_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0201_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0201_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0201_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0201_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0201_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0201_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0202_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0202_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0202_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0202_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0202_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0202_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0202_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0202_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0202_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0202_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0202_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0202_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0202_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0202_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0202_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0202_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0203_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0203_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0203_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0203_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0203_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0203_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0203_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0203_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0203_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0203_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0203_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0203_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0203_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0203_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0203_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0203_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0204_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0204_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0204_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0204_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0204_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0204_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0204_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0204_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0204_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0204_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0204_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0204_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0204_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0204_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0204_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0204_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0205_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0205_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0205_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0205_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0205_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0205_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0205_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0205_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0205_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0205_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0205_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0205_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0205_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0205_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0205_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0205_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0206_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0206_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0206_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0206_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0206_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0206_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0206_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0206_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0206_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0206_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0206_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0206_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0206_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0206_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0206_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0206_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0301_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0301_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0301_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0301_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0301_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0301_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0301_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0301_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0301_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0301_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0301_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0301_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0301_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0301_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0301_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/PECATI_site-0301_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_spider_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_spider_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_spider_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_spider_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_spider_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_spider_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_spider_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_spider_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_spider_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_spider_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_spider_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_spider_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_spider_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_spider_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_spider_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_spider_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_swimmer_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_swimmer_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_swimmer_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_swimmer_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_swimmer_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_swimmer_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_swimmer_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_swimmer_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_swimmer_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_swimmer_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_swimmer_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_swimmer_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_swimmer_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_swimmer_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_swimmer_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0102_swimmer_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_spider_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_spider_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_spider_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_spider_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_spider_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_spider_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_spider_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_spider_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_spider_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_spider_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_spider_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_spider_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_spider_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_spider_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_spider_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_spider_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_swimmer_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_swimmer_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_swimmer_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_swimmer_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_swimmer_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_swimmer_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_swimmer_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_swimmer_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_swimmer_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_swimmer_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_swimmer_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_swimmer_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_swimmer_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_swimmer_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_swimmer_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0103_swimmer_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_spider_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_spider_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_spider_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_spider_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_spider_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_spider_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_spider_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_spider_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_spider_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_spider_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_spider_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_spider_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_spider_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_spider_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_spider_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_spider_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_swimmer_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_swimmer_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_swimmer_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_swimmer_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_swimmer_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_swimmer_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_swimmer_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_swimmer_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_swimmer_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_swimmer_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_swimmer_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_swimmer_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_swimmer_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_swimmer_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_swimmer_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0105_swimmer_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_spider_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_spider_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_spider_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_spider_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_spider_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_spider_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_spider_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_spider_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_spider_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_spider_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_spider_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_spider_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_spider_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_spider_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_spider_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_spider_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_swimmer_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_swimmer_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_swimmer_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_swimmer_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_swimmer_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_swimmer_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_swimmer_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_swimmer_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_swimmer_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_swimmer_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_swimmer_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_swimmer_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_swimmer_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_swimmer_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_swimmer_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0201_swimmer_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_spider_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_spider_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_spider_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_spider_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_spider_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_spider_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_spider_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_spider_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_spider_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_spider_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_spider_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_spider_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_spider_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_spider_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_spider_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_spider_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_swimmer_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_swimmer_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_swimmer_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_swimmer_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_swimmer_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_swimmer_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_swimmer_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_swimmer_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_swimmer_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_swimmer_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_swimmer_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_swimmer_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_swimmer_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_swimmer_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_swimmer_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0202_swimmer_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_spider_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_spider_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_spider_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_spider_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_spider_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_spider_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_spider_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_spider_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_spider_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_spider_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_spider_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_spider_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_spider_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_spider_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_spider_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_spider_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_swimmer_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_swimmer_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_swimmer_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_swimmer_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_swimmer_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_swimmer_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_swimmer_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_swimmer_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_swimmer_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_swimmer_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_swimmer_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_swimmer_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_swimmer_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_swimmer_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_swimmer_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0203_swimmer_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_spider_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_spider_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_spider_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_spider_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_spider_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_spider_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_spider_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_spider_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_spider_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_spider_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_spider_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_spider_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_spider_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_spider_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_spider_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_spider_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_swimmer_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_swimmer_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_swimmer_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_swimmer_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_swimmer_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_swimmer_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_swimmer_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_swimmer_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_swimmer_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_swimmer_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_swimmer_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_swimmer_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_swimmer_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_swimmer_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_swimmer_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0204_swimmer_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_spider_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_spider_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_spider_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_spider_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_spider_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_spider_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_spider_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_spider_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_spider_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_spider_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_spider_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_spider_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_spider_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_spider_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_spider_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_spider_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_swimmer_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_swimmer_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_swimmer_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_swimmer_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_swimmer_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_swimmer_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_swimmer_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_swimmer_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_swimmer_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_swimmer_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_swimmer_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_swimmer_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_swimmer_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_swimmer_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_swimmer_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0205_swimmer_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_spider_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_spider_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_spider_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_spider_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_spider_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_spider_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_spider_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_spider_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_spider_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_spider_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_spider_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_spider_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_spider_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_spider_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_spider_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_spider_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_swimmer_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_swimmer_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_swimmer_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_swimmer_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_swimmer_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_swimmer_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_swimmer_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_swimmer_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_swimmer_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_swimmer_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_swimmer_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_swimmer_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_swimmer_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_swimmer_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_swimmer_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0206_swimmer_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_spider_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_spider_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_spider_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_spider_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_spider_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_spider_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_spider_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_spider_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_spider_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_spider_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_spider_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_spider_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_spider_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_spider_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_spider_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_spider_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_swimmer_TAs_2024-02-09.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_swimmer_TAs_2024-02-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_swimmer_TAs_2024-02-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_swimmer_TAs_2024-02-15.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_swimmer_TAs_2024-02-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_swimmer_TAs_2024-02-21.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_swimmer_TAs_2024-02-22.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_swimmer_TAs_2024-03-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_swimmer_TAs_2024-03-25.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_swimmer_TAs_2024-05-02.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_swimmer_TAs_2024-05-23.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_swimmer_TAs_2024-06-07.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_swimmer_TAs_2024-06-14.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_swimmer_TAs_2024-08-13.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_swimmer_TAs_2024-08-16.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_site-0301_swimmer_TAs_2024-08-26.png
+    Untracked:  output/swimmer-spider-plot/materials/PECATI_spider_TAs_2024-08-14.png
+    Untracked:  output/~$PECATI_ESMO-2024_v.1.0.pptx
+
+Unstaged changes:
+    Modified:   analysis/_site.yml
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown
+(<code>analysis/WP2_ESMO24_presentation.Rmd</code>) and HTML
+(<code>docs/WP2_ESMO24_presentation.html</code>) files. If you’ve
+configured a remote Git repository (see <code>?wflow_git_remote</code>),
+click on the hyperlinks in the table below to view the files as they
+were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/MedsirScientific/PECATI/blob/a3df5936983d99f37186598b9d518c011203f0c2/analysis/WP2_ESMO24_presentation.Rmd" target="_blank">a3df593</a>
+</td>
+<td>
+Daniel Alcalá
+</td>
+<td>
+2024-08-27
+</td>
+<td>
+Update separate reports for preliminary data analysis and ESMO 2024
+presentation
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<pre><code>[1] &quot;/Users/daniel.alcala/PECATI/WP1_preliminary-analysis.Rmd&quot;</code></pre>
+<p>The data cutoff date for these analyses is: 2024-07-17</p>
+<div id="efficacy-analysis" class="section level1">
+<h1>Efficacy Analysis</h1>
+<div id="progression-free-survival-pfs" class="section level2">
+<h2>Progression-free survival (PFS)</h2>
+<div id="table-1.-5-month-pfs" class="section level4">
+<h4><strong>Table 1. 5-month PFS:</strong></h4>
+<div id="fswvlrzgug" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#fswvlrzgug table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#fswvlrzgug thead, #fswvlrzgug tbody, #fswvlrzgug tfoot, #fswvlrzgug tr, #fswvlrzgug td, #fswvlrzgug th {
+  border-style: none;
+}
+
+#fswvlrzgug p {
+  margin: 0;
+  padding: 0;
+}
+
+#fswvlrzgug .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#fswvlrzgug .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#fswvlrzgug .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#fswvlrzgug .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#fswvlrzgug .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#fswvlrzgug .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#fswvlrzgug .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#fswvlrzgug .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#fswvlrzgug .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#fswvlrzgug .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#fswvlrzgug .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#fswvlrzgug .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#fswvlrzgug .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#fswvlrzgug .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#fswvlrzgug .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#fswvlrzgug .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#fswvlrzgug .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#fswvlrzgug .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#fswvlrzgug .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#fswvlrzgug .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#fswvlrzgug .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#fswvlrzgug .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#fswvlrzgug .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#fswvlrzgug .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#fswvlrzgug .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#fswvlrzgug .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#fswvlrzgug .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#fswvlrzgug .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#fswvlrzgug .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#fswvlrzgug .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#fswvlrzgug .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#fswvlrzgug .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#fswvlrzgug .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#fswvlrzgug .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#fswvlrzgug .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#fswvlrzgug .gt_left {
+  text-align: left;
+}
+
+#fswvlrzgug .gt_center {
+  text-align: center;
+}
+
+#fswvlrzgug .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#fswvlrzgug .gt_font_normal {
+  font-weight: normal;
+}
+
+#fswvlrzgug .gt_font_bold {
+  font-weight: bold;
+}
+
+#fswvlrzgug .gt_font_italic {
+  font-style: italic;
+}
+
+#fswvlrzgug .gt_super {
+  font-size: 65%;
+}
+
+#fswvlrzgug .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#fswvlrzgug .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#fswvlrzgug .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#fswvlrzgug .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#fswvlrzgug .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#fswvlrzgug .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#fswvlrzgug .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <thead>
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id=""></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="&lt;strong&gt;5-Month PFS&lt;/strong&gt;"><strong>5-Month PFS</strong></th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="label" class="gt_row gt_left">Overall</td>
+<td headers="stat_1" class="gt_row gt_center">88% (73%, 95%)</td></tr>
+  </tbody>
+  
+  
+</table>
+</div>
+</div>
+<div id="table-2.-6--12--and-24-month-progression-free-survival-pfs"
+class="section level4">
+<h4><strong>Table 2. 6-, 12-, and 24-month Progression-Free Survival
+(PFS):</strong></h4>
+<div id="ndxssffgdz" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#ndxssffgdz table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#ndxssffgdz thead, #ndxssffgdz tbody, #ndxssffgdz tfoot, #ndxssffgdz tr, #ndxssffgdz td, #ndxssffgdz th {
+  border-style: none;
+}
+
+#ndxssffgdz p {
+  margin: 0;
+  padding: 0;
+}
+
+#ndxssffgdz .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#ndxssffgdz .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#ndxssffgdz .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#ndxssffgdz .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#ndxssffgdz .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#ndxssffgdz .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#ndxssffgdz .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#ndxssffgdz .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#ndxssffgdz .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#ndxssffgdz .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#ndxssffgdz .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#ndxssffgdz .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#ndxssffgdz .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#ndxssffgdz .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#ndxssffgdz .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#ndxssffgdz .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#ndxssffgdz .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#ndxssffgdz .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#ndxssffgdz .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#ndxssffgdz .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#ndxssffgdz .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#ndxssffgdz .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#ndxssffgdz .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#ndxssffgdz .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#ndxssffgdz .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#ndxssffgdz .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#ndxssffgdz .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#ndxssffgdz .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#ndxssffgdz .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#ndxssffgdz .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#ndxssffgdz .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#ndxssffgdz .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#ndxssffgdz .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#ndxssffgdz .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#ndxssffgdz .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#ndxssffgdz .gt_left {
+  text-align: left;
+}
+
+#ndxssffgdz .gt_center {
+  text-align: center;
+}
+
+#ndxssffgdz .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#ndxssffgdz .gt_font_normal {
+  font-weight: normal;
+}
+
+#ndxssffgdz .gt_font_bold {
+  font-weight: bold;
+}
+
+#ndxssffgdz .gt_font_italic {
+  font-style: italic;
+}
+
+#ndxssffgdz .gt_super {
+  font-size: 65%;
+}
+
+#ndxssffgdz .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#ndxssffgdz .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#ndxssffgdz .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#ndxssffgdz .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#ndxssffgdz .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#ndxssffgdz .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#ndxssffgdz .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <thead>
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id=""></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="&lt;strong&gt;6-Month PFS&lt;/strong&gt;"><strong>6-Month PFS</strong></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="&lt;strong&gt;12-Month PFS&lt;/strong&gt;"><strong>12-Month PFS</strong></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="&lt;strong&gt;24-Month PFS&lt;/strong&gt;"><strong>24-Month PFS</strong></th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="label" class="gt_row gt_left">Overall</td>
+<td headers="stat_1" class="gt_row gt_center">88% (73%, 95%)</td>
+<td headers="stat_2" class="gt_row gt_center">56% (36%, 72%)</td>
+<td headers="stat_3" class="gt_row gt_center">— (—, —)</td></tr>
+  </tbody>
+  
+  
+</table>
+</div>
+</div>
+<div
+id="figure-1.-progression-free-survival-pfs-in-the-intention-to-treat-population"
+class="section level4">
+<h4><strong>Figure 1. Progression-free survival (PFS) in the
+intention-to-treat population</strong></h4>
+<p><img src="figure/WP2_ESMO24_presentation.Rmd/pfs-kaplan-meier-plot-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="table-3.-pfs-by-pd-l1-status" class="section level4">
+<h4><strong>Table 3. PFS by PD-L1 status:</strong></h4>
+<div id="joykhxfwkq" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#joykhxfwkq table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#joykhxfwkq thead, #joykhxfwkq tbody, #joykhxfwkq tfoot, #joykhxfwkq tr, #joykhxfwkq td, #joykhxfwkq th {
+  border-style: none;
+}
+
+#joykhxfwkq p {
+  margin: 0;
+  padding: 0;
+}
+
+#joykhxfwkq .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#joykhxfwkq .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#joykhxfwkq .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#joykhxfwkq .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#joykhxfwkq .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#joykhxfwkq .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#joykhxfwkq .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#joykhxfwkq .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#joykhxfwkq .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#joykhxfwkq .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#joykhxfwkq .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#joykhxfwkq .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#joykhxfwkq .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#joykhxfwkq .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#joykhxfwkq .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#joykhxfwkq .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#joykhxfwkq .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#joykhxfwkq .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#joykhxfwkq .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#joykhxfwkq .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#joykhxfwkq .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#joykhxfwkq .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#joykhxfwkq .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#joykhxfwkq .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#joykhxfwkq .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#joykhxfwkq .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#joykhxfwkq .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#joykhxfwkq .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#joykhxfwkq .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#joykhxfwkq .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#joykhxfwkq .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#joykhxfwkq .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#joykhxfwkq .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#joykhxfwkq .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#joykhxfwkq .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#joykhxfwkq .gt_left {
+  text-align: left;
+}
+
+#joykhxfwkq .gt_center {
+  text-align: center;
+}
+
+#joykhxfwkq .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#joykhxfwkq .gt_font_normal {
+  font-weight: normal;
+}
+
+#joykhxfwkq .gt_font_bold {
+  font-weight: bold;
+}
+
+#joykhxfwkq .gt_font_italic {
+  font-style: italic;
+}
+
+#joykhxfwkq .gt_super {
+  font-size: 65%;
+}
+
+#joykhxfwkq .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#joykhxfwkq .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#joykhxfwkq .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#joykhxfwkq .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#joykhxfwkq .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#joykhxfwkq .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#joykhxfwkq .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <thead>
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id=""></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="&lt;strong&gt;5-Month PFS&lt;/strong&gt;"><strong>5-Month PFS</strong></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="&lt;strong&gt;12-Month PFS&lt;/strong&gt;"><strong>12-Month PFS</strong></th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="label" class="gt_row gt_left">PD-L1 expression</td>
+<td headers="stat_1" class="gt_row gt_center"><br /></td>
+<td headers="stat_2" class="gt_row gt_center"><br /></td></tr>
+    <tr><td headers="label" class="gt_row gt_left">    Negative</td>
+<td headers="stat_1" class="gt_row gt_center">94% (63%, 99%)</td>
+<td headers="stat_2" class="gt_row gt_center">47% (18%, 72%)</td></tr>
+    <tr><td headers="label" class="gt_row gt_left">    Positive</td>
+<td headers="stat_1" class="gt_row gt_center">78% (46%, 92%)</td>
+<td headers="stat_2" class="gt_row gt_center">49% (14%, 77%)</td></tr>
+  </tbody>
+  
+  
+</table>
+</div>
+</div>
+<div
+id="figure-2.-progression-free-survival-pfs-by-pd-l1-status-in-the-intention-to-treat-population"
+class="section level4">
+<h4><strong>Figure 2. Progression-Free Survival (PFS) by PD-L1 status in
+the intention-to-treat population</strong></h4>
+<p><img src="figure/WP2_ESMO24_presentation.Rmd/pfs-pdl1-kaplan-meier-plot-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div
+id="table-4.-pfs-by-complete-dose-of-lenvatinib-during-the-first-8-weeks"
+class="section level4">
+<h4><strong>Table 4. PFS by complete dose of Lenvatinib during the first
+8 weeks:</strong></h4>
+<div id="bckhhyvews" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#bckhhyvews table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#bckhhyvews thead, #bckhhyvews tbody, #bckhhyvews tfoot, #bckhhyvews tr, #bckhhyvews td, #bckhhyvews th {
+  border-style: none;
+}
+
+#bckhhyvews p {
+  margin: 0;
+  padding: 0;
+}
+
+#bckhhyvews .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#bckhhyvews .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#bckhhyvews .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#bckhhyvews .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#bckhhyvews .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#bckhhyvews .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#bckhhyvews .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#bckhhyvews .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#bckhhyvews .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#bckhhyvews .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#bckhhyvews .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#bckhhyvews .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#bckhhyvews .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#bckhhyvews .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#bckhhyvews .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#bckhhyvews .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#bckhhyvews .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#bckhhyvews .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#bckhhyvews .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#bckhhyvews .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#bckhhyvews .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#bckhhyvews .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#bckhhyvews .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#bckhhyvews .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#bckhhyvews .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#bckhhyvews .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#bckhhyvews .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#bckhhyvews .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#bckhhyvews .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#bckhhyvews .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#bckhhyvews .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#bckhhyvews .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#bckhhyvews .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#bckhhyvews .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#bckhhyvews .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#bckhhyvews .gt_left {
+  text-align: left;
+}
+
+#bckhhyvews .gt_center {
+  text-align: center;
+}
+
+#bckhhyvews .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#bckhhyvews .gt_font_normal {
+  font-weight: normal;
+}
+
+#bckhhyvews .gt_font_bold {
+  font-weight: bold;
+}
+
+#bckhhyvews .gt_font_italic {
+  font-style: italic;
+}
+
+#bckhhyvews .gt_super {
+  font-size: 65%;
+}
+
+#bckhhyvews .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#bckhhyvews .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#bckhhyvews .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#bckhhyvews .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#bckhhyvews .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#bckhhyvews .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#bckhhyvews .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <thead>
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id=""></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="&lt;strong&gt;5-Month PFS&lt;/strong&gt;"><strong>5-Month PFS</strong></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="&lt;strong&gt;12-Month PFS&lt;/strong&gt;"><strong>12-Month PFS</strong></th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="label" class="gt_row gt_left">Complete lenvatinib dose first 8 weeks</td>
+<td headers="stat_1" class="gt_row gt_center"><br /></td>
+<td headers="stat_2" class="gt_row gt_center"><br /></td></tr>
+    <tr><td headers="label" class="gt_row gt_left">    No</td>
+<td headers="stat_1" class="gt_row gt_center">71% (44%, 87%)</td>
+<td headers="stat_2" class="gt_row gt_center">— (—, —)</td></tr>
+    <tr><td headers="label" class="gt_row gt_left">    Yes</td>
+<td headers="stat_1" class="gt_row gt_center">100% (100%, 100%)</td>
+<td headers="stat_2" class="gt_row gt_center">73% (46%, 88%)</td></tr>
+  </tbody>
+  
+  
+</table>
+</div>
+<p><img src="figure/WP2_ESMO24_presentation.Rmd/pfs-lenvatinib-dose-kaplan-meier-plot-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="overall-survival-os" class="section level2">
+<h2>Overall survival (OS)</h2>
+<div id="table-5.-os" class="section level4">
+<h4><strong>Table 5. OS:</strong></h4>
+<div id="sspwfhvsjt" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#sspwfhvsjt table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#sspwfhvsjt thead, #sspwfhvsjt tbody, #sspwfhvsjt tfoot, #sspwfhvsjt tr, #sspwfhvsjt td, #sspwfhvsjt th {
+  border-style: none;
+}
+
+#sspwfhvsjt p {
+  margin: 0;
+  padding: 0;
+}
+
+#sspwfhvsjt .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#sspwfhvsjt .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#sspwfhvsjt .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#sspwfhvsjt .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#sspwfhvsjt .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#sspwfhvsjt .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#sspwfhvsjt .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#sspwfhvsjt .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#sspwfhvsjt .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#sspwfhvsjt .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#sspwfhvsjt .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#sspwfhvsjt .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#sspwfhvsjt .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#sspwfhvsjt .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#sspwfhvsjt .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#sspwfhvsjt .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#sspwfhvsjt .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#sspwfhvsjt .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#sspwfhvsjt .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#sspwfhvsjt .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#sspwfhvsjt .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#sspwfhvsjt .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#sspwfhvsjt .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#sspwfhvsjt .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#sspwfhvsjt .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#sspwfhvsjt .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#sspwfhvsjt .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#sspwfhvsjt .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#sspwfhvsjt .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#sspwfhvsjt .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#sspwfhvsjt .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#sspwfhvsjt .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#sspwfhvsjt .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#sspwfhvsjt .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#sspwfhvsjt .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#sspwfhvsjt .gt_left {
+  text-align: left;
+}
+
+#sspwfhvsjt .gt_center {
+  text-align: center;
+}
+
+#sspwfhvsjt .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#sspwfhvsjt .gt_font_normal {
+  font-weight: normal;
+}
+
+#sspwfhvsjt .gt_font_bold {
+  font-weight: bold;
+}
+
+#sspwfhvsjt .gt_font_italic {
+  font-style: italic;
+}
+
+#sspwfhvsjt .gt_super {
+  font-size: 65%;
+}
+
+#sspwfhvsjt .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#sspwfhvsjt .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#sspwfhvsjt .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#sspwfhvsjt .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#sspwfhvsjt .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#sspwfhvsjt .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#sspwfhvsjt .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <thead>
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id=""></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="&lt;strong&gt;5-Month OS&lt;/strong&gt;"><strong>5-Month OS</strong></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="&lt;strong&gt;12-Month OS&lt;/strong&gt;"><strong>12-Month OS</strong></th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="label" class="gt_row gt_left">Overall</td>
+<td headers="stat_1" class="gt_row gt_center">95% (82%, 99%)</td>
+<td headers="stat_2" class="gt_row gt_center">85% (67%, 94%)</td></tr>
+  </tbody>
+  
+  
+</table>
+</div>
+<p><img src="figure/WP2_ESMO24_presentation.Rmd/os-kaplan-meier-plot-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="best-overall-response" class="section level2">
+<h2>Best Overall Response</h2>
+<p><img src="figure/WP2_ESMO24_presentation.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/WP2_ESMO24_presentation.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>The p-value is less than 0.05
+We have a statistically significant result</code></pre>
+<pre><code>Observed 5-month PFS rate: 0.8837209 </code></pre>
+<pre><code>p-value: 1.249755e-07 </code></pre>
+<pre><code>                              Lenvatinib dose reduction due to toxicity: No
+Lenvatinib 20mg ≥8 weeks: No  &quot;11(25.6%)&quot;                                  
+Lenvatinib 20mg ≥8 weeks: Yes &quot;16(37.2%)&quot;                                  
+                              Lenvatinib dose reduction due to toxicity: Yes
+Lenvatinib 20mg ≥8 weeks: No  &quot;8(18.6%)&quot;                                    
+Lenvatinib 20mg ≥8 weeks: Yes &quot;8(18.6%)&quot;                                    </code></pre>
+<div id="table-6.-pfs-inm-patients-with-pd-l1-50"
+class="section level4">
+<h4><strong>Table 6. PFS inm patients with PD-L1 ≥50%:</strong></h4>
+<div id="hbgmleoztf" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#hbgmleoztf table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#hbgmleoztf thead, #hbgmleoztf tbody, #hbgmleoztf tfoot, #hbgmleoztf tr, #hbgmleoztf td, #hbgmleoztf th {
+  border-style: none;
+}
+
+#hbgmleoztf p {
+  margin: 0;
+  padding: 0;
+}
+
+#hbgmleoztf .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#hbgmleoztf .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#hbgmleoztf .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#hbgmleoztf .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#hbgmleoztf .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#hbgmleoztf .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#hbgmleoztf .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#hbgmleoztf .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#hbgmleoztf .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#hbgmleoztf .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#hbgmleoztf .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#hbgmleoztf .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#hbgmleoztf .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#hbgmleoztf .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#hbgmleoztf .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#hbgmleoztf .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#hbgmleoztf .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#hbgmleoztf .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#hbgmleoztf .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#hbgmleoztf .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#hbgmleoztf .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#hbgmleoztf .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#hbgmleoztf .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#hbgmleoztf .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#hbgmleoztf .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#hbgmleoztf .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#hbgmleoztf .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#hbgmleoztf .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#hbgmleoztf .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#hbgmleoztf .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#hbgmleoztf .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#hbgmleoztf .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#hbgmleoztf .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#hbgmleoztf .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#hbgmleoztf .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#hbgmleoztf .gt_left {
+  text-align: left;
+}
+
+#hbgmleoztf .gt_center {
+  text-align: center;
+}
+
+#hbgmleoztf .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#hbgmleoztf .gt_font_normal {
+  font-weight: normal;
+}
+
+#hbgmleoztf .gt_font_bold {
+  font-weight: bold;
+}
+
+#hbgmleoztf .gt_font_italic {
+  font-style: italic;
+}
+
+#hbgmleoztf .gt_super {
+  font-size: 65%;
+}
+
+#hbgmleoztf .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#hbgmleoztf .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#hbgmleoztf .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#hbgmleoztf .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#hbgmleoztf .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#hbgmleoztf .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#hbgmleoztf .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <thead>
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id=""></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="&lt;strong&gt;5-Month PFS&lt;/strong&gt;"><strong>5-Month PFS</strong></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="&lt;strong&gt;12-Month PFS&lt;/strong&gt;"><strong>12-Month PFS</strong></th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="label" class="gt_row gt_left">Overall</td>
+<td headers="stat_1" class="gt_row gt_center">100% (100%, 100%)</td>
+<td headers="stat_2" class="gt_row gt_center">100% (100%, 100%)</td></tr>
+  </tbody>
+  
+  
+</table>
+</div>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.3.2 (2023-10-31)
+Platform: aarch64-apple-darwin20 (64-bit)
+Running under: macOS Sonoma 14.6.1
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.11.0
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+time zone: Europe/Madrid
+tzcode source: internal
+
+attached base packages:
+[1] grid      stats     graphics  grDevices utils     datasets  methods  
+[8] base     
+
+other attached packages:
+ [1] labelled_2.13.0 broom_1.0.5     crayon_1.5.2    epoxy_1.0.0    
+ [5] survminer_0.4.9 ggpubr_0.6.0    survival_3.5-7  gtreg_0.3.0    
+ [9] gtsummary_1.7.2 gt_0.10.1       cowplot_1.1.3   here_1.0.1     
+[13] janitor_2.2.0   writexl_1.4.2   readxl_1.4.3    lubridate_1.9.3
+[17] forcats_1.0.0   stringr_1.5.1   dplyr_1.1.4     purrr_1.0.2    
+[21] readr_2.1.5     tidyr_1.3.1     tibble_3.2.1    ggplot2_3.4.4  
+[25] tidyverse_2.0.0 workflowr_1.7.1
+
+loaded via a namespace (and not attached):
+ [1] gridExtra_2.3        rlang_1.1.4          magrittr_2.0.3      
+ [4] git2r_0.33.0         snakecase_0.11.1     compiler_4.3.2      
+ [7] getPass_0.2-4        systemfonts_1.1.0    callr_3.7.6         
+[10] vctrs_0.6.5          pkgconfig_2.0.3      fastmap_1.2.0       
+[13] backports_1.4.1      labeling_0.4.3       KMsurv_0.1-5        
+[16] utf8_1.2.4           promises_1.2.1       rmarkdown_2.27      
+[19] markdown_1.12        tzdb_0.4.0           haven_2.5.4         
+[22] ps_1.7.6             ragg_1.2.7           xfun_0.44           
+[25] cachem_1.1.0         jsonlite_1.8.8       highr_0.11          
+[28] later_1.3.2          R6_2.5.1             bslib_0.7.0         
+[31] stringi_1.8.4        car_3.1-2            jquerylib_0.1.4     
+[34] cellranger_1.1.0     Rcpp_1.0.12          knitr_1.47          
+[37] zoo_1.8-12           httpuv_1.6.14        Matrix_1.6-1.1      
+[40] splines_4.3.2        timechange_0.3.0     tidyselect_1.2.0    
+[43] rstudioapi_0.16.0    abind_1.4-5          yaml_2.3.8          
+[46] ggtext_0.1.2         processx_3.8.4       lattice_0.21-9      
+[49] withr_3.0.0          evaluate_0.24.0      xml2_1.3.6          
+[52] survMisc_0.5.6       pillar_1.9.0         carData_3.0-5       
+[55] whisker_0.4.1        generics_0.1.3       rprojroot_2.0.4     
+[58] hms_1.1.3            munsell_0.5.1        commonmark_1.9.1    
+[61] scales_1.3.0         xtable_1.8-4         glue_1.7.0          
+[64] tools_4.3.2          data.table_1.15.0    ggsignif_0.6.4      
+[67] fs_1.6.4             colorspace_2.1-0     cli_3.6.2           
+[70] km.ci_0.5-6          textshaping_0.3.7    fansi_1.0.6         
+[73] broom.helpers_1.14.0 gtable_0.3.4         rstatix_0.7.2       
+[76] sass_0.4.9           digest_0.6.35        farver_2.1.2        
+[79] htmltools_0.5.8.1    lifecycle_1.0.4      httr_1.4.7          
+[82] gridtext_0.1.5      </code></pre>
+</div>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
