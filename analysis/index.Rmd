@@ -10,4 +10,5 @@ editor_options:
 
 This is the index page of the online repository for the PECATI study. Here is a list of work packages:
 
- - [Preliminary data cleaning and analysis (February 2024)](WP1_preliminary-analysis.html)
+ - [Preliminary data cleaning and analysis (August 2024)](WP1_preliminary-analysis.html)
+ - [Extra data analysis for the presentation at ESMO 2024 (August 2024)](WP2_ESMO24_presentation.html)

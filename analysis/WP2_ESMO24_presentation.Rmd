@@ -1,0 +1,817 @@
+---
+title: "PECATI | Data monitoring, cleaning, and analysis for the presentation at ESMO 2024. August 2024"
+author: "Daniel Alcala"
+date: "`r format(Sys.time(), '%Y-%m-%d')`"
+output: html_document
+---
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+library(tidyverse)
+library(readxl)
+library(writexl)
+library(janitor)
+library(lubridate)
+library(here)
+library(cowplot)
+library(gt)
+library(gtsummary)
+library(gtreg)
+library(survival)
+library(survminer)
+library(epoxy)
+library(crayon)
+library(grid)
+library(workflowr)
+library(broom)
+library(labelled)
+
+here("WP1_preliminary-analysis.Rmd")
+
+project_id <- "PECATI"
+cutoff_date <- as.Date("2024-07-17")
+```
+
+The data cutoff date for these analyses is: `r cutoff_date`
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# Reformat the data cutoff date for reading of files
+cutoff_date_formatted <- format(cutoff_date, "%Y_%m_%d")
+```
+
+# Efficacy Analysis
+
+## Progression-free survival (PFS)
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+pfs5mo <- read_excel(
+  here(paste0("data/", "MedOPP341_PECATI_Draft_Listings_", cutoff_date, ".xlsx")),
+  sheet = "LIST18"
+) %>%
+  clean_names() %>% 
+  rename(
+    patient = subject_id,
+    pfs_event = pfs_at_5_months,
+    pfs = time_of_pfs_months
+  ) %>% 
+  ### Manual fix ###-----------------------------------------------------------
+  mutate(
+    ### Patient 0206-002 had a PFS event identified at the second assessment,
+    ### which was at 7.49 months (2023-12-28), due to the identification of a 
+    ### new lesion. However, the new lesion was not confirmed at the next
+    ### assessment, and the patient continued on treatment.
+    pfs_event = if_else(
+      patient == "0206-002", "No", pfs_event
+    ),
+    pfs = if_else(
+      patient == "0206-002", 7.49, pfs
+    ),
+    pfs_event = if_else(
+      pfs_event == "No", 0, 1
+    )
+  )
+```
+
+#### **Table 1. 5-month PFS:**
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+tbl_survfit(
+  survfit(Surv(pfs, pfs_event) ~ 1, data = pfs5mo, conf.type = "log-log"),
+  times = c(5),
+  label_header = "**{time}-Month PFS**"
+) %>%
+  modify_header(label = " ")
+```
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+pfs <- read_excel(
+  here(paste0("data/", "MedOPP341_PECATI_Draft_Listings_", cutoff_date, ".xlsx")),
+  sheet = "LIST18"
+) %>%
+  clean_names() %>% 
+  rename(
+    patient = subject_id,
+    pfs_event = progression_free_survival_pfs,
+    pfs = time_of_pfs_months
+  ) %>% 
+  mutate(
+    pfs_event = if_else(
+      patient == "0206-002", "No", pfs_event
+    ),
+    pfs = if_else(
+      patient == "0206-002", 7.49, pfs
+    ),
+    pfs_event = if_else(
+      pfs_event == "No", 0, 1
+    )
+  )
+```
+
+#### **Table 2. 6-, 12-, and 24-month Progression-Free Survival (PFS):**
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+tbl_survfit(
+  survfit(Surv(pfs, pfs_event) ~ 1, data = pfs, conf.type = "log-log"),
+  times = c(6, 12, 24),
+  label_header = "**{time}-Month PFS**"
+) %>%
+  modify_header(label = " ")
+```
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+customize_labels <- function(p, font.title = NULL,
+                             font.subtitle = NULL, font.caption = NULL,
+                             font.x = NULL, font.y = NULL, font.xtickslab = NULL, font.ytickslab = NULL) {
+  original.p <- p
+  if (is.ggplot(original.p)) {
+    list.plots <- list(original.p)
+  } else if (is.list(original.p)) {
+    list.plots <- original.p
+  } else {
+    stop("Can't handle an object of class ", class(original.p))
+  }
+  .set_font <- function(font) {
+    font <- ggpubr:::.parse_font(font)
+    ggtext::element_markdown(size = font$size, face = font$face, colour = font$color)
+  }
+  for (i in 1:length(list.plots)) {
+    p <- list.plots[[i]]
+    if (is.ggplot(p)) {
+      if (!is.null(font.title)) p <- p + theme(plot.title = .set_font(font.title))
+      if (!is.null(font.subtitle)) p <- p + theme(plot.subtitle = .set_font(font.subtitle))
+      if (!is.null(font.caption)) p <- p + theme(plot.caption = .set_font(font.caption))
+      if (!is.null(font.x)) p <- p + theme(axis.title.x = .set_font(font.x))
+      if (!is.null(font.y)) p <- p + theme(axis.title.y = .set_font(font.y))
+      if (!is.null(font.xtickslab)) p <- p + theme(axis.text.x = .set_font(font.xtickslab))
+      if (!is.null(font.ytickslab)) p <- p + theme(axis.text.y = .set_font(font.ytickslab))
+      list.plots[[i]] <- p
+    }
+  }
+  if (is.ggplot(original.p)) {
+    list.plots[[1]]
+  } else {
+    list.plots
+  }
+}
+```
+
+#### **Figure 1. Progression-free survival (PFS) in the intention-to-treat population**
+
+```{r pfs-kaplan-meier-plot, message = FALSE, warning = FALSE, echo = FALSE}
+### Plot ----------------------------------------------------------------------
+primary_endpoint <- ggsurvplot(
+  fit = survfit(Surv(pfs, pfs_event) ~ 1, data = pfs),
+  xlab = "Months since treatment initiation",
+  ylab = "Progression-Free Survival",
+  conf.int = FALSE,
+  xlim = c(0, 24.9),
+  ylim = c(0, 1.009),
+  censor.size = 3.5,
+  size = 1,
+  break.time.by = 3,
+  axes.offset = FALSE,
+  surv.scale = "percent",
+  break.y.by = 0.20,
+  risk.table = TRUE,
+  fontsize = 2.5,
+  ggtheme = theme_classic(),
+  palette = c("#0A3158"),
+  legend.labs = c(" "),
+  legend.title = " "
+)
+
+### Modify theme --------------------------------------------------------------
+primary_endpoint <- customize_labels(
+  primary_endpoint,
+  font.title     = c(8, "bold", "#0a0908"),
+  font.caption   = c(8, "plain", "#0a0908"),
+  font.x         = c(8, "bold", "#0a0908"),
+  font.y         = c(8, "bold", "#0a0908"),
+  font.xtickslab = c(8, "plain", "#0a0908"),
+  font.ytickslab = c(8, "plain", "#0a0908")
+)
+
+grid.draw.ggsurvplot <- function(x) {
+  survminer:::print.ggsurvplot(x, newpage = FALSE)
+}
+
+### Add legend ----------------------------------------------------------------
+caption <- paste(strwrap(
+  "5-month PFS is 87.8% (95% CI 78.3-98.4). Events: 5/43 (11.6%).", 90
+  ), collapse = "\n")
+
+primary_endpoint$plot <- primary_endpoint$plot + annotate(
+  "text",
+  x = 0.5, y = 0.10,
+  label = caption,
+  cex = 3, vjust = "center", hjust = "left", fontface = 20
+)
+
+### Save plot -----------------------------------------------------------------
+ggsave(
+  paste("../output/", project_id, "_5mo_PFS_global_", as.Date(Sys.Date()), ".png", sep = ""),
+  primary_endpoint,
+  width = 20,
+  height = 10,
+  units = "cm",
+  dpi = 300
+)
+
+### Show plot -----------------------------------------------------------------
+primary_endpoint
+```
+
+#### **Table 3. PFS by PD-L1 status:**
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+var_label(pfs$pd_l1) <- "PD-L1 expression"
+
+tbl_survfit(
+  survfit(Surv(pfs, pfs_event) ~ pd_l1, data = pfs, conf.type = "log-log"),
+  times = c(5, 12),
+  label_header = "**{time}-Month PFS**"
+) %>%
+  modify_header(label = " ")
+```
+
+#### **Figure 2. Progression-Free Survival (PFS) by PD-L1 status in the intention-to-treat population**
+
+```{r pfs-pdl1-kaplan-meier-plot, message = FALSE, warning = FALSE, echo = FALSE}
+### Plot ----------------------------------------------------------------------
+pfs_pdl1 <- ggsurvplot(
+  fit = survfit(Surv(pfs, pfs_event) ~ pd_l1, data = pfs),
+  xlab = "Months since treatment initiation",
+  ylab = "Progression-Free Survival",
+  conf.int = FALSE,
+  pval = TRUE,
+  pval.size = 3,
+  pval.coord = c(0.5, 0.28),
+  xlim = c(0, 24.9),
+  ylim = c(0, 1.009),
+  censor.size = 3.5,
+  size = 1,
+  break.time.by = 3,
+  axes.offset = FALSE,
+  surv.scale = "percent",
+  break.y.by = 0.20,
+  risk.table = TRUE,
+  fontsize = 2.5,
+  ggtheme = theme_classic(),
+  palette = c("#4F5D67", "#BB322F"),
+  legend.labs = c("PD-L1[-]", "PD-L1[+]"),
+  legend.title = " "
+)
+
+### Modify theme --------------------------------------------------------------
+pfs_pdl1 <- customize_labels(
+  pfs_pdl1,
+  font.title     = c(8, "bold", "#0a0908"),
+  font.caption   = c(8, "plain", "#0a0908"),
+  font.x         = c(8, "bold", "#0a0908"),
+  font.y         = c(8, "bold", "#0a0908"),
+  font.xtickslab = c(8, "plain", "#0a0908"),
+  font.ytickslab = c(8, "plain", "#0a0908")
+)
+
+grid.draw.ggsurvplot <- function(x) {
+  survminer:::print.ggsurvplot(x, newpage = FALSE)
+}
+
+### Add legend ----------------------------------------------------------------
+caption2 <- paste(strwrap(
+  "5-month PFS is 93.8% (95% CI 82.6-100) in PD-L1 negative patients. Events: 1/17 (5.9%).", 90
+  ), collapse = "\n")
+
+caption3 <- paste(strwrap(
+  "5-month PFS is 78.0% (95% CI 58.6-100) in PD-L1 positive patients. Events: 3/15 (20%).", 90
+  ), collapse = "\n")
+
+pfs_pdl1$plot <- pfs_pdl1$plot + annotate(
+  "text",
+  x = 0.5, y = 0.08,
+  label = caption2,
+  cex = 3, vjust = "center", hjust = "left", fontface = 20
+)
+
+pfs_pdl1$plot <- pfs_pdl1$plot + annotate(
+  "text",
+  x = 0.5, y = 0.18,
+  label = caption3,
+  cex = 3, vjust = "center", hjust = "left", fontface = 20
+)
+
+### Save plot ---------------------------------------------------------------
+ggsave(
+  paste("../output/", project_id, "_5-mo_PFS_PD-L1_", as.Date(Sys.Date()), ".png", sep = ""),
+  pfs_pdl1,
+  width = 20,
+  height = 10,
+  units = "cm",
+  dpi = 300
+)
+
+### Show plot --------------------------------------------------------------
+pfs_pdl1
+```
+
+#### **Table 4. PFS by complete dose of Lenvatinib during the first 8 weeks:**
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+var_label(pfs$per_protocol_set) <- "Complete lenvatinib dose first 8 weeks"
+
+tbl_survfit(
+  survfit(Surv(pfs, pfs_event) ~ per_protocol_set, data = pfs, conf.type = "log-log"),
+  times = c(5, 12),
+  label_header = "**{time}-Month PFS**"
+) %>%
+  modify_header(label = " ")
+```
+
+```{r pfs-lenvatinib-dose-kaplan-meier-plot, message = FALSE, warning = FALSE, echo = FALSE}
+### Plot ----------------------------------------------------------------------
+pfs_pp <- ggsurvplot(
+  fit = survfit(Surv(pfs, pfs_event) ~ per_protocol_set, data = pfs),
+  xlab = "Months since treatment initiation",
+  ylab = "Progression-Free Survival",
+  conf.int = FALSE,
+  pval = TRUE,
+  pval.size = 3,
+  pval.coord = c(0.5, 0.28),
+  xlim = c(0, 24.9),
+  ylim = c(0, 1.009),
+  censor.size = 3.5,
+  size = 1,
+  break.time.by = 3,
+  axes.offset = FALSE,
+  surv.scale = "percent",
+  break.y.by = 0.20,
+  risk.table = TRUE,
+  fontsize = 2.5,
+  ggtheme = theme_classic(),
+  palette = c("#BB322F", "#0A3158"),
+  legend.labs = c("<8 weeks", "≥8 weeks"),
+  legend.title = " "
+)
+
+### Modify theme --------------------------------------------------------------
+pfs_pp <- customize_labels(
+  pfs_pp,
+  font.title     = c(8, "bold", "#0a0908"),
+  font.caption   = c(8, "plain", "#0a0908"),
+  font.x         = c(8, "bold", "#0a0908"),
+  font.y         = c(8, "bold", "#0a0908"),
+  font.xtickslab = c(8, "plain", "#0a0908"),
+  font.ytickslab = c(8, "plain", "#0a0908")
+)
+
+grid.draw.ggsurvplot <- function(x) {
+  survminer:::print.ggsurvplot(x, newpage = FALSE)
+}
+
+### Add legend ----------------------------------------------------------------
+caption2 <- paste(strwrap(
+  "5-month PFS is 71.3% (95% CI 44.0-87.0) with <8 weeks of complete Lenvatinib dose. Events: 5/19 (26.3%).", 120
+  ), collapse = "\n")
+
+caption3 <- paste(strwrap(
+  "5-month PFS is 100% with ≥8 weeks of complete Lenvatinib dose. Events: 0/24 (0%).", 100
+  ), collapse = "\n")
+
+pfs_pp$plot <- pfs_pp$plot + annotate(
+  "text",
+  x = 0.5, y = 0.08,
+  label = caption2,
+  cex = 3, vjust = "center", hjust = "left", fontface = 20
+)
+
+pfs_pp$plot <- pfs_pp$plot + annotate(
+  "text",
+  x = 0.5, y = 0.18,
+  label = caption3,
+  cex = 3, vjust = "center", hjust = "left", fontface = 20
+)
+
+### Save plot ---------------------------------------------------------------
+ggsave(
+  paste("../output/", project_id, "_5-mo_PFS_PP_", as.Date(Sys.Date()), ".png", sep = ""),
+  pfs_pp,
+  width = 20,
+  height = 10,
+  units = "cm",
+  dpi = 300
+)
+
+### Show plot --------------------------------------------------------------
+pfs_pp
+```
+
+## Overall survival (OS)
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+os <- read_excel(
+  here(paste0("data/", "MedOPP341_PECATI_Draft_Listings_", cutoff_date, ".xlsx")),
+  sheet = "LIST18"
+) %>%
+  clean_names() %>% 
+  rename(
+    patient = subject_id,
+    os_event = overall_survival_os,
+    os = time_of_os_months
+  ) %>% 
+  mutate(
+    os_event = if_else(
+      os_event == "No", 0, 1
+    )
+  )
+```
+
+#### **Table 5. OS:**
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+tbl_survfit(
+  survfit(Surv(os, os_event) ~ 1, data = os, conf.type = "log-log"),
+  times = c(5, 12),
+  label_header = "**{time}-Month OS**"
+) %>%
+  modify_header(label = " ")
+```
+
+```{r os-kaplan-meier-plot, message = FALSE, warning = FALSE, echo = FALSE}
+### Plot ----------------------------------------------------------------------
+os_secondary <- ggsurvplot(
+  fit = survfit(Surv(os, os_event) ~ 1, data = os),
+  xlab = "Months since treatment initiation",
+  ylab = "Overall Survival",
+  conf.int = FALSE,
+  xlim = c(0, 26.9),
+  ylim = c(0, 1.009),
+  censor.size = 3.5,
+  size = 1,
+  break.time.by = 3,
+  axes.offset = FALSE,
+  surv.scale = "percent",
+  break.y.by = 0.20,
+  risk.table = TRUE,
+  fontsize = 2.5,
+  ggtheme = theme_classic(),
+  palette = c("#0A3158"),
+  legend.labs = c(" "),
+  legend.title = " "
+)
+
+### Modify theme --------------------------------------------------------------
+os_secondary <- customize_labels(
+  os_secondary,
+  font.title     = c(8, "bold", "#0a0908"),
+  font.caption   = c(8, "plain", "#0a0908"),
+  font.x         = c(8, "bold", "#0a0908"),
+  font.y         = c(8, "bold", "#0a0908"),
+  font.xtickslab = c(8, "plain", "#0a0908"),
+  font.ytickslab = c(8, "plain", "#0a0908")
+)
+
+grid.draw.ggsurvplot <- function(x) {
+  survminer:::print.ggsurvplot(x, newpage = FALSE)
+}
+
+### Add legend ----------------------------------------------------------------
+caption4 <- paste(strwrap(
+  "5-month OS is 95.3% (95% CI 82.5-98.8). Events: 2/43 (4.7%).", 90
+  ), collapse = "\n")
+
+caption5 <- paste(strwrap(
+  "12-month OS is 85.2% (95% CI 67.4-93.7). Events: 5/43 (11.6%).", 90
+  ), collapse = "\n")
+
+pfs_pdl1$plot <- pfs_pdl1$plot + annotate(
+  "text",
+  x = 0.5, y = 0.08,
+  label = caption2,
+  cex = 3, vjust = "center", hjust = "left", fontface = 20
+)
+
+pfs_pdl1$plot <- pfs_pdl1$plot + annotate(
+  "text",
+  x = 0.5, y = 0.18,
+  label = caption3,
+  cex = 3, vjust = "center", hjust = "left", fontface = 20
+)
+
+### Save plot ---------------------------------------------------------------
+ggsave(
+  paste("../output/", project_id, "_12-mo_OS_global_", as.Date(Sys.Date()), ".png", sep = ""),
+  os_secondary,
+  width = 20,
+  height = 10,
+  units = "cm",
+  dpi = 300
+)
+
+### Show plot --------------------------------------------------------------
+os_secondary
+```
+
+## Best Overall Response
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+### Load data -----------------------------------------------------------------
+data_waterfall <- read_excel(
+  here(paste0("data/", "MedOPP341_PECATI_Draft_Listings_", cutoff_date, ".xlsx")),
+  sheet = "LIST18"
+  ) %>% 
+  clean_names() %>% 
+  rename(
+    patient = subject_id,
+    confirmed_bor = confirmed_best_overall_response_bor,
+    sld_cfb = maximum_tumor_shrinkage_percent
+  ) %>% 
+  mutate(
+    sld_cfb = if_else(
+      is.na(sld_cfb), 1, sld_cfb
+    ),
+    confirmed_bor = if_else(
+      confirmed_bor == "SD>=24w", "SD", confirmed_bor
+    ),
+    confirmed_bor = if_else(
+      confirmed_bor == "SD<24w", "SD", confirmed_bor
+    ),
+    sld_cfb = if_else(
+      sld_cfb == 0, 1, sld_cfb
+    )
+  ) %>%
+  arrange(-sld_cfb) %>%
+  mutate(
+    patient = factor(patient),
+    confirmed_bor = factor(confirmed_bor, levels = c("CR", "PR", "SD", "PD", "NE")),
+    order = row_number(),
+    colour = if_else(
+      confirmed_bor == "CR", "#111111",
+      if_else(
+        confirmed_bor == "PR", "#152546",
+          if_else(
+            confirmed_bor == "SD", "#666F1C",
+            if_else(
+              confirmed_bor == "PD", "#99001B",
+              "#717272"
+            )
+          )
+        )
+      )
+    ) %>%
+  select(
+    patient, group, pd_l1, per_protocol_set, confirmed_bor, sld_cfb, colour, order
+  )
+
+### Plot ----------------------------------------------------------------------
+waterfallplot_orr_confirmed <- ggplot(
+  data_waterfall,
+  aes(
+    x = order,
+    y = sld_cfb,
+    colour = factor(colour)
+    )
+  ) +
+  coord_cartesian(
+    ylim = c(-100, 50)
+    ) +
+  scale_y_continuous(
+    breaks = seq(-100, 50, by = 20
+                 )
+    ) +
+  geom_bar(
+    fill = data_waterfall$colour,
+    colour = "#FFFFFF",
+    stat = "identity",
+    width = 0.99
+    ) +
+  geom_abline(slope = 0, intercept = 20, col = "gray40", lty = 2) +
+  geom_abline(slope = 0, intercept = -30, col = "gray40", lty = 2) +
+  theme_classic() +
+  labs(title = "",
+       x = "Patients",
+       y = "Maximum change from baseline in tumor size") +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()
+    )
+
+### Save plot -----------------------------------------------------------------
+ggsave(
+  here("output/PECATI_ORR_confirmed_waterfall_", cutoff_date, ".png"),
+  waterfallplot_orr_confirmed,
+  width = 16,
+  height = 8,
+  units = "cm",
+  dpi = 300
+  )
+
+### Show plot -----------------------------------------------------------------
+waterfallplot_orr_confirmed
+```
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+data_12_or_recist <- read_excel(
+  here(paste0("output/", project_id, "_12_or_recist_2024-06-20", ".xlsx"))
+  )
+
+pdl1 <- read_excel(
+  here(paste0("data/", "PECATI_PDL1_", cutoff_date, ".xlsx")),
+  col_types = c("text", rep("skip", 6), "text")
+  )
+
+pdl1 <- pdl1 %>% 
+  clean_names() %>% 
+  mutate(
+    pdl1_percent = if_else(is.na(pdl1_percent), "Unknown", pdl1_percent),
+    patient = paste0("0", patient)
+  )
+
+data_12_or_recist <- merge(
+  pdl1,
+  data_12_or_recist,
+  by = "patient",
+  all = TRUE
+  )
+
+data_12_or_recist <- data_12_or_recist %>%
+  mutate(
+    pdl1_percent = if_else(is.na(pdl1_percent), "Unknown", pdl1_percent)
+    # pdl1_percent = factor(pdl1_percent, levels = c("Unknown", "0", "1 <- 49", "≥50")),
+  )
+
+data_12_or_recist <- data_12_or_recist %>%
+  mutate(
+    event_num = as.numeric(event_num),
+    percent_change_from_baseline = as.numeric(percent_change_from_baseline),
+    sd_this_ta = as.numeric(sd_this_ta),
+    pr_this_ta = as.numeric(pr_this_ta),
+    cr_this_ta = as.numeric(cr_this_ta),
+    pd_this_ta = as.numeric(pd_this_ta)
+  )
+
+
+spider_plot <- function() {
+  spider_ta <- data_12_or_recist %>%
+    ggplot(
+      aes(x = event_num, y = percent_change_from_baseline, group = patient)
+    ) +
+    # Line plot showing SDL percent change from baseline, colored by pdl1_percent and grouped by patient
+    geom_line(color = "#2C2C2B", size = 0.75) +  # aes(color = pdl1_percent), 
+    # Second data layer: dot plot showing TAs with an OR = SD
+    geom_point(
+      aes(
+        x = sd_this_ta
+      ),
+      size = 1.5,
+      stroke = 1.5,
+      shape = 16
+    ) +
+    # Third data layer: dot plot showing TAs with an OR = PR
+    geom_point(
+      aes(
+        x = pr_this_ta
+      ),
+      size = 1.5,
+      stroke = 1.5,
+      shape = 16
+    ) +
+    # Fourth data layer: dot plot showing TAs with an OR = CR
+    geom_point(
+      aes(
+        x = cr_this_ta
+      ),
+      size = 1.5,
+      stroke = 1.5,
+      shape = 16
+    ) +
+    # Fifth data layer: dot plot showing TAs with an OR = PD
+    geom_point(
+      aes(
+        x = pd_this_ta,
+      ),
+      color = "#E63C56",
+      size = 1.5,
+      stroke = 1.5,
+      shape = 3
+    ) +
+    # Final aesthetics adjustments
+    theme_minimal() +
+    theme(
+      panel.border = element_blank(),
+      panel.grid.minor.y = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      panel.background = element_rect(fill = "#FFFFFF", colour = "#FFFFFF"),
+      plot.background = element_rect(fill = "#FFFFFF", colour = "#FFFFFF"),
+      legend.title = element_text(size = 5),
+      legend.text = element_text(size = 5),
+      legend.justification = "top",
+      legend.position = c(0.95, 0.95),
+      legend.direction = "vertical"
+    ) +
+    labs(
+      x = "Tumor assessment",
+      y = "Change from baseline in tumor size (%)",
+      shape = "Overall response"
+    ) +
+    guides(
+      size = "none",
+      color = guide_legend(title = "PD-L1 (%)")
+    ) +
+    scale_x_continuous(breaks = seq(1, 11, 1)) +
+    scale_y_continuous(breaks = seq(-100, 100, 20))
+
+  spider_ta <- spider_ta + scale_shape(na.translate = FALSE)
+
+  ggsave(
+    paste("../output/", project_id, "_spider_TAs_", as.Date(Sys.Date()), ".png", sep = ""),
+    spider_ta,
+    width = 20,
+    height = 10,
+    units = "cm",
+    dpi = 300
+  )
+
+  return(spider_ta)
+}
+
+spider_plot()
+```
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# Number of patients with PFS event at 5 months
+num_events_5_months <- 5
+
+# Total number of patients
+total_patients <- 43
+
+# Observed 5-month PFS rate
+observed_pfs_rate <- (total_patients - num_events_5_months) / total_patients
+
+# Hypothesized 5-month PFS rate under null hypothesis H0
+hypothesized_pfs_rate <- 0.50
+
+# Perform a one-sided binomial test
+binom_test <- binom.test(total_patients - num_events_5_months, total_patients, p = hypothesized_pfs_rate, alternative = "greater")
+
+# Extract p-value
+p_value <- binom_test$p.value
+
+# Check if the p-value is less than 0.05
+if (p_value < 0.05) {
+  cat("The p-value is less than 0.05\n")
+  cat("We have a statistically significant result\n")
+} else {
+  cat("The p-value is not less than 0.05\n")
+  cat("We do not have a statistically significant result\n")
+}
+
+# Print the observed 5-month PFS rate and p-value
+cat("Observed 5-month PFS rate:", observed_pfs_rate, "\n")
+cat("p-value:", p_value, "\n")
+```
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+data_temp_reduction <- read_excel(
+  here(paste0("data/", "MedOPP341_PECATI_Draft_Listings_", cutoff_date, ".xlsx")),
+  sheet = "LIST19"
+  ) %>% 
+  clean_names() %>% 
+  rename(
+    patient = subject_id,
+    pp = per_protocol_set,
+    reduction = study_treatment_dose_reductions
+  ) %>% 
+  select(
+  patient, pp, reduction
+  )
+
+count_table <- table(data_temp_reduction$pp, data_temp_reduction$reduction)
+percentage_table <- prop.table(count_table) * 100
+combined_table <- paste(count_table, "(", round(percentage_table, 1), "%)", sep="")
+
+combined_table_matrix <- matrix(combined_table, nrow = nrow(count_table), ncol = ncol(count_table))
+rownames(combined_table_matrix) <- paste("Lenvatinib 20mg ≥8 weeks:", rownames(count_table))
+colnames(combined_table_matrix) <- paste("Lenvatinib dose reduction due to toxicity:", colnames(count_table))
+
+combined_table_matrix
+```
+
+#### **Table 6. PFS inm patients with PD-L1 ≥50%:**
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+pfs_pdl1_50 <- merge(
+  pdl1,
+  pfs,
+  by = "patient",
+  all = TRUE
+  ) %>% 
+  filter(
+    pdl1_percent == "≥50"
+  )
+
+tbl_survfit(
+  survfit(Surv(pfs, pfs_event) ~ 1, data = pfs_pdl1_50, conf.type = "log-log"),
+  times = c(5, 12),
+  label_header = "**{time}-Month PFS**"
+) %>%
+  modify_header(label = " ")
+```

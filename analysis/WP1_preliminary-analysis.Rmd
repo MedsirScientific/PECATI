@@ -1061,6 +1061,11 @@ data_12_or_recist <- merge(
   all = FALSE
 )
 
+write_xlsx(
+  data_12_or_recist,
+  here(paste0("output/", project_id, "_12_or_recist_", cutoff_date, ".xlsx"))
+  )
+
 cols <- c(
   "CR" = "#153D99",
   "PR" = "#74AAFF",
